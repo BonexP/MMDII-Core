@@ -1,0 +1,22 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "mmdii-core"
+version = "0.1.0"
+description = "Reusable code for MMDII multimodal welding-fault research"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "Proprietary" }
+authors = [{ name = "MMDII Team" }]
+dependencies = []
+
+[project.optional-dependencies]
+dev = []
+
+[tool.setuptools]
+package-dir = { "" = "src" }
+
+[tool.setuptools.packages.find]
+where = ["src"]
