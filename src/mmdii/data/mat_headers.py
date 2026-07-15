@@ -12,6 +12,86 @@ from scipy.io import whosmat
 FORMAT_VERSION = 1
 
 
+def build_header_coverage(file_records: list[dict[str, Any]]) -> dict[str, Any]:
+    """Summarize field-to-file and file-to-field coverage for successful records."""
+
+    successful_files = sorted(
+        (record for record in file_records if "variables" in record),
+        key=lambda record: record["path"],
+    )
+    variable_names = sorted(
+        {
+            variable["name"]
+            for record in successful_files
+            for variable in record["variables"]
+        }
+    )
+    successful_file_count = len(successful_files)
+    fields: list[dict[str, Any]] = []
+
+    for name in variable_names:
+        paths = [
+            record["path"]
+            for record in successful_files
+            if name in {variable["name"] for variable in record["variables"]}
+        ]
+        fields.append(
+            {
+                "name": name,
+                "file_count": len(paths),
+                "coverage_percent": round(
+                    100 * len(paths) / successful_file_count, 1
+                ),
+                "files": paths,
+            }
+        )
+
+    total_distinct_variables = len(variable_names)
+    file_coverage: list[dict[str, Any]] = []
+    for record in successful_files:
+        present_variables = {
+            variable["name"] for variable in record["variables"]
+        }
+        missing_variables = [
+            name for name in variable_names if name not in present_variables
+        ]
+        file_coverage.append(
+            {
+                "path": record["path"],
+                "present_variable_count": len(present_variables),
+                "total_distinct_variables": total_distinct_variables,
+                "coverage_percent": round(
+                    100 * len(present_variables) / total_distinct_variables, 1
+                )
+                if total_distinct_variables
+                else 100.0,
+                "missing_variables": missing_variables,
+            }
+        )
+
+    return {
+        "total_distinct_variables": total_distinct_variables,
+        "successful_file_count": successful_file_count,
+        "universal_variables": [
+            field["name"]
+            for field in fields
+            if field["file_count"] == successful_file_count
+        ],
+        "unique_variables": [
+            {"name": field["name"], "file": field["files"][0]}
+            for field in fields
+            if field["file_count"] == 1
+        ],
+        "fully_covered_files": [
+            item["path"]
+            for item in file_coverage
+            if item["present_variable_count"] == total_distinct_variables
+        ],
+        "fields": fields,
+        "files": file_coverage,
+    }
+
+
 def inspect_mat_file(path: str | Path, source_root: str | Path) -> dict[str, Any]:
     """Return JSON-safe variable metadata for one MAT file.
 
@@ -96,5 +176,6 @@ def inspect_mat_directory(source_root: str | Path) -> dict[str, Any]:
             }
             for schema, count in sorted(schema_frequency.items())
         ],
+        "coverage": build_header_coverage(files),
         "files": files,
     }
