@@ -22,3 +22,16 @@ Run the package checks from this directory:
 ```powershell
 python -m unittest discover -s tests -v
 ```
+
+## MAT Header Inspection
+
+Install the Core package into the active Python environment:
+
+```powershell
+python -m pip install -e .
+```
+
+`mmdii.data.inspect_mat_directory` reads MAT variable names, MATLAB classes,
+and shapes through `scipy.io.whosmat`. It does not load signal arrays and does
+not require every file to contain the same variables. Unreadable files are
+reported individually while the remaining files are inspected.
