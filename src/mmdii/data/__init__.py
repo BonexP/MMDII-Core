@@ -9,17 +9,33 @@ from .mat_records import (
     parse_mat_filename,
     sample_id_for,
 )
+from .weld_annotations import (
+    AnnotationRelease,
+    AnnotationReleaseError,
+    MappingResult,
+    WeldAnnotation,
+    WeldMapping,
+    build_weld_mappings,
+    load_annotation_release,
+)
 
 __all__ = [
+    "AnnotationRelease",
+    "AnnotationReleaseError",
     "DataSourceConfig",
     "MatFilenameError",
     "MatRecord",
+    "MappingResult",
+    "WeldAnnotation",
+    "WeldMapping",
     "build_header_coverage",
+    "build_weld_mappings",
     "inspect_mat_directory",
     "inspect_mat_file",
     "inventory_mat_files",
     "iter_mat_files",
     "load_data_source",
+    "load_annotation_release",
     "parse_mat_filename",
     "sample_id_for",
 ]
