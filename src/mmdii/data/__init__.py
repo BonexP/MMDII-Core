@@ -18,6 +18,7 @@ from .weld_annotations import (
     build_weld_mappings,
     load_annotation_release,
 )
+from .signal_quality import SignalAudit, SignalQualityConfig, audit_primary_signals
 
 __all__ = [
     "AnnotationRelease",
@@ -26,10 +27,13 @@ __all__ = [
     "MatFilenameError",
     "MatRecord",
     "MappingResult",
+    "SignalAudit",
+    "SignalQualityConfig",
     "WeldAnnotation",
     "WeldMapping",
     "build_header_coverage",
     "build_weld_mappings",
+    "audit_primary_signals",
     "inspect_mat_directory",
     "inspect_mat_file",
     "inventory_mat_files",
