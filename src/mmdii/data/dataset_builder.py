@@ -12,8 +12,14 @@ from typing import Iterable
 import numpy as np
 
 from .dataset_config import DatasetPreparationConfig
+from .grouped_folds import (
+    LabelledSample,
+    assign_grouped_folds,
+    build_split_report,
+)
 from .mat_records import MatRecord, inventory_mat_files, sample_id_for
 from .signal_quality import SignalAudit, audit_primary_signals
+from .signal_spectrum import SpectrumAudit, audit_signal_spectrum, recommend_target_fs
 from .weld_annotations import build_weld_mappings, load_annotation_release
 
 
@@ -61,6 +67,18 @@ SAMPLE_LABEL_HEADERS = (
     "defect_codes_json",
     "image_group",
 )
+
+SPECTRUM_HEADERS = (
+    "sample_id",
+    "channel",
+    "original_fs_hz",
+    "duration_seconds",
+    "energy_fraction",
+    "energy_cutoff_hz",
+    "nyquist_hz",
+)
+
+FOLD_HEADERS = ("sample_id", "weld_id", "image_group", "fold")
 
 EXCLUDED_HEADERS = (
     "mat_path",
@@ -172,6 +190,8 @@ def build_dataset_stage(
     inventory_rows: list[dict[str, object]] = []
     sample_rows: list[dict[str, object]] = []
     sample_label_rows: list[dict[str, object]] = []
+    labelled_samples: list[LabelledSample] = []
+    spectrum_audits: list[SpectrumAudit] = []
     weld_map_rows: list[dict[str, object]] = []
     excluded_rows: list[dict[str, object]] = []
     issue_counter: Counter[str] = Counter()
@@ -294,6 +314,29 @@ def build_dataset_stage(
                 "image_group": mapping.annotation.image_relative_path,
             }
         )
+        labelled_samples.append(
+            LabelledSample(
+                sample_id=mapping.sample_id,
+                weld_id=mapping.weld_id,
+                image_group=mapping.annotation.image_relative_path,
+                is_normal=mapping.annotation.is_normal,
+                defect_codes=tuple(sorted(mapping.annotation.defect_codes)),
+            )
+        )
+        if config.contract_version == "0.2.0":
+            assert config.preprocessing is not None
+            assert audit.fs is not None and audit.duration_seconds is not None
+            for channel in config.signal_quality.force_fields:
+                spectrum_audits.append(
+                    audit_signal_spectrum(
+                        sample_id=mapping.sample_id,
+                        channel=channel,
+                        signal=audit.arrays[channel],
+                        fs=audit.fs,
+                        duration_seconds=audit.duration_seconds,
+                        energy_fraction=config.preprocessing.spectral_energy_fraction,
+                    )
+                )
         weld_map_rows.append(
             {
                 "weld_id": mapping.weld_id,
@@ -324,6 +367,69 @@ def build_dataset_stage(
     if config.contract_version == "0.2.0":
         _write_csv(
             stage / "sample_labels.csv", SAMPLE_LABEL_HEADERS, sample_label_rows
+        )
+        assert config.preprocessing is not None and config.splits is not None
+        spectrum_audits.sort(key=lambda row: (row.sample_id, row.channel))
+        spectrum_rows = [
+            {
+                "sample_id": row.sample_id,
+                "channel": row.channel,
+                "original_fs_hz": _number(row.original_fs_hz),
+                "duration_seconds": _number(row.duration_seconds),
+                "energy_fraction": _number(row.energy_fraction),
+                "energy_cutoff_hz": _number(row.energy_cutoff_hz),
+                "nyquist_hz": _number(row.nyquist_hz),
+            }
+            for row in spectrum_audits
+        ]
+        _write_csv(stage / "signal_spectrum.csv", SPECTRUM_HEADERS, spectrum_rows)
+
+        if config.preprocessing.target_fs == "auto":
+            target_fs = recommend_target_fs(
+                spectrum_audits,
+                record_percentile=config.preprocessing.spectral_record_percentile,
+                nyquist_margin=config.preprocessing.nyquist_margin,
+            )
+        else:
+            target_fs = config.preprocessing.target_fs
+        preprocessing = {
+            "normalization": config.preprocessing.normalization,
+            "nyquist_margin": config.preprocessing.nyquist_margin,
+            "recommended_target_fs_hz": target_fs,
+            "spectral_energy_fraction": config.preprocessing.spectral_energy_fraction,
+            "spectral_record_percentile": config.preprocessing.spectral_record_percentile,
+            "stride_seconds": config.preprocessing.stride_seconds,
+            "window_seconds": config.preprocessing.window_seconds,
+        }
+        (stage / "preprocessing.json").write_text(
+            json.dumps(preprocessing, ensure_ascii=True, indent=2, sort_keys=True)
+            + "\n",
+            encoding="utf-8",
+        )
+
+        assignments = assign_grouped_folds(
+            labelled_samples, config.splits.fold_count
+        )
+        _write_csv(
+            stage / "folds.csv",
+            FOLD_HEADERS,
+            (
+                {
+                    "sample_id": row.sample_id,
+                    "weld_id": row.weld_id,
+                    "image_group": row.image_group,
+                    "fold": row.fold,
+                }
+                for row in assignments
+            ),
+        )
+        split_report = build_split_report(
+            labelled_samples, assignments, config.splits.fold_count
+        )
+        (stage / "split_report.json").write_text(
+            json.dumps(split_report, ensure_ascii=True, indent=2, sort_keys=True)
+            + "\n",
+            encoding="utf-8",
         )
     _write_csv(stage / "weld_sample_map.csv", WELD_MAP_HEADERS, weld_map_rows)
     _write_csv(stage / "excluded_samples.csv", EXCLUDED_HEADERS, excluded_rows)

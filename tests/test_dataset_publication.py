@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import csv
 import json
 from pathlib import Path
 import sys
@@ -93,6 +94,49 @@ class DatasetPublicationTests(unittest.TestCase):
             self.assertEqual(pointer.read_text(encoding="utf-8"), '{"release_id":"previous"}\n')
             self.assertFalse((config.destination / "releases" / "failed-release").exists())
             self.assertFalse((config.destination / ".stage-failed-release").exists())
+
+    def test_dataset_v0_2_validation_rejects_out_of_range_fold(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            root = Path(temporary_directory)
+            source = root / "source"
+            source.mkdir()
+            write_annotation_release(root / "annotation-release")
+            for weld_id in range(7, 12):
+                savemat(
+                    source / f"2018-7-9-1.0-1.1-10000-200-{weld_id}~.mat",
+                    signal_payload(),
+                )
+            config = load_dataset_config(
+                write_config(root, contract_version="0.2.0")
+            )
+            published = prepare_dataset(config, release_id="release-v0-2")
+            manifest = validate_dataset_release(published.release_directory)
+
+            self.assertEqual(manifest["dataset_contract_version"], "0.2.0")
+            folds_path = published.release_directory / "folds.csv"
+            with folds_path.open(newline="", encoding="utf-8") as handle:
+                reader = csv.DictReader(handle)
+                rows = list(reader)
+                headers = tuple(reader.fieldnames or ())
+            rows[0]["fold"] = "5"
+            with folds_path.open("w", newline="", encoding="utf-8") as handle:
+                writer = csv.DictWriter(handle, fieldnames=headers)
+                writer.writeheader()
+                writer.writerows(rows)
+            manifest_path = published.release_directory / "dataset_manifest.json"
+            manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+            artifact = next(
+                item for item in manifest["artifacts"] if item["path"] == "folds.csv"
+            )
+            artifact["sha256"] = sha256_file(folds_path)
+            artifact["size_bytes"] = folds_path.stat().st_size
+            manifest_path.write_text(
+                json.dumps(manifest, ensure_ascii=True, indent=2, sort_keys=True) + "\n",
+                encoding="utf-8",
+            )
+
+            with self.assertRaisesRegex(DatasetReleaseError, "Fold"):
+                validate_dataset_release(published.release_directory)
 
 
 if __name__ == "__main__":

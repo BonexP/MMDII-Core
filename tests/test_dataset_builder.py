@@ -273,8 +273,37 @@ class DatasetBuilderTests(unittest.TestCase):
                         "image_group",
                     ),
                 )
+            with (stage / "samples.csv").open(
+                newline="", encoding="utf-8"
+            ) as handle:
+                samples = list(csv.DictReader(handle))
+            with (stage / "signal_spectrum.csv").open(
+                newline="", encoding="utf-8"
+            ) as handle:
+                spectrum = list(csv.DictReader(handle))
+            with (stage / "folds.csv").open(
+                newline="", encoding="utf-8"
+            ) as handle:
+                folds = list(csv.DictReader(handle))
+            preprocessing = json.loads(
+                (stage / "preprocessing.json").read_text(encoding="utf-8")
+            )
+            split_report = json.loads(
+                (stage / "split_report.json").read_text(encoding="utf-8")
+            )
             self.assertEqual(result.accepted_count, 5)
             self.assertEqual(len(labels), 5)
+            sample_ids = {row["sample_id"] for row in samples}
+            self.assertEqual({row["sample_id"] for row in labels}, sample_ids)
+            self.assertEqual({row["sample_id"] for row in folds}, sample_ids)
+            self.assertEqual(len(spectrum), 15)
+            self.assertEqual({row["channel"] for row in spectrum}, {"af", "sf", "axialf"})
+            self.assertEqual({int(row["fold"]) for row in folds}, {0, 1, 2, 3, 4})
+            self.assertGreater(preprocessing["recommended_target_fs_hz"], 0)
+            self.assertEqual(preprocessing["window_seconds"], 2.0)
+            self.assertEqual(preprocessing["stride_seconds"], 1.0)
+            self.assertEqual(preprocessing["normalization"], "train_fold_zscore")
+            self.assertEqual(split_report["fold_count"], 5)
             by_weld = {row["weld_id"]: row for row in labels}
             self.assertEqual(json.loads(by_weld["7"]["defect_codes_json"]), ["flash"])
             self.assertEqual(by_weld["8"]["is_normal"], "true")
