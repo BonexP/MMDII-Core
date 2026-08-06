@@ -75,7 +75,14 @@ def signal_payload(length: int = 4, *, bad_af_length: int | None = None) -> dict
     }
 
 
-def write_config(root: Path, *, read_only: bool = True, mapping_source: str = "owner confirmed") -> Path:
+def write_config(
+    root: Path,
+    *,
+    read_only: bool = True,
+    mapping_source: str = "owner confirmed",
+    contract_version: str = "0.1.0",
+    stride_seconds: float = 1.0,
+) -> Path:
     (root / "raw_source.toml").write_text(
         f'[source]\nroot = "source"\nformat = "mat"\nread_only = {str(read_only).lower()}\n',
         encoding="utf-8",
@@ -84,7 +91,7 @@ def write_config(root: Path, *, read_only: bool = True, mapping_source: str = "o
     config.write_text(
         "\n".join([
             "[dataset]",
-            'contract_version = "0.1.0"',
+            f'contract_version = "{contract_version}"',
             'raw_source_config = "raw_source.toml"',
             'annotation_release = "annotation-release"',
             'expected_annotation_release_id = "annotation-release"',
@@ -98,6 +105,25 @@ def write_config(root: Path, *, read_only: bool = True, mapping_source: str = "o
             "time_step_atol = 0.000000000001",
             "rpm_fs_rtol = 0.000001",
             "rpm_fs_atol = 0.000000001",
+            *(
+                [
+                    "",
+                    "[preprocessing]",
+                    'target_fs = "auto"',
+                    "window_seconds = 2.0",
+                    f"stride_seconds = {stride_seconds}",
+                    'normalization = "train_fold_zscore"',
+                    "spectral_energy_fraction = 0.995",
+                    "spectral_record_percentile = 0.95",
+                    "nyquist_margin = 1.25",
+                    "",
+                    "[splits]",
+                    "fold_count = 5",
+                    'group_field = "image_relative_path"',
+                ]
+                if contract_version == "0.2.0"
+                else []
+            ),
         ]) + "\n",
         encoding="utf-8",
     )
@@ -121,6 +147,35 @@ class DatasetBuilderTests(unittest.TestCase):
                 load_dataset_config(write_config(root, read_only=False))
             with self.assertRaisesRegex(ValueError, "mapping_source"):
                 load_dataset_config(write_config(root, mapping_source=""))
+
+    def test_config_loads_dataset_v0_2_training_preparation(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            root = Path(temporary_directory)
+            (root / "source").mkdir()
+            (root / "annotation-release").mkdir()
+
+            config = load_dataset_config(
+                write_config(root, contract_version="0.2.0")
+            )
+
+            self.assertEqual(config.contract_version, "0.2.0")
+            self.assertEqual(config.preprocessing.target_fs, "auto")
+            self.assertEqual(config.preprocessing.window_seconds, 2.0)
+            self.assertEqual(config.preprocessing.stride_seconds, 1.0)
+            self.assertEqual(
+                config.preprocessing.normalization, "train_fold_zscore"
+            )
+            self.assertEqual(config.splits.fold_count, 5)
+            self.assertEqual(config.splits.group_field, "image_relative_path")
+
+            with self.assertRaisesRegex(ValueError, "stride_seconds"):
+                load_dataset_config(
+                    write_config(
+                        root,
+                        contract_version="0.2.0",
+                        stride_seconds=3.0,
+                    )
+                )
 
     def test_builds_deterministic_stage_and_excludes_bad_base_records(self) -> None:
         with tempfile.TemporaryDirectory() as temporary_directory:
