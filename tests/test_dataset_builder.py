@@ -39,7 +39,14 @@ def write_annotation_release(path: Path) -> None:
     path.mkdir()
     rows = []
     defect_rows = []
-    for weld_id, codes in (("7", ["flash"]), ("8", []), ("84", ["blur"])):
+    for weld_id, codes in (
+        ("7", ["flash"]),
+        ("8", []),
+        ("9", ["blur"]),
+        ("10", ["tunnel"]),
+        ("11", ["blur", "flash"]),
+        ("84", ["blur"]),
+    ):
         row = {
             "project_id": "p", "project_name": "MMDII", "image_id": weld_id,
             "image_relative_path": f"image-{weld_id}.jpg", "image_order": weld_id,
@@ -59,8 +66,8 @@ def write_annotation_release(path: Path) -> None:
         writer.writeheader(); writer.writerows(defect_rows)
     (path / "export_manifest.json").write_text(json.dumps({
         "release_id": "annotation-release", "mode": "dataset_ready",
-        "annotation_contract_version": "1.1.0", "annotation_count": 3,
-        "confirmed_defect_count": 2,
+        "annotation_contract_version": "1.1.0", "annotation_count": len(rows),
+        "confirmed_defect_count": len(defect_rows),
     }), encoding="utf-8")
 
 
@@ -232,6 +239,46 @@ class DatasetBuilderTests(unittest.TestCase):
             quality = json.loads((stage / "quality_report.json").read_text(encoding="utf-8"))
             self.assertEqual(quality["issue_counts"]["ambiguous_run_id"], 2)
             self.assertEqual(quality["issue_counts"]["length_mismatch"], 1)
+
+    def test_dataset_v0_2_writes_self_contained_sample_labels(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            root = Path(temporary_directory)
+            source = root / "source"
+            source.mkdir()
+            write_annotation_release(root / "annotation-release")
+            for weld_id in range(7, 12):
+                savemat(
+                    source / f"2018-7-9-1.0-1.1-10000-200-{weld_id}~.mat",
+                    signal_payload(),
+                )
+            config = load_dataset_config(
+                write_config(root, contract_version="0.2.0")
+            )
+            stage = root / "stage"
+
+            result = build_dataset_stage(config, stage)
+
+            with (stage / "sample_labels.csv").open(
+                newline="", encoding="utf-8"
+            ) as handle:
+                reader = csv.DictReader(handle)
+                labels = list(reader)
+                self.assertEqual(
+                    tuple(reader.fieldnames or ()),
+                    (
+                        "sample_id",
+                        "weld_id",
+                        "is_normal",
+                        "defect_codes_json",
+                        "image_group",
+                    ),
+                )
+            self.assertEqual(result.accepted_count, 5)
+            self.assertEqual(len(labels), 5)
+            by_weld = {row["weld_id"]: row for row in labels}
+            self.assertEqual(json.loads(by_weld["7"]["defect_codes_json"]), ["flash"])
+            self.assertEqual(by_weld["8"]["is_normal"], "true")
+            self.assertEqual(by_weld["11"]["image_group"], "image-11.jpg")
 
 
 if __name__ == "__main__":

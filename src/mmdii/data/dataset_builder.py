@@ -54,6 +54,14 @@ SAMPLE_HEADERS = (
 
 WELD_MAP_HEADERS = ("weld_id", "sample_id", "mapping_source", "notes")
 
+SAMPLE_LABEL_HEADERS = (
+    "sample_id",
+    "weld_id",
+    "is_normal",
+    "defect_codes_json",
+    "image_group",
+)
+
 EXCLUDED_HEADERS = (
     "mat_path",
     "sample_id",
@@ -163,6 +171,7 @@ def build_dataset_stage(
 
     inventory_rows: list[dict[str, object]] = []
     sample_rows: list[dict[str, object]] = []
+    sample_label_rows: list[dict[str, object]] = []
     weld_map_rows: list[dict[str, object]] = []
     excluded_rows: list[dict[str, object]] = []
     issue_counter: Counter[str] = Counter()
@@ -274,6 +283,17 @@ def build_dataset_stage(
                 "notes": mapping.annotation.notes,
             }
         )
+        sample_label_rows.append(
+            {
+                "sample_id": mapping.sample_id,
+                "weld_id": mapping.weld_id,
+                "is_normal": str(mapping.annotation.is_normal).lower(),
+                "defect_codes_json": _json_codes(
+                    sorted(mapping.annotation.defect_codes)
+                ),
+                "image_group": mapping.annotation.image_relative_path,
+            }
+        )
         weld_map_rows.append(
             {
                 "weld_id": mapping.weld_id,
@@ -295,11 +315,16 @@ def build_dataset_stage(
 
     inventory_rows.sort(key=lambda row: str(row["mat_path"]).casefold())
     sample_rows.sort(key=lambda row: str(row["mat_path"]).casefold())
+    sample_label_rows.sort(key=lambda row: str(row["sample_id"]))
     weld_map_rows.sort(key=lambda row: str(row["sample_id"]))
     excluded_rows.sort(key=lambda row: str(row["mat_path"]).casefold())
 
     _write_csv(stage / "mat_inventory.csv", INVENTORY_HEADERS, inventory_rows)
     _write_csv(stage / "samples.csv", SAMPLE_HEADERS, sample_rows)
+    if config.contract_version == "0.2.0":
+        _write_csv(
+            stage / "sample_labels.csv", SAMPLE_LABEL_HEADERS, sample_label_rows
+        )
     _write_csv(stage / "weld_sample_map.csv", WELD_MAP_HEADERS, weld_map_rows)
     _write_csv(stage / "excluded_samples.csv", EXCLUDED_HEADERS, excluded_rows)
 
