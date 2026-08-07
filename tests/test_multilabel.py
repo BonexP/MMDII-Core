@@ -32,6 +32,14 @@ class MultilabelEvaluationTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "one class"):
             compute_positive_class_weights(np.zeros((3, 1), dtype=np.float64))
 
+    def test_rejects_non_binary_truth_before_loading_optional_metrics(self) -> None:
+        with self.assertRaisesRegex(ValueError, "zero and one"):
+            evaluate_multilabel(
+                np.array([[2.0]], dtype=np.float64),
+                np.array([[0.5]], dtype=np.float64),
+                target_codes=("flash",),
+            )
+
     @unittest.skipUnless(
         importlib.util.find_spec("sklearn") is not None,
         "scikit-learn train extra is not installed",

@@ -34,7 +34,10 @@ def weighted_bce_loss(
         raise RuntimeError(
             "Weighted BCE training requires the MMDII-Core train extra."
         ) from error
-    weights = torch.as_tensor(positive_class_weights, dtype=torch.float32)
+    device = getattr(logits, "device", None)
+    weights = torch.as_tensor(
+        positive_class_weights, dtype=torch.float32, device=device
+    )
     return nn.BCEWithLogitsLoss(pos_weight=weights)(logits, targets)
 
 
@@ -47,12 +50,6 @@ def evaluate_multilabel(
 ) -> dict[str, object]:
     """Return per-code PR-AUC, recall, F1 and explicit undefined-code fields."""
 
-    try:
-        from sklearn.metrics import average_precision_score, f1_score, recall_score
-    except ImportError as error:
-        raise RuntimeError(
-            "Metric evaluation requires the MMDII-Core train extra."
-        ) from error
     labels = tuple(target_codes)
     values = np.asarray(truth, dtype=np.float64)
     scores = np.asarray(probabilities, dtype=np.float64)
@@ -67,6 +64,16 @@ def evaluate_multilabel(
         or not np.isfinite(scores).all()
     ):
         raise ValueError("Metric inputs have invalid shapes or values.")
+    if not np.isin(values, (0.0, 1.0)).all():
+        raise ValueError("truth must contain only zero and one.")
+    if np.any(scores < 0.0) or np.any(scores > 1.0):
+        raise ValueError("probabilities must be between zero and one.")
+    try:
+        from sklearn.metrics import average_precision_score, f1_score, recall_score
+    except ImportError as error:
+        raise RuntimeError(
+            "Metric evaluation requires the MMDII-Core train extra."
+        ) from error
 
     per_code: dict[str, dict[str, float | int | None]] = {}
     valid = []

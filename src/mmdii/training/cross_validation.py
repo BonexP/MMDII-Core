@@ -39,6 +39,7 @@ class ModelConfig:
     dropout: float = 0.1
     top_k: int = 3
     attention_dim: int = 64
+    encoder_chunk_size: int = 32
 
 
 @dataclass(frozen=True)
@@ -271,12 +272,25 @@ def _build_deep_model(config: ExperimentConfig, aggregator: str, torch: Any) -> 
 
         def forward(self, windows: Any, window_mask: Any, sample_mask: Any) -> Any:
             batch_size, window_count, channels, sample_count = windows.shape
-            safe_mask = sample_mask.clone()
-            safe_mask[~window_mask, 0] = True
-            embeddings = self.encoder(
-                windows.reshape(batch_size * window_count, channels, sample_count),
-                sample_mask=safe_mask.reshape(batch_size * window_count, sample_count),
+            flat_windows = windows.reshape(batch_size * window_count, channels, sample_count)
+            flat_sample_mask = sample_mask.reshape(batch_size * window_count, sample_count)
+            valid_windows = window_mask.reshape(batch_size * window_count)
+            selected_windows = flat_windows[valid_windows]
+            selected_sample_mask = flat_sample_mask[valid_windows]
+            chunks = []
+            for start in range(0, int(valid_windows.sum()), config.model.encoder_chunk_size):
+                stop = start + config.model.encoder_chunk_size
+                chunks.append(
+                    self.encoder(
+                        selected_windows[start:stop],
+                        sample_mask=selected_sample_mask[start:stop],
+                    )
+                )
+            valid_embeddings = torch.cat(chunks, dim=0)
+            embeddings = windows.new_zeros(
+                (batch_size * window_count, valid_embeddings.shape[1])
             )
+            embeddings[valid_windows] = valid_embeddings
             embeddings = embeddings.reshape(batch_size, window_count, -1)
             return self.head(embeddings, window_mask)
 
@@ -385,6 +399,8 @@ def _validate_config(config: ExperimentConfig) -> None:
         raise ValueError("Preprocessing values must be positive.")
     if config.stride_seconds > config.window_seconds:
         raise ValueError("stride_seconds must not exceed window_seconds.")
+    if config.model.encoder_chunk_size < 1:
+        raise ValueError("encoder_chunk_size must be positive.")
 
 
 def _validate_index(index: DatasetIndex, config: ExperimentConfig) -> None:

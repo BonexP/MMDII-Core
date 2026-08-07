@@ -49,6 +49,7 @@ block_count = 2
 dropout = 0.0
 top_k = 2
 attention_dim = 4
+encoder_chunk_size = 16
 """.strip()
                 + "\n",
                 encoding="utf-8",
@@ -63,6 +64,7 @@ attention_dim = 4
             self.assertEqual(config.aggregator, "gated_attention")
             self.assertEqual(config.fold_count, 5)
             self.assertEqual(config.model.embedding_dim, 12)
+            self.assertEqual(config.model.encoder_chunk_size, 16)
 
     def test_committed_baseline_configuration_has_three_targets(self) -> None:
         config = load_experiment_config(
