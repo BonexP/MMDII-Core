@@ -1,0 +1,26 @@
+[experiment]
+release_directory = "../../../data/interim/releases/19db7f9cf4c04682bd33acbdd61ad3f4"
+output_directory = "outputs/moderntcn-mil-v0_1"
+target_codes = ["flash", "blur", "tunnel"]
+mode = "window_mil"
+aggregator = "gated_attention"
+seed = 7
+fold_count = 5
+epochs = 20
+batch_size = 4
+learning_rate = 0.001
+weight_decay = 0.0001
+device = "auto"
+target_fs = 5400.0
+window_seconds = 2.0
+stride_seconds = 1.0
+full_signal_samples = 4096
+
+[model]
+hidden_channels = 32
+embedding_dim = 64
+kernel_size = 31
+block_count = 2
+dropout = 0.1
+top_k = 3
+attention_dim = 64
