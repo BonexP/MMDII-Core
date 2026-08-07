@@ -1,1 +1,1 @@
-"""Training workflows will be added after dataset validation."""
+"""Training workflows for reproducible weld-level experiments."""

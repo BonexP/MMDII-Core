@@ -1,1 +1,1 @@
-"""Model definitions will be added after dataset validation."""
+"""Optional PyTorch model definitions for MMDII training."""
