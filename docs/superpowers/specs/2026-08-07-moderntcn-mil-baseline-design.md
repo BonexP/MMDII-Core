@@ -110,6 +110,10 @@ and output schema as the deep models.
   the loader boundary.
 - Treat short bags with zero padding and masks. Masked pooling must have the
   same result as unpadded pooling.
+- Encode only valid windows. The runner processes valid windows in configurable
+  chunks (`encoder_chunk_size`) so long, high-rate signals do not create a
+  memory spike from padded bags; this changes execution batching, not the
+  weld-level labels or fold semantics.
 
 ## Experiment sequence
 
