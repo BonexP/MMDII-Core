@@ -28,6 +28,18 @@ from .dataset_publication import (
     sha256_file,
     validate_dataset_release,
 )
+from .training_dataset import (
+    DatasetIndex,
+    FoldNormalizer,
+    FullSignalSpec,
+    WeldRecord,
+    WeldWindowDataset,
+    WindowSpec,
+    collate_weld_batch,
+    resample_signal,
+    target_vector,
+    window_signal,
+)
 
 __all__ = [
     "AnnotationRelease",
@@ -36,6 +48,9 @@ __all__ = [
     "DatasetBuildResult",
     "DatasetPreparationConfig",
     "DatasetReleaseError",
+    "DatasetIndex",
+    "FoldNormalizer",
+    "FullSignalSpec",
     "MatFilenameError",
     "MatRecord",
     "MappingResult",
@@ -44,6 +59,9 @@ __all__ = [
     "SignalQualityConfig",
     "WeldAnnotation",
     "WeldMapping",
+    "WeldRecord",
+    "WeldWindowDataset",
+    "WindowSpec",
     "build_header_coverage",
     "build_dataset_stage",
     "build_weld_mappings",
@@ -60,4 +78,8 @@ __all__ = [
     "sample_id_for",
     "sha256_file",
     "validate_dataset_release",
+    "collate_weld_batch",
+    "resample_signal",
+    "target_vector",
+    "window_signal",
 ]

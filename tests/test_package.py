@@ -16,7 +16,7 @@ from mmdii.data import DataSourceConfig, iter_mat_files
 
 class PackageTests(unittest.TestCase):
     def test_package_imports(self) -> None:
-        self.assertEqual(__version__, "0.1.0")
+        self.assertEqual(__version__, "0.2.0")
 
     def test_missing_source_directory_is_reported(self) -> None:
         source = DataSourceConfig(
