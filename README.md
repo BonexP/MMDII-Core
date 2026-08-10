@@ -44,7 +44,25 @@ Install the standalone training dependencies on the training host:
 python -m pip install -e ".[train]"
 ```
 
-Run the configured windowed ModernTCN-MIL experiment:
+Check the environment and immutable real release before allocating a full run:
+
+```powershell
+python scripts/check_training_environment.py `
+  --config configs/moderntcn_mil_v0_1.toml `
+  --release-dir D:\datasets\mmdii-v0-2\releases\<release-id>
+```
+
+Perform one optimizer update using real Dataset v0.2 windows. This command does
+not write formal OOF artifacts or use synthetic data:
+
+```powershell
+python scripts/smoke_train.py `
+  --config configs/moderntcn_mil_v0_1.toml `
+  --release-dir D:\datasets\mmdii-v0-2\releases\<release-id> `
+  --fold 0 --batch-size 1
+```
+
+After both checks pass, run the configured windowed ModernTCN-MIL experiment:
 
 ```powershell
 python scripts/train_baseline.py --config configs/moderntcn_mil_v0_1.toml
