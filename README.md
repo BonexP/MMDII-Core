@@ -38,6 +38,9 @@ reported individually while the remaining files are inspected.
 
 ## Dataset v0.2 training
 
+For a reproducible Linux/JupyterLab setup with an uv-managed Python 3.11 and
+CPU-only PyTorch, see [`docs/training-host-cpu-setup.md`](docs/training-host-cpu-setup.md).
+
 Install the standalone training dependencies on the training host:
 
 ```powershell
