@@ -100,6 +100,25 @@ tensor= tensor(0.)
 
 `cuda=False` 是预期状态，不是错误。
 
+## 有 NVIDIA GPU 时
+
+如果 `nvidia-smi` 能看到 GPU，不要使用上面的 `--torch-backend=cpu`。例如
+驱动 535.x 可使用 CUDA 12.1 构建：
+
+```bash
+uv pip uninstall --python .venv/bin/python torch
+uv pip install --python .venv/bin/python \
+  "torch==2.5.1" \
+  --index-url https://download.pytorch.org/whl/cu121
+python -c "import torch; print(torch.__version__, torch.version.cuda, torch.cuda.is_available())"
+```
+
+输出应包含 `+cu121` 和 `True`。配置文件中的 `device = "auto"` 会自动选择
+CUDA；也可以在冒烟测试中显式传入 `--device cuda`。
+
+GPU 主机可以使用 [`scripts/run_overnight_suite.sh`](../scripts/run_overnight_suite.sh)
+在断开 JupyterLab 后继续跑完整实验套件。
+
 ## 检查代码与真实数据
 
 先运行 Core 测试：

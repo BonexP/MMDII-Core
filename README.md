@@ -89,3 +89,27 @@ weights are candidate windows for review, not validated defect locations.
 Experiment order is B0 statistical features, E0 full-signal ModernTCN, then
 windowed mean/max/top-k/gated MIL. The same preassigned image-group folds are
 used for every comparison.
+
+### Unattended Linux/JupyterLab run
+
+Run the complete comparison suite in a process that survives terminal or
+JupyterLab disconnection:
+
+```bash
+RELEASE=/path/to/mmdii-v0-2/releases/<release-id>
+bash scripts/run_overnight_suite.sh "$RELEASE"
+```
+
+The launcher returns immediately and prints the PID, output directory, and
+commands for following the log and current status. It runs B0, E0, E1a mean,
+E1b max, E1b top-k mean, and E1c gated attention sequentially. Every experiment
+gets a separate directory. Passing the same output directory again skips
+completed experiments and resumes at the first incomplete experiment:
+
+```bash
+bash scripts/run_overnight_suite.sh "$RELEASE" outputs/overnight-20260902-210000
+```
+
+The worker uses `.venv/bin/python` directly, so shell activation is not needed
+after launch. `nohup` protects against terminal disconnection; it cannot keep a
+process alive if the hosting platform suspends or destroys the entire instance.

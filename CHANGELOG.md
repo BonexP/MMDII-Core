@@ -3,6 +3,13 @@
 All notable changes to MMDII-Core are recorded here. Versions follow Semantic
 Versioning.
 
+## [Unreleased]
+
+### Added
+
+- Resumable `nohup` launcher for unattended B0/E0/E1 comparison runs on Linux
+  and JupyterLab training hosts.
+
 ## [0.3.0] - 2026-08-13
 
 ### Added
