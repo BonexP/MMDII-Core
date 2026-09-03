@@ -6,6 +6,9 @@ PYTHON="${PYTHON:-$ROOT/.venv/bin/python}"
 SEEDS="${SEEDS:-7 17 27}"
 EPOCHS="${EPOCHS:-20}"
 OPTIMIZER="${OPTIMIZER:-adamw}"
+LEARNING_RATE="${LEARNING_RATE:-}"
+WEIGHT_DECAY="${WEIGHT_DECAY:-}"
+EARLY_STOPPING_PATIENCE="${EARLY_STOPPING_PATIENCE:-0}"
 
 usage() {
     cat <<'EOF'
@@ -22,19 +25,28 @@ run_one() {
     local destination="$OUTPUT_ROOT/$name"
     [[ -f "$destination/.complete" ]] && return
     mkdir -p "$destination"
+    local options=(
+        --config "$CONFIG" --release-dir "$RELEASE_DIR" --output-dir "$destination"
+        --mode "$mode" --aggregator "$aggregator" --seed "$seed"
+        --epochs "$EPOCHS" --optimizer "$OPTIMIZER"
+        --early-stopping-patience "$EARLY_STOPPING_PATIENCE"
+    )
+    [[ -n "$LEARNING_RATE" ]] && options+=(--learning-rate "$LEARNING_RATE")
+    [[ -n "$WEIGHT_DECAY" ]] && options+=(--weight-decay "$WEIGHT_DECAY")
     "$PYTHON" scripts/train_baseline.py \
-        --config "$CONFIG" --release-dir "$RELEASE_DIR" --output-dir "$destination" \
-        --mode "$mode" --aggregator "$aggregator" --seed "$seed" \
-        --epochs "$EPOCHS" --optimizer "$OPTIMIZER" 2>&1 | tee "$destination/train.log"
-    "$PYTHON" scripts/validate_tracked_outputs.py --root "$destination"
+        "${options[@]}" 2>&1 | tee "$destination/train.log"
     touch "$destination/.complete"
+    if ! "$PYTHON" scripts/validate_tracked_outputs.py --root "$destination"; then
+        rm -f "$destination/.complete"
+        return 1
+    fi
 }
 
 worker() {
     cd "$ROOT"
     mkdir -p "$OUTPUT_ROOT"
-    printf 'started_at=%s\ncommit=%s\nseeds=%s\nepochs=%s\noptimizer=%s\n' \
-        "$(date --iso-8601=seconds)" "$(git rev-parse HEAD)" "$SEEDS" "$EPOCHS" "$OPTIMIZER" \
+    printf 'started_at=%s\ncommit=%s\nseeds=%s\nepochs=%s\noptimizer=%s\nearly_stopping_patience=%s\nlearning_rate=%s\nweight_decay=%s\n' \
+        "$(date --iso-8601=seconds)" "$(git rev-parse HEAD)" "$SEEDS" "$EPOCHS" "$OPTIMIZER" "$EARLY_STOPPING_PATIENCE" "$LEARNING_RATE" "$WEIGHT_DECAY" \
         > "$OUTPUT_ROOT/run-metadata.txt"
     for seed in $SEEDS; do
         run_one "seed-${seed}-b0-statistical" statistical mean "$seed"
