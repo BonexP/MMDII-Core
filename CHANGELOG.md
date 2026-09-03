@@ -11,6 +11,15 @@ Versioning.
   and JupyterLab training hosts.
 - Dataset v0.2 overnight baseline analysis report with raw fold/OOF result
   tables and model-selection conclusions.
+- Robustness experiment launcher for multi-seed B0/E1c runs.
+- Tracked-output validator for OOF, fold, completion-marker, and probability
+  consistency checks.
+
+### Changed
+
+- Training CLI now supports seed, epoch, optimizer, learning-rate,
+  regularization, gradient-clipping, and conservative training-loss early-stop
+  overrides while preserving the v0.3.0 defaults.
 
 ## [0.3.0] - 2026-08-13
 
