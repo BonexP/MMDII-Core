@@ -1,0 +1,148 @@
+{
+    "aggregator": "gated_attention",
+    "fold_count": 5,
+    "fold_metrics": [
+        {
+            "fold": 0,
+            "macro_f1": 0.7545787545787546,
+            "macro_pr_auc": 0.8619923351670756,
+            "macro_recall": 0.746078431372549,
+            "per_code": {
+                "blur": {
+                    "f1": 0.6923076923076923,
+                    "pr_auc": 0.6139317545199897,
+                    "recall": 0.9,
+                    "valid_positive_count": 10
+                },
+                "flash": {
+                    "f1": 0.7142857142857143,
+                    "pr_auc": 0.9720452509812372,
+                    "recall": 0.5882352941176471,
+                    "valid_positive_count": 17
+                },
+                "tunnel": {
+                    "f1": 0.8571428571428571,
+                    "pr_auc": 1.0,
+                    "recall": 0.75,
+                    "valid_positive_count": 4
+                }
+            },
+            "threshold": 0.5,
+            "valid_code_count": 3
+        },
+        {
+            "fold": 1,
+            "macro_f1": 0.7023809523809524,
+            "macro_pr_auc": 0.9527887096068914,
+            "macro_recall": 0.7171717171717171,
+            "per_code": {
+                "blur": {
+                    "f1": 0.8571428571428571,
+                    "pr_auc": 0.9416994621540078,
+                    "recall": 0.8181818181818182,
+                    "valid_positive_count": 11
+                },
+                "flash": {
+                    "f1": 0.5,
+                    "pr_auc": 1.0000000000000002,
+                    "recall": 0.3333333333333333,
+                    "valid_positive_count": 21
+                },
+                "tunnel": {
+                    "f1": 0.75,
+                    "pr_auc": 0.9166666666666665,
+                    "recall": 1.0,
+                    "valid_positive_count": 3
+                }
+            },
+            "threshold": 0.5,
+            "valid_code_count": 3
+        },
+        {
+            "fold": 2,
+            "macro_f1": 0.6470588235294118,
+            "macro_pr_auc": 0.708710407239819,
+            "macro_recall": 0.6296296296296297,
+            "per_code": {
+                "blur": {
+                    "f1": 1.0,
+                    "pr_auc": 1.0,
+                    "recall": 1.0,
+                    "valid_positive_count": 9
+                },
+                "flash": {
+                    "f1": 0.9411764705882353,
+                    "pr_auc": 1.0,
+                    "recall": 0.8888888888888888,
+                    "valid_positive_count": 18
+                },
+                "tunnel": {
+                    "f1": 0.0,
+                    "pr_auc": 0.126131221719457,
+                    "recall": 0.0,
+                    "valid_positive_count": 3
+                }
+            },
+            "threshold": 0.5,
+            "valid_code_count": 3
+        },
+        {
+            "fold": 3,
+            "macro_f1": 0.7749999999999999,
+            "macro_pr_auc": 0.6879323148067298,
+            "macro_recall": 0.7655502392344498,
+            "per_code": {
+                "blur": {
+                    "f1": 0.7,
+                    "pr_auc": 0.6052865462554456,
+                    "recall": 0.6363636363636364,
+                    "valid_positive_count": 11
+                },
+                "flash": {
+                    "f1": 0.85,
+                    "pr_auc": 0.770578083358014,
+                    "recall": 0.8947368421052632,
+                    "valid_positive_count": 19
+                },
+                "tunnel": {
+                    "f1": null,
+                    "pr_auc": null,
+                    "recall": null,
+                    "valid_positive_count": 0
+                }
+            },
+            "threshold": 0.5,
+            "valid_code_count": 2
+        },
+        {
+            "fold": 4,
+            "macro_f1": 0.8746898263027295,
+            "macro_pr_auc": 0.887108173689056,
+            "macro_recall": 0.8700980392156863,
+            "per_code": {
+                "blur": {
+                    "f1": 0.8461538461538461,
+                    "pr_auc": 0.7774843212343212,
+                    "recall": 0.9166666666666666,
+                    "valid_positive_count": 12
+                },
+                "flash": {
+                    "f1": 0.9032258064516129,
+                    "pr_auc": 0.9967320261437909,
+                    "recall": 0.8235294117647058,
+                    "valid_positive_count": 17
+                },
+                "tunnel": {
+                    "f1": null,
+                    "pr_auc": null,
+                    "recall": null,
+                    "valid_positive_count": 0
+                }
+            },
+            "threshold": 0.5,
+            "valid_code_count": 2
+        }
+    ],
+    "mode": "window_mil",
+    "sample_count": 101
+}

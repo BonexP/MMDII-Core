@@ -1,0 +1,33 @@
+{
+  "aggregator": "gated_attention",
+  "batch_size": 4,
+  "config_path": "/home/user/PROJECT/MMDII/MMDII-Core/configs/moderntcn_mil_v0_1.toml",
+  "device": "auto",
+  "epochs": 20,
+  "fold_count": 5,
+  "full_signal_samples": 4096,
+  "learning_rate": 0.001,
+  "mode": "window_mil",
+  "model": {
+    "attention_dim": 64,
+    "block_count": 2,
+    "dropout": 0.1,
+    "embedding_dim": 64,
+    "encoder_chunk_size": 32,
+    "hidden_channels": 32,
+    "kernel_size": 31,
+    "top_k": 3
+  },
+  "output_directory": "/home/user/PROJECT/MMDII/MMDII-Core/configs/outputs/moderntcn-mil-v0_1",
+  "release_directory": "/home/user/PROJECT/MMDII/data/dataset/mmdii-v0-2/releases/19db7f9cf4c04682bd33acbdd61ad3f4",
+  "seed": 7,
+  "stride_seconds": 1.0,
+  "target_codes": [
+    "flash",
+    "blur",
+    "tunnel"
+  ],
+  "target_fs": 5400.0,
+  "weight_decay": 0.0001,
+  "window_seconds": 2.0
+}
