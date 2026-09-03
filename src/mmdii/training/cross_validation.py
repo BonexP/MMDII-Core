@@ -61,6 +61,10 @@ class ExperimentConfig:
     window_seconds: float
     stride_seconds: float
     full_signal_samples: int
+    optimizer: str = "adamw"
+    early_stopping_patience: int = 0
+    early_stopping_min_delta: float = 0.0
+    gradient_clip_norm: float = 0.0
     model: ModelConfig = field(default_factory=ModelConfig)
 
     @classmethod
@@ -83,6 +87,10 @@ class ExperimentConfig:
             window_seconds=2.0,
             stride_seconds=1.0,
             full_signal_samples=256,
+            optimizer="adamw",
+            early_stopping_patience=0,
+            early_stopping_min_delta=0.0,
+            gradient_clip_norm=0.0,
         )
 
 
@@ -112,6 +120,10 @@ def load_experiment_config(path: str | Path) -> ExperimentConfig:
             window_seconds=float(experiment["window_seconds"]),
             stride_seconds=float(experiment["stride_seconds"]),
             full_signal_samples=int(experiment["full_signal_samples"]),
+            optimizer=str(experiment.get("optimizer", "adamw")),
+            early_stopping_patience=int(experiment.get("early_stopping_patience", 0)),
+            early_stopping_min_delta=float(experiment.get("early_stopping_min_delta", 0.0)),
+            gradient_clip_norm=float(experiment.get("gradient_clip_norm", 0.0)),
             model=ModelConfig(
                 **{
                     field_name: model_payload.get(field_name, getattr(ModelConfig(), field_name))
@@ -149,6 +161,7 @@ def run_cross_validation(
             raise ValueError(f"Fold {fold} has no train or validation records.")
         train_targets = np.asarray([record.target for record in train_records], dtype=np.float64)
         class_weights = compute_positive_class_weights(train_targets)
+        training_info: dict[str, object] = {}
         if config.mode == "statistical":
             probabilities = _run_statistical_fold(
                 index, train_records, valid_records, config
@@ -171,7 +184,7 @@ def run_cross_validation(
             train_dataset = WeldWindowDataset(index, {record.fold for record in train_records}, spec, normalizer)
             valid_dataset = WeldWindowDataset(index, {fold}, spec, normalizer)
             model = _build_deep_model(config, aggregator, torch)
-            probabilities = _run_deep_fold(
+            probabilities, training_info = _run_deep_fold(
                 model,
                 train_dataset,
                 valid_dataset,
@@ -187,6 +200,7 @@ def run_cross_validation(
             probabilities,
             target_codes=config.target_codes,
         )
+        metrics.update(training_info)
         metrics["fold"] = fold
         fold_reports.append(metrics)
         for record, row_probabilities in zip(valid_records, probabilities, strict=True):
@@ -297,10 +311,14 @@ def _build_deep_model(config: ExperimentConfig, aggregator: str, torch: Any) -> 
     return WeldModel()
 
 
-def _run_deep_fold(model: Any, train_dataset: Any, valid_dataset: Any, class_weights: np.ndarray, config: ExperimentConfig, torch: Any, nn: Any, DataLoader: Any) -> np.ndarray:
+def _run_deep_fold(model: Any, train_dataset: Any, valid_dataset: Any, class_weights: np.ndarray, config: ExperimentConfig, torch: Any, nn: Any, DataLoader: Any) -> tuple[np.ndarray, dict[str, object]]:
     device = _device(config.device, torch)
     model.to(device)
-    optimizer = torch.optim.AdamW(
+    optimizer_class = {
+        "adamw": torch.optim.AdamW,
+        "adam": torch.optim.Adam,
+    }[config.optimizer]
+    optimizer = optimizer_class(
         model.parameters(), lr=config.learning_rate, weight_decay=config.weight_decay
     )
     criterion = nn.BCEWithLogitsLoss(
@@ -318,8 +336,14 @@ def _run_deep_fold(model: Any, train_dataset: Any, valid_dataset: Any, class_wei
         shuffle=False,
         collate_fn=_torch_collate,
     )
-    for _ in range(config.epochs):
+    best_loss = float("inf")
+    best_epoch = 0
+    epochs_without_improvement = 0
+    epochs_ran = 0
+    for epoch in range(config.epochs):
         model.train()
+        train_loss_total = 0.0
+        train_batches = 0
         for batch in train_loader:
             optimizer.zero_grad(set_to_none=True)
             logits, _ = model(
@@ -329,7 +353,24 @@ def _run_deep_fold(model: Any, train_dataset: Any, valid_dataset: Any, class_wei
             )
             loss = criterion(logits, batch["targets"].to(device))
             loss.backward()
+            if config.gradient_clip_norm > 0:
+                torch.nn.utils.clip_grad_norm_(
+                    model.parameters(), config.gradient_clip_norm
+                )
             optimizer.step()
+            train_loss_total += float(loss.detach().cpu())
+            train_batches += 1
+        epochs_ran = epoch + 1
+        epoch_loss = train_loss_total / max(train_batches, 1)
+        if config.early_stopping_patience > 0:
+            if epoch_loss < best_loss - config.early_stopping_min_delta:
+                best_loss = epoch_loss
+                best_epoch = epoch + 1
+                epochs_without_improvement = 0
+            else:
+                epochs_without_improvement += 1
+                if epochs_without_improvement >= config.early_stopping_patience:
+                    break
     model.eval()
     probabilities = []
     with torch.no_grad():
@@ -340,7 +381,11 @@ def _run_deep_fold(model: Any, train_dataset: Any, valid_dataset: Any, class_wei
                 batch["sample_mask"].to(device),
             )
             probabilities.append(torch.sigmoid(logits).cpu().numpy())
-    return np.concatenate(probabilities, axis=0)
+    return np.concatenate(probabilities, axis=0), {
+        "epochs_ran": epochs_ran,
+        "best_epoch": best_epoch or epochs_ran,
+        "early_stopping_monitor": "train_loss" if config.early_stopping_patience > 0 else None,
+    }
 
 
 def _torch_collate(items: list[dict[str, object]]) -> dict[str, Any]:
@@ -395,6 +440,12 @@ def _validate_config(config: ExperimentConfig) -> None:
         raise ValueError("target_codes must be non-empty and unique.")
     if config.fold_count != 5 or config.epochs < 1 or config.batch_size < 1:
         raise ValueError("fold_count must be 5 and epochs/batch_size positive.")
+    if config.optimizer not in {"adamw", "adam"}:
+        raise ValueError("optimizer must be adamw or adam.")
+    if config.early_stopping_patience < 0 or config.early_stopping_min_delta < 0:
+        raise ValueError("early stopping values must be non-negative.")
+    if config.gradient_clip_norm < 0:
+        raise ValueError("gradient_clip_norm must be non-negative.")
     if config.target_fs <= 0 or config.window_seconds <= 0 or config.stride_seconds <= 0:
         raise ValueError("Preprocessing values must be positive.")
     if config.stride_seconds > config.window_seconds:
