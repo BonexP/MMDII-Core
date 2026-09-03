@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass, field
+import copy
 import csv
 import json
 from pathlib import Path
@@ -338,6 +339,7 @@ def _run_deep_fold(model: Any, train_dataset: Any, valid_dataset: Any, class_wei
     )
     best_loss = float("inf")
     best_epoch = 0
+    best_state = None
     epochs_without_improvement = 0
     epochs_ran = 0
     for epoch in range(config.epochs):
@@ -366,11 +368,14 @@ def _run_deep_fold(model: Any, train_dataset: Any, valid_dataset: Any, class_wei
             if epoch_loss < best_loss - config.early_stopping_min_delta:
                 best_loss = epoch_loss
                 best_epoch = epoch + 1
+                best_state = copy.deepcopy(model.state_dict())
                 epochs_without_improvement = 0
             else:
                 epochs_without_improvement += 1
                 if epochs_without_improvement >= config.early_stopping_patience:
                     break
+    if best_state is not None:
+        model.load_state_dict(best_state)
     model.eval()
     probabilities = []
     with torch.no_grad():
