@@ -9,6 +9,8 @@ Versioning.
 
 - Resumable `nohup` launcher for unattended B0/E0/E1 comparison runs on Linux
   and JupyterLab training hosts.
+- Dataset v0.2 overnight baseline analysis report with raw fold/OOF result
+  tables and model-selection conclusions.
 
 ## [0.3.0] - 2026-08-13
 
