@@ -47,6 +47,16 @@ def _best_threshold(truth: np.ndarray, scores: np.ndarray) -> float:
     return best[0]
 
 
+def _average_precision(truth: np.ndarray, scores: np.ndarray) -> float | None:
+    positive_count = int(truth.sum())
+    if positive_count == 0:
+        return None
+    order = np.argsort(-scores, kind="mergesort")
+    ordered_truth = truth[order].astype(np.int64)
+    precision_at_rank = np.cumsum(ordered_truth) / np.arange(1, len(truth) + 1)
+    return float((precision_at_rank * ordered_truth).sum() / positive_count)
+
+
 def calibrate(path: Path) -> dict[str, Any]:
     rows, codes = _load(path)
     truth = _truth(rows, codes)
@@ -76,6 +86,7 @@ def calibrate(path: Path) -> dict[str, Any]:
         fn = int(np.logical_and(~pred_all[:, position], positive).sum())
         per_code[code] = {
             "positive_count": int(positive.sum()),
+            "pr_auc": _average_precision(positive, score_all[:, position]),
             "recall": None if positive.sum() == 0 else tp / (tp + fn),
             "f1": 0.0 if 2 * tp + fp + fn == 0 else 2 * tp / (2 * tp + fp + fn),
         }
