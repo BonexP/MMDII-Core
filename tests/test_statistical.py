@@ -15,6 +15,7 @@ from mmdii.models.statistical import (
     STATISTIC_NAMES,
     extract_statistical_features,
     fit_predict_logistic_ovr,
+    fit_predict_random_forest_ovr,
 )
 
 
@@ -69,6 +70,27 @@ class StatisticalBaselineTests(unittest.TestCase):
             random_state=7,
         )
 
+        self.assertEqual(probabilities.shape, (2, 2))
+        self.assertTrue(np.all((probabilities >= 0.0) & (probabilities <= 1.0)))
+
+    @unittest.skipUnless(
+        importlib.util.find_spec("sklearn") is not None,
+        "scikit-learn train extra is not installed",
+    )
+    def test_random_forest_returns_one_probability_per_sample_and_target(self) -> None:
+        train_features = np.array([[0.0], [0.1], [1.0], [1.1]], dtype=np.float64)
+        train_targets = np.array(
+            [[0.0, 1.0], [0.0, 1.0], [1.0, 0.0], [1.0, 0.0]],
+            dtype=np.float64,
+        )
+        probabilities = fit_predict_random_forest_ovr(
+            train_features,
+            train_targets,
+            np.array([[0.05], [1.05]], dtype=np.float64),
+            target_codes=("flash", "blur"),
+            random_state=7,
+            n_estimators=8,
+        )
         self.assertEqual(probabilities.shape, (2, 2))
         self.assertTrue(np.all((probabilities >= 0.0) & (probabilities <= 1.0)))
 

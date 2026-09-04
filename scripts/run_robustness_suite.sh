@@ -50,6 +50,7 @@ worker() {
         > "$OUTPUT_ROOT/run-metadata.txt"
     for seed in $SEEDS; do
         run_one "seed-${seed}-b0-statistical" statistical mean "$seed"
+        run_one "seed-${seed}-random-forest" random_forest mean "$seed"
         run_one "seed-${seed}-e1c-gated-attention" window_mil gated_attention "$seed"
     done
     printf 'status=complete\nfinished_at=%s\n' "$(date --iso-8601=seconds)" > "$OUTPUT_ROOT/status.txt"

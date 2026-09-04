@@ -28,6 +28,7 @@ from mmdii.evaluation.multilabel import (
 from mmdii.models.statistical import (
     extract_statistical_features,
     fit_predict_logistic_ovr,
+    fit_predict_random_forest_ovr,
 )
 
 
@@ -143,7 +144,7 @@ def run_cross_validation(
 ) -> dict[str, object]:
     """Run one model per held-out weld fold and publish weld-level OOF output."""
 
-    if config.mode != "statistical":
+    if config.mode not in {"statistical", "random_forest"}:
         torch, nn, DataLoader = _require_torch()
     else:
         torch = nn = DataLoader = None
@@ -163,7 +164,7 @@ def run_cross_validation(
         train_targets = np.asarray([record.target for record in train_records], dtype=np.float64)
         class_weights = compute_positive_class_weights(train_targets)
         training_info: dict[str, object] = {}
-        if config.mode == "statistical":
+        if config.mode in {"statistical", "random_forest"}:
             probabilities = _run_statistical_fold(
                 index, train_records, valid_records, config
             )
@@ -250,7 +251,8 @@ def _run_statistical_fold(index: DatasetIndex, train_records: tuple[Any, ...], v
     valid_features = np.stack(
         [extract_statistical_features(index.load_signal(record)[0]) for record in valid_records]
     )
-    return fit_predict_logistic_ovr(
+    predictor = fit_predict_random_forest_ovr if config.mode == "random_forest" else fit_predict_logistic_ovr
+    return predictor(
         train_features,
         np.asarray([record.target for record in train_records], dtype=np.float64),
         valid_features,
@@ -437,8 +439,8 @@ def _seed_everything(seed: int, torch: Any) -> None:
 
 
 def _validate_config(config: ExperimentConfig) -> None:
-    if config.mode not in {"statistical", "full_signal", "window_mil"}:
-        raise ValueError("mode must be statistical, full_signal or window_mil.")
+    if config.mode not in {"statistical", "random_forest", "full_signal", "window_mil"}:
+        raise ValueError("mode must be statistical, random_forest, full_signal or window_mil.")
     if config.aggregator not in {"mean", "max", "topk_mean", "gated_attention"}:
         raise ValueError("Invalid aggregator.")
     if not config.target_codes or len(config.target_codes) != len(set(config.target_codes)):
