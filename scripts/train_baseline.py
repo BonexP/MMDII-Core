@@ -21,7 +21,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("--config", required=True, type=Path)
     parser.add_argument("--release-dir", type=Path)
     parser.add_argument("--output-dir", type=Path)
-    parser.add_argument("--mode", choices=("statistical", "full_signal", "window_mil"))
+    parser.add_argument("--mode", choices=("statistical", "random_forest", "full_signal", "window_mil"))
     parser.add_argument(
         "--aggregator",
         choices=("mean", "max", "topk_mean", "gated_attention"),

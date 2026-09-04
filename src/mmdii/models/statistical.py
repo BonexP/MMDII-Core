@@ -88,3 +88,56 @@ def fit_predict_logistic_ovr(
         model.fit(train_x, train_y[:, position])
         probabilities[:, position] = model.predict_proba(test_x)[:, 1]
     return probabilities
+
+
+def fit_predict_random_forest_ovr(
+    train_features: np.ndarray,
+    train_targets: np.ndarray,
+    test_features: np.ndarray,
+    *,
+    target_codes: Iterable[str],
+    random_state: int,
+    n_estimators: int = 300,
+) -> np.ndarray:
+    """Fit one balanced random-forest model per target.
+
+    This is a nonlinear, non-neural reference using exactly the same fold-local
+    statistical features as B0. It is intentionally not a window model.
+    """
+
+    train_x = np.asarray(train_features, dtype=np.float64)
+    train_y = np.asarray(train_targets, dtype=np.float64)
+    test_x = np.asarray(test_features, dtype=np.float64)
+    codes = tuple(target_codes)
+    if (
+        train_x.ndim != 2
+        or test_x.ndim != 2
+        or train_y.ndim != 2
+        or train_x.shape[0] != train_y.shape[0]
+        or train_x.shape[1] != test_x.shape[1]
+        or train_y.shape[1] != len(codes)
+        or not codes
+        or n_estimators < 1
+    ):
+        raise ValueError("Feature, target and random-forest settings are invalid.")
+    try:
+        from sklearn.ensemble import RandomForestClassifier
+    except ImportError as error:
+        raise RuntimeError(
+            "Random-forest training requires the MMDII-Core train extra."
+        ) from error
+
+    probabilities = np.empty((test_x.shape[0], len(codes)), dtype=np.float64)
+    for position, code in enumerate(codes):
+        target = train_y[:, position]
+        if np.unique(target).size != 2:
+            raise ValueError(f"Training target {code!r} contains only one class.")
+        model = RandomForestClassifier(
+            n_estimators=n_estimators,
+            class_weight="balanced",
+            random_state=random_state,
+            n_jobs=-1,
+        )
+        model.fit(train_x, target)
+        probabilities[:, position] = model.predict_proba(test_x)[:, 1]
+    return probabilities

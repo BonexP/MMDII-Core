@@ -12,7 +12,7 @@ configuration paths and must not hard-code parent-repository paths.
 ## Layout
 
 - `src/mmdii/data/`: Dataset v0.2 indexing, signal quality and preparation code.
-- `src/mmdii/models/`: statistical lower bound, ModernTCN and weld MIL heads.
+- `src/mmdii/models/`: statistical lower bound, random forest, ModernTCN and weld MIL heads.
 - `src/mmdii/training/`: deterministic five-fold OOF training workflows.
 - `src/mmdii/evaluation/`: weld-level multi-label evaluation workflows.
 - `tests/`: standalone package tests.
@@ -69,6 +69,24 @@ After both checks pass, run the configured windowed ModernTCN-MIL experiment:
 
 ```powershell
 python scripts/train_baseline.py --config configs/moderntcn_mil_v0_1.toml
+```
+
+The same entry point also supports the nonlinear statistical reference:
+
+```powershell
+python scripts/train_baseline.py `
+  --config configs/moderntcn_mil_v0_1.toml `
+  --release-dir D:\datasets\mmdii-v0-2\releases\<release-id> `
+  --output-dir outputs\random-forest-v0-2 `
+  --mode random_forest
+```
+
+Calibrate thresholds without using the held-out fold labels:
+
+```powershell
+python scripts/calibrate_oof_thresholds.py `
+  --oof outputs\mmdii-v0-2-gated\oof_predictions.csv `
+  --output outputs\mmdii-v0-2-gated\threshold-calibration.json
 ```
 
 The release path may be overridden when the dataset is stored outside this

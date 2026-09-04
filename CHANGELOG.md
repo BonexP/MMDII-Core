@@ -14,6 +14,9 @@ Versioning.
 - Robustness experiment launcher for multi-seed B0/E1c runs.
 - Tracked-output validator for OOF, fold, completion-marker, and probability
   consistency checks.
+- Nonlinear Random Forest reference using the existing fold-local statistical
+  features.
+- Cross-fitted per-class OOF threshold calibration utility.
 
 ### Changed
 
