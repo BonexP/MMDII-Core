@@ -101,18 +101,32 @@ class DatasetIndex:
         cls,
         release_directory: str | Path,
         target_codes: Iterable[str],
+        *,
+        fold_scheme: str | None = None,
     ) -> "DatasetIndex":
         release = Path(release_directory).resolve()
         manifest = validate_dataset_release(release)
-        if manifest.get("dataset_contract_version") != "0.2.0":
-            raise DatasetReleaseError("Training requires Dataset v0.2.0.")
+        if manifest.get("dataset_contract_version") not in {"0.2.0", "0.2.1"}:
+            raise DatasetReleaseError("Training requires Dataset v0.2.0 or v0.2.1.")
         targets = tuple(target_codes)
         if not targets or any(not code for code in targets) or len(targets) != len(set(targets)):
             raise ValueError("target_codes must be non-empty and unique.")
 
         samples = _read_csv(release / "samples.csv")
         labels = _read_csv(release / "sample_labels.csv")
-        folds = _read_csv(release / "folds.csv")
+        manifest_version = manifest.get("dataset_contract_version")
+        if fold_scheme is None:
+            fold_scheme = "weld_independent" if manifest_version == "0.2.1" else "image_group"
+        if fold_scheme not in {"weld_independent", "image_group"}:
+            raise ValueError("fold_scheme must be weld_independent or image_group.")
+        if fold_scheme == "weld_independent" and manifest_version == "0.2.0":
+            raise DatasetReleaseError(
+                "weld_independent folds require a Dataset v0.2.1 release."
+            )
+        fold_path = "folds.csv" if fold_scheme == "weld_independent" else "folds_image_group.csv"
+        if fold_scheme == "image_group" and not (release / fold_path).exists():
+            fold_path = "folds.csv"
+        folds = _read_csv(release / fold_path)
         sample_rows = _unique_by_sample(samples, "samples.csv")
         label_rows = _unique_by_sample(labels, "sample_labels.csv")
         fold_rows = _unique_by_sample(folds, "folds.csv")
@@ -154,7 +168,7 @@ class DatasetIndex:
                     metadata=tuple(sorted(sample.items())),
                 )
             )
-        if any(len(fold_values) != 1 for fold_values in group_folds.values()):
+        if fold_scheme == "image_group" and any(len(fold_values) != 1 for fold_values in group_folds.values()):
             raise DatasetReleaseError("An image group crosses folds.")
         return cls(release, targets, tuple(records))
 

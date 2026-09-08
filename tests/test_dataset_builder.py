@@ -127,8 +127,16 @@ def write_config(
                     "[splits]",
                     "fold_count = 5",
                     'group_field = "image_relative_path"',
+                    *(
+                        [
+                            'primary_fold_scheme = "weld_independent"',
+                            "include_image_group_comparison = true",
+                        ]
+                        if contract_version == "0.2.1"
+                        else []
+                    ),
                 ]
-                if contract_version == "0.2.0"
+                if contract_version in {"0.2.0", "0.2.1"}
                 else []
             ),
         ]) + "\n",
@@ -308,6 +316,26 @@ class DatasetBuilderTests(unittest.TestCase):
             self.assertEqual(json.loads(by_weld["7"]["defect_codes_json"]), ["flash"])
             self.assertEqual(by_weld["8"]["is_normal"], "true")
             self.assertEqual(by_weld["11"]["image_group"], "image-11.jpg")
+
+    def test_dataset_v0_2_1_writes_weld_primary_and_image_comparison_folds(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            root = Path(temporary_directory)
+            source = root / "source"
+            source.mkdir()
+            write_annotation_release(root / "annotation-release")
+            for weld_id in range(7, 12):
+                savemat(
+                    source / f"2018-7-9-1.0-1.1-10000-200-{weld_id}~.mat",
+                    signal_payload(),
+                )
+            config = load_dataset_config(write_config(root, contract_version="0.2.1"))
+            stage = root / "stage"
+            build_dataset_stage(config, stage)
+            self.assertTrue((stage / "folds.csv").is_file())
+            self.assertTrue((stage / "folds_image_group.csv").is_file())
+            report = json.loads((stage / "split_report.json").read_text(encoding="utf-8"))
+            self.assertEqual(report["scheme"], "weld_independent")
+            self.assertEqual(report["image_group_comparison"]["scheme"], "image_group")
 
 
 if __name__ == "__main__":

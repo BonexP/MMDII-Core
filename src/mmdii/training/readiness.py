@@ -67,7 +67,9 @@ def inspect_environment(
         "target_codes": list(config.target_codes),
     }
     try:
-        index = DatasetIndex.from_release(release, config.target_codes)
+        index = DatasetIndex.from_release(
+            release, config.target_codes, fold_scheme=config.fold_scheme
+        )
         folds = sorted({record.fold for record in index.records})
         if folds != list(range(config.fold_count)):
             raise ValueError("Dataset folds do not match the experiment configuration.")
@@ -76,6 +78,7 @@ def inspect_environment(
             sample_count=len(index.records),
             folds=folds,
             image_group_count=len({record.image_group for record in index.records}),
+            fold_scheme=config.fold_scheme,
         )
     except Exception as error:  # report all readiness failures together
         errors.append(f"Dataset check failed: {error}")
@@ -117,7 +120,11 @@ def run_real_data_smoke(
         raise ValueError("batch_size must be positive.")
     torch = _require_torch()
     release = Path(release_directory or config.release_directory).resolve()
-    index = DatasetIndex.from_release(release, config.target_codes)
+    index = DatasetIndex.from_release(
+        release,
+        config.target_codes,
+        fold_scheme=config.fold_scheme,
+    )
     train_records = tuple(record for record in index.records if record.fold != fold)
     train_folds = {record.fold for record in train_records}
     if not train_records or train_folds != set(range(config.fold_count)) - {fold}:

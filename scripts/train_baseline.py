@@ -36,6 +36,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("--early-stopping-min-delta", type=float)
     parser.add_argument("--gradient-clip-norm", type=float)
     parser.add_argument("--device", choices=("auto", "cpu", "cuda"))
+    parser.add_argument("--fold-scheme", choices=("weld_independent", "image_group"))
     args = parser.parse_args(argv)
     config = load_experiment_config(args.config)
     overrides: dict[str, object] = {}
@@ -43,6 +44,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         overrides["release_directory"] = args.release_dir.resolve()
     if args.output_dir is not None:
         overrides["output_directory"] = args.output_dir.resolve()
+    if args.fold_scheme is not None:
+        overrides["fold_scheme"] = args.fold_scheme
     if args.mode is not None:
         overrides["mode"] = args.mode
     if args.aggregator is not None:
@@ -64,7 +67,9 @@ def main(argv: Sequence[str] | None = None) -> int:
             overrides[config_name] = value
     if overrides:
         config = replace(config, **overrides)
-    index = DatasetIndex.from_release(config.release_directory, config.target_codes)
+    index = DatasetIndex.from_release(
+        config.release_directory, config.target_codes, fold_scheme=config.fold_scheme
+    )
     summary = run_cross_validation(index, config)
     print(json.dumps(summary, ensure_ascii=True, indent=2, sort_keys=True))
     return 0

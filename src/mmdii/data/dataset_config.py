@@ -25,6 +25,8 @@ class PreprocessingConfig:
 class SplitConfig:
     fold_count: int
     group_field: str
+    primary_fold_scheme: str = "image_group"
+    include_image_group_comparison: bool = False
 
 
 @dataclass(frozen=True)
@@ -72,8 +74,8 @@ def load_dataset_config(path: str | Path) -> DatasetPreparationConfig:
         raise ValueError("Raw source format must be mat.")
 
     contract_version = dataset.get("contract_version")
-    if contract_version not in {"0.1.0", "0.2.0"}:
-        raise ValueError("Dataset contract_version must be 0.1.0 or 0.2.0.")
+    if contract_version not in {"0.1.0", "0.2.0", "0.2.1"}:
+        raise ValueError("Dataset contract_version must be 0.1.0, 0.2.0 or 0.2.1.")
     mapping_source = dataset.get("mapping_source")
     if not isinstance(mapping_source, str) or not mapping_source.strip():
         raise ValueError("mapping_source must be a non-empty string.")
@@ -103,7 +105,7 @@ def load_dataset_config(path: str | Path) -> DatasetPreparationConfig:
 
     preprocessing = None
     splits = None
-    if contract_version == "0.2.0":
+    if contract_version in {"0.2.0", "0.2.1"}:
         try:
             preprocessing_payload = payload["preprocessing"]
             split_payload = payload["splits"]
@@ -142,6 +144,17 @@ def load_dataset_config(path: str | Path) -> DatasetPreparationConfig:
                 raise ValueError("fold_count must be 5.")
             if group_field != "image_relative_path":
                 raise ValueError("group_field must be image_relative_path.")
+            primary_fold_scheme = split_payload.get("primary_fold_scheme", "image_group")
+            include_image_group_comparison = bool(
+                split_payload.get("include_image_group_comparison", False)
+            )
+            if contract_version == "0.2.1":
+                if primary_fold_scheme != "weld_independent":
+                    raise ValueError("v0.2.1 primary_fold_scheme must be weld_independent.")
+                if not include_image_group_comparison:
+                    raise ValueError("v0.2.1 must include the image_group comparison.")
+            elif primary_fold_scheme != "image_group" or include_image_group_comparison:
+                raise ValueError("v0.2.0 uses image_group as its only fold scheme.")
         except (KeyError, TypeError, ValueError) as error:
             raise ValueError(f"Invalid v0.2 training configuration: {error}") from error
         preprocessing = PreprocessingConfig(
@@ -153,7 +166,12 @@ def load_dataset_config(path: str | Path) -> DatasetPreparationConfig:
             spectral_record_percentile=record_percentile,
             nyquist_margin=nyquist_margin,
         )
-        splits = SplitConfig(fold_count=fold_count, group_field=group_field)
+        splits = SplitConfig(
+            fold_count=fold_count,
+            group_field=group_field,
+            primary_fold_scheme=primary_fold_scheme,
+            include_image_group_comparison=include_image_group_comparison,
+        )
 
     return DatasetPreparationConfig(
         config_path=config_path,

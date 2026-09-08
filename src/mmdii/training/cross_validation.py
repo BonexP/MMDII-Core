@@ -63,6 +63,7 @@ class ExperimentConfig:
     window_seconds: float
     stride_seconds: float
     full_signal_samples: int
+    fold_scheme: str = "weld_independent"
     optimizer: str = "adamw"
     early_stopping_patience: int = 0
     early_stopping_min_delta: float = 0.0
@@ -89,6 +90,7 @@ class ExperimentConfig:
             window_seconds=2.0,
             stride_seconds=1.0,
             full_signal_samples=256,
+            fold_scheme="weld_independent",
             optimizer="adamw",
             early_stopping_patience=0,
             early_stopping_min_delta=0.0,
@@ -122,6 +124,7 @@ def load_experiment_config(path: str | Path) -> ExperimentConfig:
             window_seconds=float(experiment["window_seconds"]),
             stride_seconds=float(experiment["stride_seconds"]),
             full_signal_samples=int(experiment["full_signal_samples"]),
+            fold_scheme=str(experiment.get("fold_scheme", "image_group")),
             optimizer=str(experiment.get("optimizer", "adamw")),
             early_stopping_patience=int(experiment.get("early_stopping_patience", 0)),
             early_stopping_min_delta=float(experiment.get("early_stopping_min_delta", 0.0)),
@@ -226,6 +229,7 @@ def run_cross_validation(
         "mode": config.mode,
         "aggregator": config.aggregator,
         "fold_count": config.fold_count,
+        "fold_scheme": config.fold_scheme,
         "sample_count": len(oof_rows),
         "fold_metrics": fold_reports,
     }
@@ -447,6 +451,8 @@ def _validate_config(config: ExperimentConfig) -> None:
         raise ValueError("target_codes must be non-empty and unique.")
     if config.fold_count != 5 or config.epochs < 1 or config.batch_size < 1:
         raise ValueError("fold_count must be 5 and epochs/batch_size positive.")
+    if config.fold_scheme not in {"weld_independent", "image_group"}:
+        raise ValueError("fold_scheme must be weld_independent or image_group.")
     if config.optimizer not in {"adamw", "adam"}:
         raise ValueError("optimizer must be adamw or adam.")
     if config.early_stopping_patience < 0 or config.early_stopping_min_delta < 0:
