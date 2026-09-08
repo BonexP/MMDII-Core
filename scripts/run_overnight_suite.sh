@@ -106,7 +106,7 @@ fi
 
 RELEASE_DIR="$(cd "$1" && pwd)"
 OUTPUT_ROOT="${2:-$ROOT/outputs/overnight-$(date +%Y%m%d-%H%M%S)}"
-CONFIG="${3:-$ROOT/configs/moderntcn_mil_v0_1.toml}"
+CONFIG="${3:-$ROOT/configs/moderntcn_mil_weld_independent_v0_2_1.toml}"
 mkdir -p "$OUTPUT_ROOT"
 OUTPUT_ROOT="$(cd "$OUTPUT_ROOT" && pwd)"
 CONFIG="$(cd "$(dirname "$CONFIG")" && pwd)/$(basename "$CONFIG")"

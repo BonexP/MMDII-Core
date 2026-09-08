@@ -15,6 +15,7 @@ from .dataset_config import DatasetPreparationConfig
 from .grouped_folds import (
     LabelledSample,
     assign_grouped_folds,
+    assign_weld_folds,
     build_split_report,
 )
 from .mat_records import MatRecord, inventory_mat_files, sample_id_for
@@ -323,7 +324,7 @@ def build_dataset_stage(
                 defect_codes=tuple(sorted(mapping.annotation.defect_codes)),
             )
         )
-        if config.contract_version == "0.2.0":
+        if config.contract_version in {"0.2.0", "0.2.1"}:
             assert config.preprocessing is not None
             assert audit.fs is not None and audit.duration_seconds is not None
             for channel in config.signal_quality.force_fields:
@@ -364,7 +365,7 @@ def build_dataset_stage(
 
     _write_csv(stage / "mat_inventory.csv", INVENTORY_HEADERS, inventory_rows)
     _write_csv(stage / "samples.csv", SAMPLE_HEADERS, sample_rows)
-    if config.contract_version == "0.2.0":
+    if config.contract_version in {"0.2.0", "0.2.1"}:
         _write_csv(
             stage / "sample_labels.csv", SAMPLE_LABEL_HEADERS, sample_label_rows
         )
@@ -407,9 +408,10 @@ def build_dataset_stage(
             encoding="utf-8",
         )
 
-        assignments = assign_grouped_folds(
-            labelled_samples, config.splits.fold_count
-        )
+        if config.splits.primary_fold_scheme == "weld_independent":
+            assignments = assign_weld_folds(labelled_samples, config.splits.fold_count)
+        else:
+            assignments = assign_grouped_folds(labelled_samples, config.splits.fold_count)
         _write_csv(
             stage / "folds.csv",
             FOLD_HEADERS,
@@ -424,8 +426,32 @@ def build_dataset_stage(
             ),
         )
         split_report = build_split_report(
-            labelled_samples, assignments, config.splits.fold_count
+            labelled_samples,
+            assignments,
+            config.splits.fold_count,
+            scheme=config.splits.primary_fold_scheme,
         )
+        if config.splits.include_image_group_comparison:
+            comparison = assign_grouped_folds(labelled_samples, config.splits.fold_count)
+            _write_csv(
+                stage / "folds_image_group.csv",
+                FOLD_HEADERS,
+                (
+                    {
+                        "sample_id": row.sample_id,
+                        "weld_id": row.weld_id,
+                        "image_group": row.image_group,
+                        "fold": row.fold,
+                    }
+                    for row in comparison
+                ),
+            )
+            split_report["image_group_comparison"] = build_split_report(
+                labelled_samples,
+                comparison,
+                config.splits.fold_count,
+                scheme="image_group",
+            )
         (stage / "split_report.json").write_text(
             json.dumps(split_report, ensure_ascii=True, indent=2, sort_keys=True)
             + "\n",

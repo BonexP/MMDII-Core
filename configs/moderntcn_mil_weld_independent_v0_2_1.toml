@@ -1,12 +1,12 @@
 [experiment]
-release_directory = "../../../data/interim/releases/19db7f9cf4c04682bd33acbdd61ad3f4"
-output_directory = "outputs/moderntcn-mil-v0_1"
+release_directory = "../../../data/interim/releases/weld-independent-v0-2-1-r2"
+output_directory = "outputs/weld-independent-v0-2-1"
 target_codes = ["flash", "blur", "tunnel"]
 mode = "window_mil"
 aggregator = "gated_attention"
 seed = 7
 fold_count = 5
-fold_scheme = "image_group"
+fold_scheme = "weld_independent"
 epochs = 20
 batch_size = 4
 learning_rate = 0.001

@@ -11,6 +11,7 @@ sys.path.insert(0, str(CORE_ROOT / "src"))
 from mmdii.data.grouped_folds import (
     LabelledSample,
     assign_grouped_folds,
+    assign_weld_folds,
     build_split_report,
 )
 
@@ -53,6 +54,19 @@ class GroupedFoldTests(unittest.TestCase):
 
         with self.assertRaisesRegex(ValueError, "fewer image groups"):
             assign_grouped_folds(samples, fold_count=5)
+
+    def test_weld_folds_allow_samples_from_one_image_in_different_folds(self) -> None:
+        samples = tuple(
+            LabelledSample(f"s{index}", str(index), "same-image", index == 0, () if index == 0 else ("flash",))
+            for index in range(5)
+        )
+        assignments = assign_weld_folds(samples, fold_count=5)
+        self.assertEqual({row.fold for row in assignments}, {0, 1, 2, 3, 4})
+        self.assertGreater(len({row.fold for row in assignments}), 1)
+        report = build_split_report(
+            samples, assignments, fold_count=5, scheme="weld_independent"
+        )
+        self.assertEqual(report["scheme"], "weld_independent")
 
 
 if __name__ == "__main__":

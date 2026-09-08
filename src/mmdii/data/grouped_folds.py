@@ -45,19 +45,19 @@ def _sample_labels(sample: LabelledSample) -> tuple[str, ...]:
     return ("normal",) if sample.is_normal else sample.defect_codes
 
 
-def assign_grouped_folds(
-    samples: Iterable[LabelledSample], fold_count: int
+def _assign_folds(
+    samples: tuple[LabelledSample, ...],
+    fold_count: int,
+    groups: dict[str, list[LabelledSample]],
+    unit_key,
 ) -> tuple[FoldAssignment, ...]:
-    """Greedily balance labels and sample counts while keeping images intact."""
+    """Greedily balance labels and sample counts for the supplied units."""
 
     if fold_count < 2:
         raise ValueError("fold_count must be at least 2.")
-    ordered = _validated_samples(samples)
-    groups: dict[str, list[LabelledSample]] = {}
-    for sample in ordered:
-        groups.setdefault(sample.image_group, []).append(sample)
+    ordered = samples
     if len(groups) < fold_count:
-        raise ValueError("Cannot create folds from fewer image groups than folds.")
+        raise ValueError("Cannot create folds from fewer assignment units than folds.")
 
     group_labels = {
         name: Counter(
@@ -121,16 +121,45 @@ def assign_grouped_folds(
             sample_id=sample.sample_id,
             weld_id=sample.weld_id,
             image_group=sample.image_group,
-            fold=group_fold[sample.image_group],
+            fold=group_fold[unit_key(sample)],
         )
         for sample in ordered
     )
+
+
+def assign_grouped_folds(
+    samples: Iterable[LabelledSample], fold_count: int
+) -> tuple[FoldAssignment, ...]:
+    """Assign folds while keeping samples from one image group together."""
+
+    ordered = _validated_samples(samples)
+    groups: dict[str, list[LabelledSample]] = {}
+    for sample in ordered:
+        groups.setdefault(sample.image_group, []).append(sample)
+    if len(groups) < fold_count:
+        raise ValueError("Cannot create folds from fewer image groups than folds.")
+    return _assign_folds(ordered, fold_count, groups, lambda sample: sample.image_group)
+
+
+def assign_weld_folds(
+    samples: Iterable[LabelledSample], fold_count: int
+) -> tuple[FoldAssignment, ...]:
+    """Assign deterministic, balanced folds with one weld per assignment unit."""
+
+    ordered = _validated_samples(samples)
+    weld_ids = [sample.weld_id for sample in ordered]
+    if len(weld_ids) != len(set(weld_ids)):
+        raise ValueError("weld_independent splitting requires one sample per unique weld_id")
+    groups = {sample.weld_id: [sample] for sample in ordered}
+    return _assign_folds(ordered, fold_count, groups, lambda sample: sample.weld_id)
 
 
 def build_split_report(
     samples: Iterable[LabelledSample],
     assignments: Iterable[FoldAssignment],
     fold_count: int,
+    *,
+    scheme: str = "image_group",
 ) -> dict[str, object]:
     """Summarize fold balance and labels that cannot cover every fold."""
 
@@ -144,10 +173,12 @@ def build_split_report(
     if any(row.fold < 0 or row.fold >= fold_count for row in assignment_rows):
         raise ValueError("Fold assignment is outside the configured range.")
 
+    if scheme not in {"image_group", "weld_independent"}:
+        raise ValueError("Unsupported fold scheme.")
     group_folds: dict[str, set[int]] = {}
     for row in assignment_rows:
         group_folds.setdefault(row.image_group, set()).add(row.fold)
-    if any(len(folds) != 1 for folds in group_folds.values()):
+    if scheme == "image_group" and any(len(folds) != 1 for folds in group_folds.values()):
         raise ValueError("An image group was assigned to multiple folds.")
 
     labels = sorted({label for sample in ordered for label in _sample_labels(sample)})
@@ -170,7 +201,7 @@ def build_split_report(
     positive_group_counts = {
         label: len(
             {
-                sample.image_group
+                sample.image_group if scheme == "image_group" else sample.sample_id
                 for sample in ordered
                 if label in _sample_labels(sample)
             }
@@ -189,6 +220,7 @@ def build_split_report(
     ]
     return {
         "fold_count": fold_count,
+        "scheme": scheme,
         "folds": folds,
         "label_positive_group_counts": positive_group_counts,
         "warnings": warnings,

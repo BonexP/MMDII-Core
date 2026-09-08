@@ -34,6 +34,7 @@ V0_2_REQUIRED_ARTIFACTS = {
     "signal_spectrum.csv",
     "split_report.json",
 }
+V0_2_1_REQUIRED_ARTIFACTS = {"folds_image_group.csv"}
 
 
 class DatasetReleaseError(ValueError):
@@ -111,7 +112,7 @@ def _write_manifest(
         "time_step_atol": config.signal_quality.time_step_atol,
         "time_step_rtol": config.signal_quality.time_step_rtol,
     }
-    if config.contract_version == "0.2.0":
+    if config.contract_version in {"0.2.0", "0.2.1"}:
         assert config.preprocessing is not None and config.splits is not None
         configuration["preprocessing"] = {
             "normalization": config.preprocessing.normalization,
@@ -125,6 +126,8 @@ def _write_manifest(
         configuration["splits"] = {
             "fold_count": config.splits.fold_count,
             "group_field": config.splits.group_field,
+            "primary_fold_scheme": config.splits.primary_fold_scheme,
+            "include_image_group_comparison": config.splits.include_image_group_comparison,
         }
     manifest = {
         "annotation_contract_version": "1.1.0",
@@ -140,6 +143,9 @@ def _write_manifest(
             "variant": result.variant_count,
         },
         "dataset_contract_version": config.contract_version,
+        "primary_fold_scheme": (
+            config.splits.primary_fold_scheme if config.splits is not None else None
+        ),
         "files": [artifact["path"] for artifact in artifacts],
         "generated_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
         "git_commit": _git_commit(config),
@@ -194,6 +200,12 @@ def _validate_v0_2_release(
     folds = _read_csv(
         release / "folds.csv", ("sample_id", "weld_id", "image_group", "fold")
     )
+    comparison_folds = None
+    if manifest.get("dataset_contract_version") == "0.2.1":
+        comparison_folds = _read_csv(
+            release / "folds_image_group.csv",
+            ("sample_id", "weld_id", "image_group", "fold"),
+        )
     spectrum = _read_csv(
         release / "signal_spectrum.csv",
         (
@@ -227,10 +239,17 @@ def _validate_v0_2_release(
             or not row["image_group"]
         ):
             raise DatasetReleaseError("Invalid sample label semantics.")
+    if manifest.get("dataset_contract_version") == "0.2.1":
+        weld_ids = [row["weld_id"] for row in labels]
+        if len(weld_ids) != len(set(weld_ids)):
+            raise DatasetReleaseError("v0.2.1 requires one accepted sample per weld_id.")
 
     configuration = manifest.get("configuration")
     splits = configuration.get("splits") if isinstance(configuration, dict) else None
     fold_count = splits.get("fold_count") if isinstance(splits, dict) else None
+    primary_scheme = splits.get("primary_fold_scheme", "image_group") if isinstance(splits, dict) else "image_group"
+    if manifest.get("dataset_contract_version") == "0.2.1" and primary_scheme != "weld_independent":
+        raise DatasetReleaseError("v0.2.1 primary fold scheme must be weld_independent.")
     if not isinstance(fold_count, int) or fold_count < 2:
         raise DatasetReleaseError("Manifest fold configuration is invalid.")
     group_folds: dict[str, set[int]] = {}
@@ -245,10 +264,30 @@ def _validate_v0_2_release(
         if str(fold) != row["fold"] or fold < 0 or fold >= fold_count:
             raise DatasetReleaseError("Fold value is outside the configured range.")
         group_folds.setdefault(row["image_group"], set()).add(fold)
-    if any(len(values) != 1 for values in group_folds.values()):
+    if primary_scheme == "image_group" and any(len(values) != 1 for values in group_folds.values()):
         raise DatasetReleaseError("An image group crosses folds.")
     if {int(row["fold"]) for row in folds} != set(range(fold_count)):
         raise DatasetReleaseError("Not every configured fold is populated.")
+    if comparison_folds is not None:
+        comparison_ids = [row["sample_id"] for row in comparison_folds]
+        if len(comparison_ids) != accepted or len(set(comparison_ids)) != accepted or set(comparison_ids) != expected_ids:
+            raise DatasetReleaseError("folds_image_group.csv sample IDs do not match samples.csv.")
+        comparison_groups: dict[str, set[int]] = {}
+        for row in comparison_folds:
+            label = labels_by_id[row["sample_id"]]
+            if row["weld_id"] != label["weld_id"] or row["image_group"] != label["image_group"]:
+                raise DatasetReleaseError("Comparison fold metadata does not match sample labels.")
+            try:
+                fold = int(row["fold"])
+            except ValueError as error:
+                raise DatasetReleaseError("Invalid comparison fold value.") from error
+            if str(fold) != row["fold"] or fold < 0 or fold >= fold_count:
+                raise DatasetReleaseError("Comparison fold value is outside the configured range.")
+            comparison_groups.setdefault(row["image_group"], set()).add(fold)
+        if any(len(values) != 1 for values in comparison_groups.values()):
+            raise DatasetReleaseError("An image group crosses comparison folds.")
+        if {int(row["fold"]) for row in comparison_folds} != set(range(fold_count)):
+            raise DatasetReleaseError("Not every configured comparison fold is populated.")
 
     spectrum_keys = [(row["sample_id"], row["channel"]) for row in spectrum]
     expected_spectrum_keys = {
@@ -273,8 +312,16 @@ def _validate_v0_2_release(
         or preprocessing["recommended_target_fs_hz"] <= 0
         or not isinstance(split_report, dict)
         or split_report.get("fold_count") != fold_count
+        or (
+            manifest.get("dataset_contract_version") == "0.2.1"
+            and split_report.get("scheme") != primary_scheme
+        )
     ):
         raise DatasetReleaseError("Invalid v0.2 preprocessing or split report.")
+    if comparison_folds is not None:
+        comparison_report = split_report.get("image_group_comparison")
+        if not isinstance(comparison_report, dict) or comparison_report.get("scheme") != "image_group":
+            raise DatasetReleaseError("Comparison split report metadata is invalid.")
 
 
 def validate_dataset_release(path: str | Path) -> dict[str, object]:
@@ -315,8 +362,10 @@ def validate_dataset_release(path: str | Path) -> dict[str, object]:
     if actual_paths != manifest_paths:
         raise DatasetReleaseError("Manifest artifact list does not match release files.")
     required_artifacts = set(REQUIRED_ARTIFACTS)
-    if manifest.get("dataset_contract_version") == "0.2.0":
+    if manifest.get("dataset_contract_version") in {"0.2.0", "0.2.1"}:
         required_artifacts.update(V0_2_REQUIRED_ARTIFACTS)
+    if manifest.get("dataset_contract_version") == "0.2.1":
+        required_artifacts.update(V0_2_1_REQUIRED_ARTIFACTS)
     if not required_artifacts.issubset(manifest_paths):
         missing = sorted(required_artifacts - manifest_paths)
         raise DatasetReleaseError(f"Required artifacts are missing: {missing}")
@@ -335,7 +384,7 @@ def validate_dataset_release(path: str | Path) -> dict[str, object]:
                 or len({array.size for array in arrays}) != 1
             ):
                 raise DatasetReleaseError(f"Invalid NPZ signal schema: {relative_text}")
-    if manifest.get("dataset_contract_version") == "0.2.0":
+    if manifest.get("dataset_contract_version") in {"0.2.0", "0.2.1"}:
         assert isinstance(accepted, int)
         _validate_v0_2_release(release, manifest, accepted)
     return manifest

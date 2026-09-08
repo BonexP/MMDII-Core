@@ -47,12 +47,15 @@ Install the standalone training dependencies on the training host:
 python -m pip install -e ".[train]"
 ```
 
-Check the environment and immutable real release before allocating a full run:
+The primary protocol is Dataset v0.2.1 with `weld_independent` folds. The
+published release is data, not Git content: place
+`weld-independent-v0-2-1-r2` on the training host before running. Check the
+environment and immutable release before allocating a full run:
 
 ```powershell
 python scripts/check_training_environment.py `
-  --config configs/moderntcn_mil_v0_1.toml `
-  --release-dir D:\datasets\mmdii-v0-2\releases\<release-id>
+  --config configs/moderntcn_mil_weld_independent_v0_2_1.toml `
+  --release-dir D:\datasets\mmdii-v0-2\releases\weld-independent-v0-2-1-r2
 ```
 
 Perform one optimizer update using real Dataset v0.2 windows. This command does
@@ -60,15 +63,15 @@ not write formal OOF artifacts or use synthetic data:
 
 ```powershell
 python scripts/smoke_train.py `
-  --config configs/moderntcn_mil_v0_1.toml `
-  --release-dir D:\datasets\mmdii-v0-2\releases\<release-id> `
+  --config configs/moderntcn_mil_weld_independent_v0_2_1.toml `
+  --release-dir D:\datasets\mmdii-v0-2\releases\weld-independent-v0-2-1-r2 `
   --fold 0 --batch-size 1
 ```
 
 After both checks pass, run the configured windowed ModernTCN-MIL experiment:
 
 ```powershell
-python scripts/train_baseline.py --config configs/moderntcn_mil_v0_1.toml
+python scripts/train_baseline.py --config configs/moderntcn_mil_weld_independent_v0_2_1.toml
 ```
 
 The same entry point also supports the nonlinear statistical reference:
@@ -105,8 +108,29 @@ release metadata but is excluded from the first three formal targets. Attention
 weights are candidate windows for review, not validated defect locations.
 
 Experiment order is B0 statistical features, E0 full-signal ModernTCN, then
-windowed mean/max/top-k/gated MIL. The same preassigned image-group folds are
-used for every comparison.
+windowed mean/max/top-k/gated MIL. The v0.2.1 main protocol uses deterministic
+weld-independent folds; the same release also carries `folds_image_group.csv`
+for strict unseen-image-source comparison. The older v0.2.0 release remains
+available for reproducing the original image-group results.
+
+### Primary GPU host command
+
+After checking out the release branch and transferring the published dataset
+directory to the host, run the complete v0.2.1 suite with this Linux command:
+
+```bash
+RELEASE=/data/mmdii/releases/weld-independent-v0-2-1-r2
+PYTHON=.venv/bin/python \
+  CUDA_VISIBLE_DEVICES=0 \
+  bash scripts/run_overnight_suite.sh "$RELEASE" outputs/weld-independent-v0-2-1
+```
+
+The launcher uses the v0.2.1 weld-independent configuration by default. It
+starts B0, E0, E1a, E1b-max, E1b-top-k and E1c sequentially under `nohup`, so
+it survives SSH/JupyterLab disconnection. Follow it with
+`tail -f outputs/weld-independent-v0-2-1/suite.log`; rerun the same command to
+resume only incomplete experiments. Use the same release and set
+`--fold-scheme image_group` only for the separate strict comparison run.
 
 ### Unattended Linux/JupyterLab run
 

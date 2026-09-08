@@ -207,7 +207,11 @@ class TrainingReadinessTests(unittest.TestCase):
                                 result = readiness.run_real_data_smoke(config, fold=0)
 
         self.assertEqual(result, expected)
-        load_index.assert_called_once_with(config.release_directory.resolve(), config.target_codes)
+        load_index.assert_called_once_with(
+            config.release_directory.resolve(),
+            config.target_codes,
+            fold_scheme=config.fold_scheme,
+        )
         fit_records = fit_normalizer.call_args.args[1]
         self.assertEqual({record.fold for record in fit_records}, {1, 2, 3, 4})
         self.assertEqual(build_dataset.call_args.args[1], {1, 2, 3, 4})
