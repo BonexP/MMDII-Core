@@ -76,6 +76,21 @@ encoder_chunk_size = 16
         self.assertEqual(config.fold_count, 5)
         self.assertEqual(config.window_seconds, 2.0)
 
+    def test_deep_weld_configuration_only_increases_depth(self) -> None:
+        baseline = load_experiment_config(
+            CORE_ROOT / "configs" / "moderntcn_mil_weld_independent_v0_2_1.toml"
+        )
+        deep = load_experiment_config(
+            CORE_ROOT / "configs" / "moderntcn_mil_weld_independent_deep_v0_2_1.toml"
+        )
+
+        self.assertEqual(deep.model.block_count, 4)
+        self.assertEqual(deep.fold_scheme, baseline.fold_scheme)
+        self.assertEqual(deep.epochs, baseline.epochs)
+        self.assertEqual(deep.model.hidden_channels, baseline.model.hidden_channels)
+        self.assertEqual(deep.model.embedding_dim, baseline.model.embedding_dim)
+        self.assertEqual(deep.model.kernel_size, baseline.model.kernel_size)
+
     @unittest.skipIf(
         importlib.util.find_spec("torch") is not None,
         "PyTorch train extra is installed",
