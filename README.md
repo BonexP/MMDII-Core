@@ -152,6 +152,19 @@ completed experiments and resumes at the first incomplete experiment:
 bash scripts/run_overnight_suite.sh "$RELEASE" outputs/overnight-20260902-210000
 ```
 
+For protocol alignment across seeds, use the multi-seed launcher. It runs the
+same six overnight models plus the Random Forest reference under the selected
+release and fold scheme:
+
+```bash
+RELEASE=/path/to/mmdii-v0-2/releases/weld-independent-v0-2-1-r2
+SEEDS="7 17 27" \
+  PYTHON=.venv/bin/python CUDA_VISIBLE_DEVICES=0 \
+  bash scripts/run_robustness_suite.sh \
+    "$RELEASE" outputs/alignment-weld-independent-v0-2-1 \
+    configs/moderntcn_mil_weld_independent_v0_2_1.toml
+```
+
 The worker uses `.venv/bin/python` directly, so shell activation is not needed
 after launch. `nohup` protects against terminal disconnection; it cannot keep a
 process alive if the hosting platform suspends or destroys the entire instance.

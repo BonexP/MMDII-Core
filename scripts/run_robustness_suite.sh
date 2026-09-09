@@ -14,9 +14,10 @@ usage() {
     cat <<'EOF'
 Usage: bash scripts/run_robustness_suite.sh RELEASE_DIR [OUTPUT_DIR] [CONFIG]
 
-Runs the predeclared B0 and E1c candidate baselines for multiple seeds. The
-process is detached with nohup; override SEEDS, EPOCHS, OPTIMIZER, or
-CUDA_VISIBLE_DEVICES before invoking it when needed.
+Runs the full seven-model comparison matrix for multiple seeds: B0, Random
+Forest, E0, E1a, E1b-max, E1b-topk and E1c. The process is detached with
+nohup; override SEEDS, EPOCHS, OPTIMIZER, or CUDA_VISIBLE_DEVICES before
+invoking it when needed.
 EOF
 }
 
@@ -51,6 +52,10 @@ worker() {
     for seed in $SEEDS; do
         run_one "seed-${seed}-b0-statistical" statistical mean "$seed"
         run_one "seed-${seed}-random-forest" random_forest mean "$seed"
+        run_one "seed-${seed}-e0-full-signal" full_signal mean "$seed"
+        run_one "seed-${seed}-e1a-mean" window_mil mean "$seed"
+        run_one "seed-${seed}-e1b-max" window_mil max "$seed"
+        run_one "seed-${seed}-e1b-topk-mean" window_mil topk_mean "$seed"
         run_one "seed-${seed}-e1c-gated-attention" window_mil gated_attention "$seed"
     done
     printf 'status=complete\nfinished_at=%s\n' "$(date --iso-8601=seconds)" > "$OUTPUT_ROOT/status.txt"
