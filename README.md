@@ -165,6 +165,21 @@ SEEDS="7 17 27" \
     configs/moderntcn_mil_weld_independent_v0_2_1.toml
 ```
 
+To test a deeper ModernTCN without changing the training budget, use the
+depth-only configuration below. It changes `block_count` from 2 to 4 and
+keeps the data protocol, width, kernel, optimizer, and 20 epochs fixed:
+
+```bash
+RELEASE=/path/to/mmdii-v0-2/releases/weld-independent-v0-2-1-r2
+SEEDS="7 17 27" \
+  PYTHON=.venv/bin/python CUDA_VISIBLE_DEVICES=0 \
+  bash scripts/run_robustness_suite.sh \
+    "$RELEASE" outputs/alignment-weld-independent-deep-v0-2-1 \
+    configs/moderntcn_mil_weld_independent_deep_v0_2_1.toml
+```
+
+Run this before increasing epochs so the depth effect remains identifiable.
+
 The worker uses `.venv/bin/python` directly, so shell activation is not needed
 after launch. `nohup` protects against terminal disconnection; it cannot keep a
 process alive if the hosting platform suspends or destroys the entire instance.
