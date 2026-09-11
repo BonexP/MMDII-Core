@@ -1,0 +1,20 @@
+[matrix]
+representations = ["stft_256", "stft_512", "cwt_morl", "dwt_swt_db4"]
+encoders = ["cnn2d", "separable_cnn2d", "resnet2d_small", "convnext2d_lite"]
+aggregators = ["mean", "max", "topk_mean", "gated_attention"]
+dual_branches = ["raw_plus_stft", "raw_plus_cwt"]
+seeds = [7, 17, 27]
+epochs = 20
+fold_count = 5
+fold_scheme = "weld_independent"
+batch_size = 4
+learning_rate = 0.001
+weight_decay = 0.0001
+optimizer = "adamw"
+early_stopping_patience = 0
+device = "auto"
+target_fs = 5400.0
+window_seconds = 2.0
+stride_seconds = 1.0
+full_signal_samples = 4096
+output_time_bins = 256

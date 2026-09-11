@@ -11,6 +11,7 @@ from typing import Sequence
 from mmdii.data.training_dataset import DatasetIndex
 from mmdii.training.cross_validation import (
     ExperimentConfig,
+    RepresentationConfig,
     load_experiment_config,
     run_cross_validation,
 )
@@ -37,6 +38,17 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("--gradient-clip-norm", type=float)
     parser.add_argument("--device", choices=("auto", "cpu", "cuda"))
     parser.add_argument("--fold-scheme", choices=("weld_independent", "image_group"))
+    parser.add_argument(
+        "--representation",
+        choices=("raw", "stft_256", "stft_512", "cwt_morl", "dwt_swt_db4"),
+    )
+    parser.add_argument(
+        "--encoder",
+        choices=("modern_tcn", "cnn2d", "separable_cnn2d", "resnet2d_small", "convnext2d_lite"),
+    )
+    parser.add_argument("--fusion", choices=("none", "raw_plus_stft", "raw_plus_cwt"))
+    parser.add_argument("--output-time-bins", type=int)
+    parser.add_argument("--fold", type=int, action="append", dest="run_folds")
     args = parser.parse_args(argv)
     config = load_experiment_config(args.config)
     overrides: dict[str, object] = {}
@@ -50,6 +62,27 @@ def main(argv: Sequence[str] | None = None) -> int:
         overrides["mode"] = args.mode
     if args.aggregator is not None:
         overrides["aggregator"] = args.aggregator
+    representation_overrides = {}
+    for argument_name, config_name in (
+        ("representation", "name"),
+        ("encoder", "encoder"),
+        ("fusion", "fusion"),
+        ("output_time_bins", "output_time_bins"),
+    ):
+        value = getattr(args, argument_name)
+        if value is not None:
+            representation_overrides[config_name] = value
+    if representation_overrides:
+        overrides["representation"] = RepresentationConfig(
+            **{
+                field_name: representation_overrides.get(
+                    field_name, getattr(config.representation, field_name)
+                )
+                for field_name in RepresentationConfig.__dataclass_fields__
+            }
+        )
+    if args.run_folds is not None:
+        overrides["run_folds"] = tuple(args.run_folds)
     for argument_name, config_name in (
         ("seed", "seed"),
         ("epochs", "epochs"),

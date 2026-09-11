@@ -45,6 +45,15 @@ class ModelConfig:
 
 
 @dataclass(frozen=True)
+class RepresentationConfig:
+    name: str = "raw"
+    encoder: str = "modern_tcn"
+    fusion: str = "none"
+    output_time_bins: int = 256
+    normalization: str = "per_channel_zscore"
+
+
+@dataclass(frozen=True)
 class ExperimentConfig:
     config_path: Path | None
     release_directory: Path
@@ -69,6 +78,8 @@ class ExperimentConfig:
     early_stopping_min_delta: float = 0.0
     gradient_clip_norm: float = 0.0
     model: ModelConfig = field(default_factory=ModelConfig)
+    representation: RepresentationConfig = field(default_factory=RepresentationConfig)
+    run_folds: tuple[int, ...] = ()
 
     @classmethod
     def for_test(cls) -> "ExperimentConfig":
@@ -105,6 +116,7 @@ def load_experiment_config(path: str | Path) -> ExperimentConfig:
     try:
         experiment = payload["experiment"]
         model_payload = payload.get("model", {})
+        representation_payload = payload.get("representation", {})
         target_codes = tuple(experiment["target_codes"])
         config = ExperimentConfig(
             config_path=config_path,
@@ -135,6 +147,14 @@ def load_experiment_config(path: str | Path) -> ExperimentConfig:
                     for field_name in ModelConfig.__dataclass_fields__
                 }
             ),
+            representation=RepresentationConfig(
+                **{
+                    field_name: representation_payload.get(
+                        field_name, getattr(RepresentationConfig(), field_name)
+                    )
+                    for field_name in RepresentationConfig.__dataclass_fields__
+                }
+            ),
         )
     except (KeyError, TypeError, ValueError) as error:
         raise ValueError(f"Invalid experiment configuration: {error}") from error
@@ -159,7 +179,8 @@ def run_cross_validation(
     oof_rows: list[dict[str, object]] = []
     fold_reports: list[dict[str, object]] = []
 
-    for fold in range(config.fold_count):
+    folds = config.run_folds or tuple(range(config.fold_count))
+    for fold in folds:
         train_records = tuple(record for record in index.records if record.fold != fold)
         valid_records = tuple(record for record in index.records if record.fold == fold)
         if not train_records or not valid_records:
@@ -188,6 +209,10 @@ def run_cross_validation(
                 aggregator = config.aggregator
             train_dataset = WeldWindowDataset(index, {record.fold for record in train_records}, spec, normalizer)
             valid_dataset = WeldWindowDataset(index, {fold}, spec, normalizer)
+            if config.representation.name != "raw":
+                train_dataset, valid_dataset = _time_frequency_datasets(
+                    train_dataset, valid_dataset, config
+                )
             model = _build_deep_model(config, aggregator, torch)
             probabilities, training_info = _run_deep_fold(
                 model,
@@ -229,6 +254,8 @@ def run_cross_validation(
         "mode": config.mode,
         "aggregator": config.aggregator,
         "fold_count": config.fold_count,
+        "completed_fold_count": len(folds),
+        "run_folds": list(folds),
         "fold_scheme": config.fold_scheme,
         "sample_count": len(oof_rows),
         "fold_metrics": fold_reports,
@@ -269,7 +296,7 @@ def _build_deep_model(config: ExperimentConfig, aggregator: str, torch: Any) -> 
     from mmdii.models.mil import WeldMIL
     from mmdii.models.modern_tcn import ModernTCNSmall
 
-    encoder = ModernTCNSmall(
+    raw_encoder = ModernTCNSmall(
         input_channels=3,
         hidden_channels=config.model.hidden_channels,
         embedding_dim=config.model.embedding_dim,
@@ -277,6 +304,28 @@ def _build_deep_model(config: ExperimentConfig, aggregator: str, torch: Any) -> 
         block_count=config.model.block_count,
         dropout=config.model.dropout,
     )
+    if config.representation.name == "raw":
+        encoder = raw_encoder
+    else:
+        from mmdii.models.encoders2d import RawTimeFrequencyFusion, build_2d_encoder
+
+        time_frequency_encoder = build_2d_encoder(
+            config.representation.encoder,
+            input_channels=3,
+            embedding_dim=config.model.embedding_dim,
+        )
+        encoder = (
+            time_frequency_encoder
+            if config.representation.fusion == "none"
+            else RawTimeFrequencyFusion(
+                raw_encoder=raw_encoder,
+                time_frequency_encoder=time_frequency_encoder,
+                raw_embedding_dim=config.model.embedding_dim,
+                time_frequency_embedding_dim=config.model.embedding_dim,
+                embedding_dim=config.model.embedding_dim,
+                dropout=config.model.dropout,
+            )
+        )
     head = WeldMIL(
         embedding_dim=config.model.embedding_dim,
         num_targets=len(config.target_codes),
@@ -291,22 +340,41 @@ def _build_deep_model(config: ExperimentConfig, aggregator: str, torch: Any) -> 
             self.encoder = encoder
             self.head = head
 
-        def forward(self, windows: Any, window_mask: Any, sample_mask: Any) -> Any:
+        def forward(
+            self,
+            windows: Any,
+            window_mask: Any,
+            sample_mask: Any,
+            representations: Any | None = None,
+        ) -> Any:
             batch_size, window_count, channels, sample_count = windows.shape
             flat_windows = windows.reshape(batch_size * window_count, channels, sample_count)
             flat_sample_mask = sample_mask.reshape(batch_size * window_count, sample_count)
             valid_windows = window_mask.reshape(batch_size * window_count)
             selected_windows = flat_windows[valid_windows]
             selected_sample_mask = flat_sample_mask[valid_windows]
+            selected_representations = None
+            if representations is not None:
+                selected_representations = representations.reshape(
+                    batch_size * window_count, *representations.shape[2:]
+                )[valid_windows]
             chunks = []
             for start in range(0, int(valid_windows.sum()), config.model.encoder_chunk_size):
                 stop = start + config.model.encoder_chunk_size
-                chunks.append(
-                    self.encoder(
+                if config.representation.name == "raw":
+                    embedding = self.encoder(
                         selected_windows[start:stop],
                         sample_mask=selected_sample_mask[start:stop],
                     )
-                )
+                elif config.representation.fusion == "none":
+                    embedding = self.encoder(selected_representations[start:stop])
+                else:
+                    embedding = self.encoder(
+                        selected_windows[start:stop],
+                        selected_representations[start:stop],
+                        sample_mask=selected_sample_mask[start:stop],
+                    )
+                chunks.append(embedding)
             valid_embeddings = torch.cat(chunks, dim=0)
             embeddings = windows.new_zeros(
                 (batch_size * window_count, valid_embeddings.shape[1])
@@ -316,6 +384,68 @@ def _build_deep_model(config: ExperimentConfig, aggregator: str, torch: Any) -> 
             return self.head(embeddings, window_mask)
 
     return WeldModel()
+
+
+class _TimeFrequencyDataset:
+    """Lazily transform an existing weld-window dataset into 2-D inputs."""
+
+    def __init__(self, source: Any, config: ExperimentConfig, normalizer: Any) -> None:
+        self.source = source
+        self.config = config
+        self.normalizer = normalizer
+
+    def __len__(self) -> int:
+        return len(self.source)
+
+    def __getitem__(self, position: int) -> dict[str, object]:
+        from mmdii.data.time_frequency import transform_representation
+
+        item = dict(self.source[position])
+        windows = np.asarray(item["windows"], dtype=np.float64)
+        masks = np.asarray(item["sample_mask"], dtype=bool)
+        transformed = [
+            transform_representation(
+                window,
+                self.config.representation.name,
+                sample_mask=mask,
+                target_fs=self.config.target_fs,
+                output_time_bins=self.config.representation.output_time_bins,
+            )[0]
+            for window, mask in zip(windows, masks, strict=True)
+        ]
+        item["representations"] = self.normalizer.transform(np.stack(transformed))
+        return item
+
+
+def _time_frequency_datasets(
+    train_dataset: Any, valid_dataset: Any, config: ExperimentConfig
+) -> tuple[Any, Any]:
+    from mmdii.data.time_frequency import RepresentationNormalizer, transform_representation
+
+    arrays = []
+    for position in range(len(train_dataset)):
+        item = train_dataset[position]
+        windows = np.asarray(item["windows"], dtype=np.float64)
+        masks = np.asarray(item["sample_mask"], dtype=bool)
+        arrays.append(
+            np.stack(
+                [
+                    transform_representation(
+                        window,
+                        config.representation.name,
+                        sample_mask=mask,
+                        target_fs=config.target_fs,
+                        output_time_bins=config.representation.output_time_bins,
+                    )[0]
+                    for window, mask in zip(windows, masks, strict=True)
+                ]
+            )
+        )
+    normalizer = RepresentationNormalizer.fit(arrays)
+    return (
+        _TimeFrequencyDataset(train_dataset, config, normalizer),
+        _TimeFrequencyDataset(valid_dataset, config, normalizer),
+    )
 
 
 def _run_deep_fold(model: Any, train_dataset: Any, valid_dataset: Any, class_weights: np.ndarray, config: ExperimentConfig, torch: Any, nn: Any, DataLoader: Any) -> tuple[np.ndarray, dict[str, object]]:
@@ -331,17 +461,18 @@ def _run_deep_fold(model: Any, train_dataset: Any, valid_dataset: Any, class_wei
     criterion = nn.BCEWithLogitsLoss(
         pos_weight=torch.as_tensor(class_weights, dtype=torch.float32, device=device)
     )
+    collate = _torch_collate if config.representation.name == "raw" else _torch_time_frequency_collate
     train_loader = DataLoader(
         train_dataset,
         batch_size=config.batch_size,
         shuffle=True,
-        collate_fn=_torch_collate,
+        collate_fn=collate,
     )
     valid_loader = DataLoader(
         valid_dataset,
         batch_size=config.batch_size,
         shuffle=False,
-        collate_fn=_torch_collate,
+        collate_fn=collate,
     )
     best_loss = float("inf")
     best_epoch = 0
@@ -358,6 +489,7 @@ def _run_deep_fold(model: Any, train_dataset: Any, valid_dataset: Any, class_wei
                 batch["windows"].to(device),
                 batch["window_mask"].to(device),
                 batch["sample_mask"].to(device),
+                _to_device(batch.get("representations"), device),
             )
             loss = criterion(logits, batch["targets"].to(device))
             loss.backward()
@@ -390,6 +522,7 @@ def _run_deep_fold(model: Any, train_dataset: Any, valid_dataset: Any, class_wei
                 batch["windows"].to(device),
                 batch["window_mask"].to(device),
                 batch["sample_mask"].to(device),
+                _to_device(batch.get("representations"), device),
             )
             probabilities.append(torch.sigmoid(logits).cpu().numpy())
     return np.concatenate(probabilities, axis=0), {
@@ -413,6 +546,25 @@ def _torch_collate(items: list[dict[str, object]]) -> dict[str, Any]:
         "image_groups": batch["image_groups"],
         "folds": batch["folds"],
     }
+
+
+def _torch_time_frequency_collate(items: list[dict[str, object]]) -> dict[str, Any]:
+    import torch
+
+    batch = _torch_collate(items)
+    values = [np.asarray(item["representations"], dtype=np.float32) for item in items]
+    max_windows = max(value.shape[0] for value in values)
+    representations = np.zeros(
+        (len(values), max_windows, *values[0].shape[1:]), dtype=np.float32
+    )
+    for index, value in enumerate(values):
+        representations[index, : value.shape[0]] = value
+    batch["representations"] = torch.as_tensor(representations)
+    return batch
+
+
+def _to_device(value: Any | None, device: Any) -> Any | None:
+    return None if value is None else value.to(device)
 
 
 def _require_torch() -> tuple[Any, Any, Any]:
@@ -465,6 +617,25 @@ def _validate_config(config: ExperimentConfig) -> None:
         raise ValueError("stride_seconds must not exceed window_seconds.")
     if config.model.encoder_chunk_size < 1:
         raise ValueError("encoder_chunk_size must be positive.")
+    representation = config.representation
+    if representation.name not in {"raw", "stft_256", "stft_512", "cwt_morl", "dwt_swt_db4"}:
+        raise ValueError("Invalid representation.")
+    if representation.name == "raw" and representation.encoder != "modern_tcn":
+        raise ValueError("raw representation requires encoder=modern_tcn.")
+    if representation.name != "raw" and representation.encoder not in {
+        "cnn2d", "separable_cnn2d", "resnet2d_small", "convnext2d_lite"
+    }:
+        raise ValueError("Invalid time-frequency encoder.")
+    if representation.fusion not in {"none", "raw_plus_stft", "raw_plus_cwt"}:
+        raise ValueError("Invalid fusion mode.")
+    if representation.fusion == "raw_plus_stft" and representation.name not in {"stft_256", "stft_512"}:
+        raise ValueError("raw_plus_stft requires an STFT representation.")
+    if representation.fusion == "raw_plus_cwt" and representation.name != "cwt_morl":
+        raise ValueError("raw_plus_cwt requires cwt_morl.")
+    if representation.output_time_bins < 1:
+        raise ValueError("output_time_bins must be positive.")
+    if any(fold < 0 or fold >= config.fold_count for fold in config.run_folds):
+        raise ValueError("run_folds must contain valid fold indices.")
 
 
 def _validate_index(index: DatasetIndex, config: ExperimentConfig) -> None:
@@ -479,6 +650,17 @@ def _json_config(config: ExperimentConfig) -> dict[str, object]:
     result["config_path"] = None if config.config_path is None else config.config_path.as_posix()
     result["release_directory"] = config.release_directory.as_posix()
     result["output_directory"] = config.output_directory.as_posix()
+    if config.representation.name == "stft_256":
+        params = {"n_fft": 256, "hop_length": 64}
+    elif config.representation.name == "stft_512":
+        params = {"n_fft": 512, "hop_length": 128}
+    elif config.representation.name == "cwt_morl":
+        params = {"wavelet": "morl", "frequency_bins": 48, "min_frequency_hz": 30.0}
+    elif config.representation.name == "dwt_swt_db4":
+        params = {"wavelet": "db4", "level": 5}
+    else:
+        params = {}
+    result["representation_parameters"] = params
     return result
 
 
