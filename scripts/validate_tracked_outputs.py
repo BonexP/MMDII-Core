@@ -77,6 +77,8 @@ def validate_run(
     if isinstance(fold_metrics, list) and required_folds is not None:
         if len(fold_metrics) != required_folds:
             errors.append(f"expected {required_folds} fold reports, found {len(fold_metrics)}")
+        if expected_fold_count is not None and rows and not fold_values:
+            errors.append("OOF has no parseable fold values")
         if fold_values and fold_values != set(range(required_folds)) and not allow_partial:
             errors.append(f"expected OOF folds 0..{required_folds - 1}, found {sorted(fold_values)}")
     run_config = payloads.get("run_config")
