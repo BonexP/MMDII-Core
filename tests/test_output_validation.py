@@ -46,6 +46,25 @@ class OutputValidationTests(unittest.TestCase):
             self.assertFalse(result["complete"])
             self.assertIn("missing .complete marker", result["errors"])
 
+    def test_allows_partial_fold_reports_only_when_requested(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            run = Path(temporary_directory)
+            (run / ".complete").touch()
+            (run / "training_summary.json").write_text(
+                json.dumps({"sample_count": 1}), encoding="utf-8"
+            )
+            (run / "run_config.json").write_text("{}", encoding="utf-8")
+            (run / "fold_metrics.json").write_text(json.dumps([{}]), encoding="utf-8")
+            with (run / "oof_predictions.csv").open(
+                "w", newline="", encoding="utf-8"
+            ) as handle:
+                writer = csv.DictWriter(handle, fieldnames=("sample_id", "prob_flash"))
+                writer.writeheader()
+                writer.writerow({"sample_id": "sample-1", "prob_flash": "0.5"})
+
+            self.assertFalse(MODULE.validate_run(run)["complete"])
+            self.assertTrue(MODULE.validate_run(run, allow_partial=True)["complete"])
+
 
 if __name__ == "__main__":
     unittest.main()
