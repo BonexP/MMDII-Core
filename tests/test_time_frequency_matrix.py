@@ -17,6 +17,8 @@ class TimeFrequencyMatrixTests(unittest.TestCase):
         self.assertEqual(single + dual + 7, 103)
         self.assertEqual((single + dual) * len(matrix["seeds"]), 288)
         self.assertEqual((single + dual + 7) * len(matrix["seeds"]), 309)
+        self.assertEqual(matrix["total_configuration_count"], 103)
+        self.assertEqual(matrix["total_seed_runs"], 309)
 
 
 if __name__ == "__main__":
