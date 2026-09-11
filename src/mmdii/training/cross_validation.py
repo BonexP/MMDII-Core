@@ -367,8 +367,12 @@ def _build_deep_model(config: ExperimentConfig, aggregator: str, torch: Any) -> 
                         sample_mask=selected_sample_mask[start:stop],
                     )
                 elif config.representation.fusion == "none":
+                    if selected_representations is None:
+                        raise ValueError("Time-frequency representations are required.")
                     embedding = self.encoder(selected_representations[start:stop])
                 else:
+                    if selected_representations is None:
+                        raise ValueError("Time-frequency representations are required for fusion.")
                     embedding = self.encoder(
                         selected_windows[start:stop],
                         selected_representations[start:stop],
@@ -393,6 +397,7 @@ class _TimeFrequencyDataset:
         self.source = source
         self.config = config
         self.normalizer = normalizer
+        self._cache: dict[int, dict[str, object]] = {}
 
     def __len__(self) -> int:
         return len(self.source)
@@ -400,20 +405,27 @@ class _TimeFrequencyDataset:
     def __getitem__(self, position: int) -> dict[str, object]:
         from mmdii.data.time_frequency import transform_representation
 
+        if position in self._cache:
+            return self._cache[position]
         item = dict(self.source[position])
         windows = np.asarray(item["windows"], dtype=np.float64)
         masks = np.asarray(item["sample_mask"], dtype=bool)
-        transformed = [
-            transform_representation(
+        transformed = []
+        time_masks = []
+        for window, mask in zip(windows, masks, strict=True):
+            representation, time_mask = transform_representation(
                 window,
                 self.config.representation.name,
                 sample_mask=mask,
                 target_fs=self.config.target_fs,
                 output_time_bins=self.config.representation.output_time_bins,
-            )[0]
-            for window, mask in zip(windows, masks, strict=True)
-        ]
-        item["representations"] = self.normalizer.transform(np.stack(transformed))
+            )
+            transformed.append(representation)
+            time_masks.append(time_mask)
+        normalized = self.normalizer.transform(np.stack(transformed))
+        normalized *= np.asarray(time_masks, dtype=np.float32)[:, np.newaxis, np.newaxis, :]
+        item["representations"] = normalized
+        self._cache[position] = item
         return item
 
 
@@ -634,6 +646,8 @@ def _validate_config(config: ExperimentConfig) -> None:
         raise ValueError("raw_plus_cwt requires cwt_morl.")
     if representation.output_time_bins < 1:
         raise ValueError("output_time_bins must be positive.")
+    if representation.normalization != "per_channel_zscore":
+        raise ValueError("Only per_channel_zscore normalization is supported.")
     if any(fold < 0 or fold >= config.fold_count for fold in config.run_folds):
         raise ValueError("run_folds must contain valid fold indices.")
 

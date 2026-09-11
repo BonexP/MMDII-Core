@@ -9,7 +9,7 @@ from pathlib import Path
 from typing import Any
 
 
-def validate_run(path: Path) -> dict[str, Any]:
+def validate_run(path: Path, *, allow_partial: bool = False) -> dict[str, Any]:
     errors: list[str] = []
     payloads: dict[str, Any] = {}
     for name in ("training_summary", "run_config", "fold_metrics"):
@@ -53,7 +53,7 @@ def validate_run(path: Path) -> dict[str, Any]:
         if expected_count != len(rows):
             errors.append(f"summary sample_count={expected_count} but OOF has {len(rows)} rows")
     fold_metrics = payloads.get("fold_metrics")
-    if isinstance(fold_metrics, list) and len(fold_metrics) != 5:
+    if isinstance(fold_metrics, list) and not allow_partial and len(fold_metrics) != 5:
         errors.append(f"expected 5 fold reports, found {len(fold_metrics)}")
     return {
         "path": str(path.resolve()),
@@ -69,10 +69,11 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--root", required=True, type=Path)
     parser.add_argument("--json", action="store_true")
+    parser.add_argument("--allow-partial", action="store_true")
     args = parser.parse_args()
     root = args.root.resolve()
     runs = sorted(path.parent for path in root.rglob("training_summary.json"))
-    results = [validate_run(path) for path in runs]
+    results = [validate_run(path, allow_partial=args.allow_partial) for path in runs]
     payload = {
         "root": str(root),
         "run_count": len(results),
