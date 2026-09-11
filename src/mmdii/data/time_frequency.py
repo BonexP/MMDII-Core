@@ -13,7 +13,6 @@ import math
 from typing import Iterable
 
 import numpy as np
-from scipy.signal import resample
 from scipy.signal import stft as scipy_stft
 
 
@@ -43,11 +42,11 @@ def _resize_rows(values: np.ndarray, target: int) -> np.ndarray:
         raise ValueError("target time bins must be positive.")
     if values.shape[-1] == target:
         return values.copy()
-    # scipy.signal.resample is deterministic and handles both up/down sampling.
     flat = values.reshape(-1, values.shape[-1])
-    return np.asarray(resample(flat, target, axis=-1), dtype=np.float64).reshape(
-        *values.shape[:-1], target
-    )
+    source = np.linspace(0.0, 1.0, values.shape[-1])
+    destination = np.linspace(0.0, 1.0, target)
+    resized = np.stack([np.interp(destination, source, row) for row in flat])
+    return resized.reshape(*values.shape[:-1], target)
 
 
 def _resize_mask(mask: np.ndarray, target: int) -> np.ndarray:
