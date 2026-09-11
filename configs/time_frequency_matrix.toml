@@ -23,3 +23,28 @@ single_configuration_count = 64
 dual_configuration_count = 32
 total_configuration_count = 103
 total_seed_runs = 309
+
+[matrix.stft_256]
+window = "hann"
+n_fft = 256
+hop_length = 64
+value = "log1p_power"
+
+[matrix.stft_512]
+window = "hann"
+n_fft = 512
+hop_length = 128
+value = "log1p_power"
+
+[matrix.cwt_morl]
+wavelet = "morl"
+frequency_bins = 48
+min_frequency_hz = 30.0
+max_frequency_hz = 2700.0
+value = "log1p_magnitude"
+
+[matrix.dwt_swt_db4]
+wavelet = "db4"
+level = 5
+subband_count = 6
+value = "log1p_magnitude"

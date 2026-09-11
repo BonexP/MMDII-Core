@@ -51,19 +51,68 @@ class OutputValidationTests(unittest.TestCase):
             run = Path(temporary_directory)
             (run / ".complete").touch()
             (run / "training_summary.json").write_text(
-                json.dumps({"sample_count": 1}), encoding="utf-8"
+                json.dumps({"sample_count": 5}), encoding="utf-8"
             )
             (run / "run_config.json").write_text("{}", encoding="utf-8")
             (run / "fold_metrics.json").write_text(json.dumps([{}]), encoding="utf-8")
             with (run / "oof_predictions.csv").open(
                 "w", newline="", encoding="utf-8"
             ) as handle:
-                writer = csv.DictWriter(handle, fieldnames=("sample_id", "prob_flash"))
+                writer = csv.DictWriter(
+                    handle, fieldnames=("sample_id", "weld_id", "fold", "prob_flash")
+                )
                 writer.writeheader()
-                writer.writerow({"sample_id": "sample-1", "prob_flash": "0.5"})
+                for fold in range(5):
+                    writer.writerow(
+                        {
+                            "sample_id": f"sample-{fold}",
+                            "weld_id": f"weld-{fold}",
+                            "fold": fold,
+                            "prob_flash": "0.5",
+                        }
+                    )
 
             self.assertFalse(MODULE.validate_run(run)["complete"])
             self.assertTrue(MODULE.validate_run(run, allow_partial=True)["complete"])
+
+    def test_enforces_expected_weld_count(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            run = Path(temporary_directory)
+            (run / ".complete").touch()
+            (run / "training_summary.json").write_text(
+                json.dumps({"sample_count": 1}), encoding="utf-8"
+            )
+            (run / "run_config.json").write_text(
+                json.dumps({"fold_scheme": "weld_independent", "seed": 7}),
+                encoding="utf-8",
+            )
+            (run / "fold_metrics.json").write_text(json.dumps([{}]), encoding="utf-8")
+            with (run / "oof_predictions.csv").open(
+                "w", newline="", encoding="utf-8"
+            ) as handle:
+                writer = csv.DictWriter(
+                    handle, fieldnames=("sample_id", "weld_id", "fold", "prob_flash")
+                )
+                writer.writeheader()
+                writer.writerow(
+                    {
+                        "sample_id": "sample-1",
+                        "weld_id": "weld-1",
+                        "fold": 0,
+                        "prob_flash": "0.5",
+                    }
+                )
+
+            result = MODULE.validate_run(
+                run,
+                allow_partial=True,
+                expected_weld_count=101,
+                expected_fold_count=1,
+                expected_fold_scheme="weld_independent",
+            )
+
+            self.assertFalse(result["complete"])
+            self.assertIn("expected 101 unique welds, found 1", result["errors"])
 
 
 if __name__ == "__main__":

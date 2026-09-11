@@ -191,26 +191,40 @@ def transform_representation(
     sample_mask: np.ndarray | None = None,
     target_fs: float = 5400.0,
     output_time_bins: int = 256,
+    n_fft: int | None = None,
+    hop_length: int | None = None,
+    wavelet: str | None = None,
+    frequency_bins: int = 48,
+    min_frequency_hz: float = 30.0,
+    max_frequency_hz: float | None = None,
+    level: int = 5,
 ) -> tuple[np.ndarray, np.ndarray]:
     """Dispatch one of the preregistered representation names."""
     if representation == "stft_256":
         return stft_representation(
-            signal, target_fs=target_fs, n_fft=256, hop_length=64,
+            signal, target_fs=target_fs,
+            n_fft=256 if n_fft is None else n_fft,
+            hop_length=64 if hop_length is None else hop_length,
             sample_mask=sample_mask, output_time_bins=output_time_bins,
         )
     if representation == "stft_512":
         return stft_representation(
-            signal, target_fs=target_fs, n_fft=512, hop_length=128,
+            signal, target_fs=target_fs,
+            n_fft=512 if n_fft is None else n_fft,
+            hop_length=128 if hop_length is None else hop_length,
             sample_mask=sample_mask, output_time_bins=output_time_bins,
         )
     if representation == "cwt_morl":
+        maximum = target_fs / 2.0 if max_frequency_hz is None else max_frequency_hz
+        frequencies = np.geomspace(min_frequency_hz, maximum, frequency_bins)
         return cwt_representation(
             signal, target_fs=target_fs, output_time_bins=output_time_bins,
-            sample_mask=sample_mask,
+            frequencies=frequencies, wavelet=wavelet or "morl", sample_mask=sample_mask,
         )
     if representation == "dwt_swt_db4":
         return dwt_representation(
-            signal, output_time_bins=output_time_bins, sample_mask=sample_mask,
+            signal, level=level, wavelet=wavelet or "db4",
+            output_time_bins=output_time_bins, sample_mask=sample_mask,
         )
     raise ValueError(f"Unknown representation: {representation}")
 

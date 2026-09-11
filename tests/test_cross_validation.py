@@ -12,6 +12,8 @@ sys.path.insert(0, str(CORE_ROOT / "src"))
 
 from mmdii.training.cross_validation import (
     ExperimentConfig,
+    RepresentationConfig,
+    _json_config,
     load_experiment_config,
     run_cross_validation,
 )
@@ -90,6 +92,30 @@ encoder_chunk_size = 16
         self.assertEqual(deep.model.hidden_channels, baseline.model.hidden_channels)
         self.assertEqual(deep.model.embedding_dim, baseline.model.embedding_dim)
         self.assertEqual(deep.model.kernel_size, baseline.model.kernel_size)
+
+    def test_run_config_records_resolved_representation_parameters(self) -> None:
+        base = ExperimentConfig.for_test()
+        config = ExperimentConfig(
+            **{
+                **base.__dict__,
+                "representation": RepresentationConfig(
+                    name="stft_512",
+                    encoder="cnn2d",
+                    stft_n_fft=1024,
+                    stft_hop_length=256,
+                ),
+            }
+        )
+
+        payload = _json_config(config)
+
+        self.assertEqual(payload["representation_parameters"]["n_fft"], 1024)
+        self.assertEqual(payload["representation_parameters"]["hop_length"], 256)
+        self.assertEqual(payload["representation_parameters"]["window"], "hann")
+        self.assertEqual(
+            payload["representation_parameters"]["normalization"],
+            "per_channel_zscore",
+        )
 
     @unittest.skipIf(
         importlib.util.find_spec("torch") is not None,

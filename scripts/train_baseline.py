@@ -48,6 +48,15 @@ def main(argv: Sequence[str] | None = None) -> int:
     )
     parser.add_argument("--fusion", choices=("none", "raw_plus_stft", "raw_plus_cwt"))
     parser.add_argument("--output-time-bins", type=int)
+    parser.add_argument("--representation-normalization", choices=("per_channel_zscore",))
+    parser.add_argument("--stft-n-fft", type=int)
+    parser.add_argument("--stft-hop-length", type=int)
+    parser.add_argument("--cwt-wavelet")
+    parser.add_argument("--cwt-frequency-bins", type=int)
+    parser.add_argument("--cwt-min-frequency-hz", type=float)
+    parser.add_argument("--cwt-max-frequency-hz", type=float)
+    parser.add_argument("--dwt-wavelet")
+    parser.add_argument("--dwt-level", type=int)
     parser.add_argument("--fold", type=int, action="append", dest="run_folds")
     args = parser.parse_args(argv)
     config = load_experiment_config(args.config)
@@ -68,6 +77,15 @@ def main(argv: Sequence[str] | None = None) -> int:
         ("encoder", "encoder"),
         ("fusion", "fusion"),
         ("output_time_bins", "output_time_bins"),
+        ("representation_normalization", "normalization"),
+        ("stft_n_fft", "stft_n_fft"),
+        ("stft_hop_length", "stft_hop_length"),
+        ("cwt_wavelet", "cwt_wavelet"),
+        ("cwt_frequency_bins", "cwt_frequency_bins"),
+        ("cwt_min_frequency_hz", "cwt_min_frequency_hz"),
+        ("cwt_max_frequency_hz", "cwt_max_frequency_hz"),
+        ("dwt_wavelet", "dwt_wavelet"),
+        ("dwt_level", "dwt_level"),
     ):
         value = getattr(args, argument_name)
         if value is not None:

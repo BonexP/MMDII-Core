@@ -51,6 +51,14 @@ class RepresentationConfig:
     fusion: str = "none"
     output_time_bins: int = 256
     normalization: str = "per_channel_zscore"
+    stft_n_fft: int | None = None
+    stft_hop_length: int | None = None
+    cwt_wavelet: str = "morl"
+    cwt_frequency_bins: int = 48
+    cwt_min_frequency_hz: float = 30.0
+    cwt_max_frequency_hz: float | None = None
+    dwt_wavelet: str = "db4"
+    dwt_level: int = 5
 
 
 @dataclass(frozen=True)
@@ -419,6 +427,7 @@ class _TimeFrequencyDataset:
                 sample_mask=mask,
                 target_fs=self.config.target_fs,
                 output_time_bins=self.config.representation.output_time_bins,
+                **_representation_transform_parameters(self.config),
             )
             transformed.append(representation)
             time_masks.append(time_mask)
@@ -448,6 +457,7 @@ def _time_frequency_datasets(
                         sample_mask=mask,
                         target_fs=config.target_fs,
                         output_time_bins=config.representation.output_time_bins,
+                        **_representation_transform_parameters(config),
                     )[0]
                     for window, mask in zip(windows, masks, strict=True)
                 ]
@@ -648,6 +658,18 @@ def _validate_config(config: ExperimentConfig) -> None:
         raise ValueError("output_time_bins must be positive.")
     if representation.normalization != "per_channel_zscore":
         raise ValueError("Only per_channel_zscore normalization is supported.")
+    parameters = _representation_transform_parameters(config)
+    if representation.name.startswith("stft_"):
+        if parameters["n_fft"] < 2 or not 1 <= parameters["hop_length"] <= parameters["n_fft"]:
+            raise ValueError("STFT n_fft/hop_length are invalid.")
+    if representation.name == "cwt_morl":
+        if not representation.cwt_wavelet or representation.cwt_frequency_bins < 1:
+            raise ValueError("CWT wavelet and frequency bin count are invalid.")
+        if not 0 < parameters["min_frequency_hz"] <= parameters["max_frequency_hz"] <= config.target_fs / 2:
+            raise ValueError("CWT frequency range must lie in (0, Nyquist].")
+    if representation.name == "dwt_swt_db4":
+        if not representation.dwt_wavelet or representation.dwt_level < 1:
+            raise ValueError("DWT wavelet and level are invalid.")
     if any(fold < 0 or fold >= config.fold_count for fold in config.run_folds):
         raise ValueError("run_folds must contain valid fold indices.")
 
@@ -664,18 +686,56 @@ def _json_config(config: ExperimentConfig) -> dict[str, object]:
     result["config_path"] = None if config.config_path is None else config.config_path.as_posix()
     result["release_directory"] = config.release_directory.as_posix()
     result["output_directory"] = config.output_directory.as_posix()
-    if config.representation.name == "stft_256":
-        params = {"n_fft": 256, "hop_length": 64}
-    elif config.representation.name == "stft_512":
-        params = {"n_fft": 512, "hop_length": 128}
-    elif config.representation.name == "cwt_morl":
-        params = {"wavelet": "morl", "frequency_bins": 48, "min_frequency_hz": 30.0}
-    elif config.representation.name == "dwt_swt_db4":
-        params = {"wavelet": "db4", "level": 5}
-    else:
-        params = {}
-    result["representation_parameters"] = params
+    result["representation_parameters"] = _representation_parameters(config)
     return result
+
+
+def _representation_transform_parameters(config: ExperimentConfig) -> dict[str, object]:
+    """Resolve the selected representation's auditable transform arguments."""
+
+    representation = config.representation
+    if representation.name == "stft_256":
+        return {
+            "n_fft": 256 if representation.stft_n_fft is None else representation.stft_n_fft,
+            "hop_length": 64 if representation.stft_hop_length is None else representation.stft_hop_length,
+        }
+    if representation.name == "stft_512":
+        return {
+            "n_fft": 512 if representation.stft_n_fft is None else representation.stft_n_fft,
+            "hop_length": 128 if representation.stft_hop_length is None else representation.stft_hop_length,
+        }
+    if representation.name == "cwt_morl":
+        return {
+            "wavelet": representation.cwt_wavelet,
+            "frequency_bins": representation.cwt_frequency_bins,
+            "min_frequency_hz": representation.cwt_min_frequency_hz,
+            "max_frequency_hz": (
+                config.target_fs / 2
+                if representation.cwt_max_frequency_hz is None
+                else representation.cwt_max_frequency_hz
+            ),
+        }
+    if representation.name == "dwt_swt_db4":
+        return {"wavelet": representation.dwt_wavelet, "level": representation.dwt_level}
+    return {}
+
+
+def _representation_parameters(config: ExperimentConfig) -> dict[str, object]:
+    parameters = _representation_transform_parameters(config)
+    if config.representation.name.startswith("stft_"):
+        parameters.update({"window": "hann", "spectrum": "one_sided", "value": "log1p_power"})
+    elif config.representation.name == "cwt_morl":
+        parameters["value"] = "log1p_magnitude"
+    elif config.representation.name == "dwt_swt_db4":
+        parameters.update({"transform": "stationary_wavelet", "value": "log1p_magnitude"})
+    if parameters:
+        parameters.update(
+            {
+                "output_time_bins": config.representation.output_time_bins,
+                "normalization": config.representation.normalization,
+            }
+        )
+    return parameters
 
 
 def _write_oof(path: Path, rows: list[dict[str, object]], target_codes: tuple[str, ...]) -> None:

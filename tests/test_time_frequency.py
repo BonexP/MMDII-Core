@@ -78,6 +78,17 @@ class TimeFrequencyTests(unittest.TestCase):
         self.assertEqual(transformed.shape, (3, 4, 5))
         self.assertTrue(np.isfinite(transformed).all())
 
+    def test_dispatch_accepts_explicit_stft_parameters(self) -> None:
+        transformed, mask = transform_representation(
+            self.signal,
+            "stft_256",
+            n_fft=128,
+            hop_length=32,
+            output_time_bins=20,
+        )
+        self.assertEqual(transformed.shape, (3, 65, 20))
+        self.assertEqual(mask.shape, (20,))
+
     def test_rejects_nonfinite_signal_and_unknown_representation(self) -> None:
         invalid = self.signal.copy()
         invalid[0, 0] = np.nan
