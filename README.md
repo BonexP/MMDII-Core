@@ -200,6 +200,7 @@ SMOKE_ONLY=1 SMOKE_FOLD=0 PYTHON=.venv/bin/python \
 After smoke validation succeeds, launch the full 103-configuration matrix:
 
 ```bash
+RELEASE=/data/mmdii/releases/weld-independent-v0-2-1-r2
 SEEDS="7 17 27" PYTHON=.venv/bin/python CUDA_VISIBLE_DEVICES=0 \
   bash scripts/run_time_frequency_suite.sh \
   "$RELEASE" outputs/time-frequency-v0-2-1
