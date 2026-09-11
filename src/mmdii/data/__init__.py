@@ -40,6 +40,13 @@ from .training_dataset import (
     target_vector,
     window_signal,
 )
+from .time_frequency import (
+    RepresentationNormalizer,
+    cwt_representation,
+    dwt_representation,
+    stft_representation,
+    transform_representation,
+)
 
 __all__ = [
     "AnnotationRelease",
@@ -82,4 +89,9 @@ __all__ = [
     "resample_signal",
     "target_vector",
     "window_signal",
+    "RepresentationNormalizer",
+    "cwt_representation",
+    "dwt_representation",
+    "stft_representation",
+    "transform_representation",
 ]
