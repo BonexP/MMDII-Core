@@ -7,6 +7,7 @@ SEEDS="${SEEDS:-7 17 27}"
 EPOCHS="${EPOCHS:-20}"
 DEVICE="${DEVICE:-auto}"
 SMOKE_ONLY="${SMOKE_ONLY:-0}"
+SMOKE_FOLD="${SMOKE_FOLD:-0}"
 
 usage() { echo "Usage: bash scripts/run_time_frequency_suite.sh RELEASE_DIR [OUTPUT_DIR] [CONFIG]"; }
 run_one() {
@@ -17,7 +18,13 @@ run_one() {
   local args=(--config "$BASE_CONFIG" --release-dir "$RELEASE_DIR" --output-dir "$destination"
     --mode window_mil --aggregator "$aggregator" --seed "$seed" --epochs "$EPOCHS"
     --device "$DEVICE" --representation "$representation" --encoder "$encoder" --fusion "$fusion")
+  [[ "$SMOKE_ONLY" == 1 ]] && args+=(--fold "$SMOKE_FOLD")
   "$PYTHON" scripts/train_baseline.py "${args[@]}" 2>&1 | tee "$destination/train.log"
+  [[ "$SMOKE_ONLY" == 1 ]] && {
+    touch "$destination/.complete"
+    "$PYTHON" scripts/validate_tracked_outputs.py --root "$destination" --allow-partial
+    return
+  }
   touch "$destination/.complete"
   if ! "$PYTHON" scripts/validate_tracked_outputs.py --root "$destination"; then
     rm -f "$destination/.complete"
@@ -37,8 +44,26 @@ run_control() {
 worker() {
   cd "$ROOT"
   mkdir -p "$OUTPUT_ROOT"
-  printf 'started_at=%s\ncommit=%s\nseeds=%s\nepochs=%s\n' "$(date --iso-8601=seconds)" "$(git rev-parse HEAD)" "$SEEDS" "$EPOCHS" > "$OUTPUT_ROOT/run-metadata.txt"
+  cp "$ROOT/configs/time_frequency_matrix.toml" "$OUTPUT_ROOT/matrix-config.toml"
+  printf 'started_at=%s\ncommit=%s\nseeds=%s\nepochs=%s\nsmoke_only=%s\nsmoke_fold=%s\n' "$(date --iso-8601=seconds)" "$(git rev-parse HEAD)" "$SEEDS" "$EPOCHS" "$SMOKE_ONLY" "$SMOKE_FOLD" > "$OUTPUT_ROOT/run-metadata.txt"
   local count=0
+  if [[ "$SMOKE_ONLY" == 1 ]]; then
+    for representation in stft_256 stft_512 cwt_morl dwt_swt_db4; do
+      for encoder in cnn2d separable_cnn2d resnet2d_small convnext2d_lite; do
+        run_one "smoke-${representation}-${encoder}-gated_attention" "$representation" "$encoder" none gated_attention 7
+        count=$((count + 1))
+      done
+    done
+    for fusion in raw_plus_stft raw_plus_cwt; do
+      if [[ "$fusion" == raw_plus_stft ]]; then representation=stft_256; else representation=cwt_morl; fi
+      for encoder in cnn2d separable_cnn2d resnet2d_small convnext2d_lite; do
+        run_one "smoke-${fusion}-${encoder}-gated_attention" "$representation" "$encoder" "$fusion" gated_attention 7
+        count=$((count + 1))
+      done
+    done
+    printf 'status=smoke_complete\nfinished_at=%s\nrun_count=%s\n' "$(date --iso-8601=seconds)" "$count" > "$OUTPUT_ROOT/status.txt"
+    return
+  fi
   for seed in $SEEDS; do
     run_control "seed-${seed}-b0-statistical" statistical mean "$seed"; count=$((count + 1))
     run_control "seed-${seed}-random-forest" random_forest mean "$seed"; count=$((count + 1))
