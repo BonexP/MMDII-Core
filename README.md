@@ -180,6 +180,39 @@ SEEDS="7 17 27" \
 
 Run this before increasing epochs so the depth effect remains identifiable.
 
+### Time-frequency matrix
+
+The time-frequency experiment stack provides STFT (`stft_256`, `stft_512`),
+Morlet CWT (`cwt_morl`), and five-level `db4` SWT (`dwt_swt_db4`) window
+representations. Each can use `cnn2d`, `separable_cnn2d`, `resnet2d_small`, or
+`convnext2d_lite`, with all four MIL aggregators. The matrix also includes raw
+ModernTCN plus STFT/CWT fusion. All runs use the weld-independent five-fold
+protocol and seeds 7, 17, and 27.
+
+Run a one-fold smoke matrix before the full detached suite:
+
+```bash
+RELEASE=/data/mmdii/releases/weld-independent-v0-2-1-r2
+SMOKE_ONLY=1 SMOKE_FOLD=0 PYTHON=.venv/bin/python \
+  bash scripts/run_time_frequency_suite.sh "$RELEASE" outputs/time-frequency-smoke
+```
+
+After smoke validation succeeds, launch the full 103-configuration matrix:
+
+```bash
+SEEDS="7 17 27" PYTHON=.venv/bin/python CUDA_VISIBLE_DEVICES=0 \
+  bash scripts/run_time_frequency_suite.sh \
+  "$RELEASE" outputs/time-frequency-v0-2-1
+```
+
+Summarize completed runs across seeds and compare them with raw gated
+attention and the statistical baselines:
+
+```bash
+.venv/bin/python scripts/summarize_time_frequency_matrix.py \
+  --root outputs/time-frequency-v0-2-1
+```
+
 The worker uses `.venv/bin/python` directly, so shell activation is not needed
 after launch. `nohup` protects against terminal disconnection; it cannot keep a
 process alive if the hosting platform suspends or destroys the entire instance.
