@@ -13,6 +13,14 @@ SMOKE_ONLY="${SMOKE_ONLY:-0}"
 SMOKE_FOLD="${SMOKE_FOLD:-0}"
 
 usage() { echo "Usage: bash scripts/run_time_frequency_suite.sh RELEASE_DIR [OUTPUT_DIR] [CONFIG]"; }
+check_dependencies() {
+  if ! "$PYTHON" -c 'import scipy, pywt, sklearn, torch' >/dev/null 2>&1; then
+    echo "Missing training dependencies in $PYTHON." >&2
+    echo "Install them with: uv pip install --python $PYTHON -e \".[train]\"" >&2
+    echo "For an existing environment, the minimum missing time-frequency package is: uv pip install --python $PYTHON PyWavelets" >&2
+    return 1
+  fi
+}
 run_one() {
   local name="$1" representation="$2" encoder="$3" fusion="$4" aggregator="$5" seed="$6"
   local destination="$OUTPUT_ROOT/$name"
@@ -62,6 +70,7 @@ run_control() {
 }
 worker() {
   cd "$ROOT"
+  check_dependencies
   mkdir -p "$OUTPUT_ROOT"
   CONFIG_MANIFEST="$OUTPUT_ROOT/configuration-manifest.txt"
   : > "$CONFIG_MANIFEST"

@@ -197,6 +197,17 @@ SMOKE_ONLY=1 SMOKE_FOLD=0 PYTHON=.venv/bin/python \
   bash scripts/run_time_frequency_suite.sh "$RELEASE" outputs/time-frequency-smoke
 ```
 
+The matrix requires the Core training environment, including PyWavelets for
+CWT/DWT. After pulling a Core update, refresh an existing virtual environment
+before launching:
+
+```bash
+uv pip install --python .venv/bin/python -e ".[train]"
+```
+
+The suite performs this dependency check before starting any run and prints the
+same command if a package is missing.
+
 After smoke validation succeeds, launch the full 103-configuration matrix:
 
 ```bash
