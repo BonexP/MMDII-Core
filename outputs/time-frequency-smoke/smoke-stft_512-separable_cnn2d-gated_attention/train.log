@@ -1,0 +1,44 @@
+{
+  "aggregator": "gated_attention",
+  "completed_fold_count": 1,
+  "fold_count": 5,
+  "fold_metrics": [
+    {
+      "best_epoch": 20,
+      "early_stopping_monitor": null,
+      "epochs_ran": 20,
+      "fold": 0,
+      "macro_f1": 0.4485294117647059,
+      "macro_pr_auc": 0.6175814431017389,
+      "macro_recall": 0.38047138047138046,
+      "per_code": {
+        "blur": {
+          "f1": 0.47058823529411764,
+          "pr_auc": 0.6884115884115883,
+          "recall": 0.36363636363636365,
+          "valid_positive_count": 11
+        },
+        "flash": {
+          "f1": 0.875,
+          "pr_auc": 0.9907216297825174,
+          "recall": 0.7777777777777778,
+          "valid_positive_count": 18
+        },
+        "tunnel": {
+          "f1": 0.0,
+          "pr_auc": 0.1736111111111111,
+          "recall": 0.0,
+          "valid_positive_count": 2
+        }
+      },
+      "threshold": 0.5,
+      "valid_code_count": 3
+    }
+  ],
+  "fold_scheme": "weld_independent",
+  "mode": "window_mil",
+  "run_folds": [
+    0
+  ],
+  "sample_count": 20
+}
