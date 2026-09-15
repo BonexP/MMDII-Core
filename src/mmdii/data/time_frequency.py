@@ -84,32 +84,29 @@ def stft_representation(
         values = padded
         valid = np.pad(valid, (0, n_fft - valid.size))
     noverlap = n_fft - hop_length
-    spectra = []
-    frame_masks = []
-    for channel in values:
-        _, times, coeff = scipy_stft(
-            channel,
-            fs=target_fs,
-            window="hann",
-            nperseg=n_fft,
-            noverlap=noverlap,
-            nfft=n_fft,
-            detrend=False,
-            return_onesided=True,
-            boundary=None,
-            padded=False,
-        )
-        spectra.append(np.log1p(np.abs(coeff) ** 2))
-        # scipy's frames start at n_fft/2 when boundary=None.
-        starts = np.rint(times * target_fs - n_fft / 2).astype(int)
-        frame_masks.append(
-            np.asarray(
-                [valid[max(0, start) : min(valid.size, start + n_fft)].any() for start in starts],
-                dtype=bool,
-            )
-        )
-    result = np.stack(spectra, axis=0)
-    mask = frame_masks[0]
+    # scipy handles the channel dimension in one call.  Besides removing a
+    # Python loop this lets the implementation reuse the same FFT setup for
+    # all three sensors; the numerical operation is unchanged.
+    _, times, coeff = scipy_stft(
+        values,
+        fs=target_fs,
+        window="hann",
+        nperseg=n_fft,
+        noverlap=noverlap,
+        nfft=n_fft,
+        detrend=False,
+        return_onesided=True,
+        boundary=None,
+        padded=False,
+        axis=-1,
+    )
+    result = np.log1p(np.abs(coeff) ** 2)
+    # scipy's frames start at n_fft/2 when boundary=None.
+    starts = np.rint(times * target_fs - n_fft / 2).astype(int)
+    mask = np.asarray(
+        [valid[max(0, start) : min(valid.size, start + n_fft)].any() for start in starts],
+        dtype=bool,
+    )
     if output_time_bins is not None:
         result = _resize_rows(result, output_time_bins)
         mask = _resize_mask(mask, output_time_bins)
@@ -144,13 +141,19 @@ def cwt_representation(
     except ImportError as error:  # pragma: no cover - dependency is declared
         raise RuntimeError("CWT requires the PyWavelets package.") from error
     scales = pywt.central_frequency(wavelet) * target_fs / freqs
-    rows = []
     masked = values.copy()
     masked[:, ~valid] = 0.0
-    for channel in masked:
-        coeff, _ = pywt.cwt(channel, scales, wavelet, sampling_period=1.0 / target_fs)
-        rows.append(_resize_rows(np.log1p(np.abs(coeff)), output_time_bins))
-    return np.stack(rows, axis=0).astype(np.float32), _resize_mask(valid, output_time_bins)
+    # PyWavelets accepts an N-D array and keeps all leading dimensions.  A
+    # single call avoids Python-level per-channel dispatch while preserving the
+    # exact channel/frequency/time layout.
+    coeff, _ = pywt.cwt(
+        masked, scales, wavelet, sampling_period=1.0 / target_fs, axis=-1
+    )
+    # ``pywt.cwt`` places the scale axis first for N-D input.
+    transformed = _resize_rows(
+        np.log1p(np.abs(coeff)).transpose(1, 0, 2), output_time_bins
+    )
+    return transformed.astype(np.float32), _resize_mask(valid, output_time_bins)
 
 
 def dwt_representation(
@@ -175,13 +178,15 @@ def dwt_representation(
     padded = np.zeros((values.shape[0], padded_samples), dtype=np.float64)
     padded[:, : values.shape[1]] = values
     padded[:, ~np.pad(valid, (0, padded_samples - valid.size))] = 0.0
-    outputs = []
-    for channel in padded:
-        coeffs = pywt.swt(channel, wavelet, level=level, trim_approx=False)
-        bands = [coeffs[0][0], *[detail for _, detail in coeffs]]
-        # PyWavelets returns approximation/detail pairs from coarse to fine.
-        outputs.append(_resize_rows(np.log1p(np.abs(np.stack(bands))), output_time_bins))
-    return np.stack(outputs, axis=0).astype(np.float32), _resize_mask(valid, output_time_bins)
+    # SWT also supports leading channel dimensions.  Transforming all sensors
+    # together avoids one Python/PyWavelets dispatch per channel.
+    coeffs = pywt.swt(padded, wavelet, level=level, trim_approx=False, axis=-1)
+    bands = [coeffs[0][0], *[detail for _, detail in coeffs]]
+    # PyWavelets returns approximation/detail pairs from coarse to fine.
+    transformed = _resize_rows(
+        np.log1p(np.abs(np.stack(bands, axis=1))), output_time_bins
+    )
+    return transformed.astype(np.float32), _resize_mask(valid, output_time_bins)
 
 
 def transform_representation(
