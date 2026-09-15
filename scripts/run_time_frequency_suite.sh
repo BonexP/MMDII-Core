@@ -9,6 +9,7 @@ BATCH_SIZE="${BATCH_SIZE:-4}"
 LEARNING_RATE="${LEARNING_RATE:-0.001}"
 WEIGHT_DECAY="${WEIGHT_DECAY:-0.0001}"
 DEVICE="${DEVICE:-auto}"
+MMDII_TRANSFORM_WORKERS="${MMDII_TRANSFORM_WORKERS:-2}"
 SMOKE_ONLY="${SMOKE_ONLY:-0}"
 SMOKE_FOLD="${SMOKE_FOLD:-0}"
 
@@ -70,13 +71,14 @@ run_control() {
 }
 worker() {
   cd "$ROOT"
+  export MMDII_TRANSFORM_WORKERS
   check_dependencies
   mkdir -p "$OUTPUT_ROOT"
   CONFIG_MANIFEST="$OUTPUT_ROOT/configuration-manifest.txt"
   : > "$CONFIG_MANIFEST"
   trap 'code=$?; printf "status=failed\nfinished_at=%s\nexit_code=%s\n" "$(date --iso-8601=seconds)" "$code" > "$OUTPUT_ROOT/status.txt"; exit "$code"' ERR
   cp "$ROOT/configs/time_frequency_matrix.toml" "$OUTPUT_ROOT/matrix-config.toml"
-  printf 'started_at=%s\ncommit=%s\nrelease=%s\nbase_config=%s\nseeds=%s\nepochs=%s\nbatch_size=%s\nlearning_rate=%s\nweight_decay=%s\noptimizer=adamw\nearly_stopping_patience=0\nfold_scheme=weld_independent\nsmoke_only=%s\nsmoke_fold=%s\n' "$(date --iso-8601=seconds)" "$(git rev-parse HEAD)" "$RELEASE_DIR" "$BASE_CONFIG" "$SEEDS" "$EPOCHS" "$BATCH_SIZE" "$LEARNING_RATE" "$WEIGHT_DECAY" "$SMOKE_ONLY" "$SMOKE_FOLD" > "$OUTPUT_ROOT/run-metadata.txt"
+  printf 'started_at=%s\ncommit=%s\nrelease=%s\nbase_config=%s\nseeds=%s\nepochs=%s\nbatch_size=%s\nlearning_rate=%s\nweight_decay=%s\noptimizer=adamw\nearly_stopping_patience=0\nfold_scheme=weld_independent\ntransform_workers=%s\nsmoke_only=%s\nsmoke_fold=%s\n' "$(date --iso-8601=seconds)" "$(git rev-parse HEAD)" "$RELEASE_DIR" "$BASE_CONFIG" "$SEEDS" "$EPOCHS" "$BATCH_SIZE" "$LEARNING_RATE" "$WEIGHT_DECAY" "$MMDII_TRANSFORM_WORKERS" "$SMOKE_ONLY" "$SMOKE_FOLD" > "$OUTPUT_ROOT/run-metadata.txt"
   local count=0
   if [[ "$SMOKE_ONLY" == 1 ]]; then
     for representation in stft_256 stft_512 cwt_morl dwt_swt_db4; do
