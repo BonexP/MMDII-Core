@@ -6,9 +6,11 @@ from dataclasses import asdict, dataclass, field
 import copy
 import csv
 import json
+import os
 from pathlib import Path
 import random
 import tomllib
+from concurrent.futures import ThreadPoolExecutor
 from typing import Any
 
 import numpy as np
@@ -401,37 +403,52 @@ def _build_deep_model(config: ExperimentConfig, aggregator: str, torch: Any) -> 
 class _TimeFrequencyDataset:
     """Lazily transform an existing weld-window dataset into 2-D inputs."""
 
-    def __init__(self, source: Any, config: ExperimentConfig, normalizer: Any) -> None:
+    def __init__(
+        self,
+        source: Any,
+        config: ExperimentConfig,
+        normalizer: Any,
+        precomputed: dict[int, tuple[np.ndarray, np.ndarray]] | None = None,
+    ) -> None:
         self.source = source
         self.config = config
         self.normalizer = normalizer
+        # The training fold is transformed once while fitting the fold-only
+        # normalizer.  Reuse those arrays instead of recomputing expensive
+        # CWT/SWT transforms when DataLoader first accesses each item.
+        self._precomputed = precomputed or {}
         self._cache: dict[int, dict[str, object]] = {}
 
     def __len__(self) -> int:
         return len(self.source)
 
     def __getitem__(self, position: int) -> dict[str, object]:
-        from mmdii.data.time_frequency import transform_representation
-
         if position in self._cache:
             return self._cache[position]
         item = dict(self.source[position])
-        windows = np.asarray(item["windows"], dtype=np.float64)
-        masks = np.asarray(item["sample_mask"], dtype=bool)
-        transformed = []
-        time_masks = []
-        for window, mask in zip(windows, masks, strict=True):
-            representation, time_mask = transform_representation(
-                window,
-                self.config.representation.name,
-                sample_mask=mask,
-                target_fs=self.config.target_fs,
-                output_time_bins=self.config.representation.output_time_bins,
-                **_representation_transform_parameters(self.config),
-            )
-            transformed.append(representation)
-            time_masks.append(time_mask)
-        normalized = self.normalizer.transform(np.stack(transformed))
+        if position in self._precomputed:
+            transformed, time_masks = self._precomputed[position]
+        else:
+            from mmdii.data.time_frequency import transform_representation
+
+            windows = np.asarray(item["windows"], dtype=np.float64)
+            masks = np.asarray(item["sample_mask"], dtype=bool)
+            transformed = []
+            time_masks = []
+            for window, mask in zip(windows, masks, strict=True):
+                representation, time_mask = transform_representation(
+                    window,
+                    self.config.representation.name,
+                    sample_mask=mask,
+                    target_fs=self.config.target_fs,
+                    output_time_bins=self.config.representation.output_time_bins,
+                    **_representation_transform_parameters(self.config),
+                )
+                transformed.append(representation)
+                time_masks.append(time_mask)
+            transformed = np.stack(transformed)
+            time_masks = np.stack(time_masks)
+        normalized = self.normalizer.transform(transformed)
         normalized *= np.asarray(time_masks, dtype=np.float32)[:, np.newaxis, np.newaxis, :]
         item["representations"] = normalized
         self._cache[position] = item
@@ -443,30 +460,47 @@ def _time_frequency_datasets(
 ) -> tuple[Any, Any]:
     from mmdii.data.time_frequency import RepresentationNormalizer, transform_representation
 
-    arrays = []
-    for position in range(len(train_dataset)):
-        item = train_dataset[position]
-        windows = np.asarray(item["windows"], dtype=np.float64)
-        masks = np.asarray(item["sample_mask"], dtype=bool)
-        arrays.append(
-            np.stack(
-                [
-                    transform_representation(
-                        window,
-                        config.representation.name,
-                        sample_mask=mask,
-                        target_fs=config.target_fs,
-                        output_time_bins=config.representation.output_time_bins,
-                        **_representation_transform_parameters(config),
-                    )[0]
-                    for window, mask in zip(windows, masks, strict=True)
-                ]
-            )
-        )
+    def transform_dataset(dataset: Any) -> tuple[list[np.ndarray], dict[int, tuple[np.ndarray, np.ndarray]]]:
+        def transform_item(position: int) -> tuple[int, np.ndarray, np.ndarray]:
+            item = dataset[position]
+            windows = np.asarray(item["windows"], dtype=np.float64)
+            masks = np.asarray(item["sample_mask"], dtype=bool)
+            transformed: list[np.ndarray] = []
+            time_masks: list[np.ndarray] = []
+            for window, mask in zip(windows, masks, strict=True):
+                representation, time_mask = transform_representation(
+                    window,
+                    config.representation.name,
+                    sample_mask=mask,
+                    target_fs=config.target_fs,
+                    output_time_bins=config.representation.output_time_bins,
+                    **_representation_transform_parameters(config),
+                )
+                transformed.append(representation)
+                time_masks.append(time_mask)
+            return position, np.stack(transformed), np.stack(time_masks)
+
+        arrays: list[np.ndarray] = []
+        transformed_by_position: dict[int, tuple[np.ndarray, np.ndarray]] = {}
+        positions = range(len(dataset))
+        worker_count = max(1, int(os.environ.get("MMDII_TRANSFORM_WORKERS", "1")))
+        if worker_count > 1 and len(dataset) > 1:
+            with ThreadPoolExecutor(max_workers=worker_count) as executor:
+                transformed_items = executor.map(transform_item, positions)
+                results = list(transformed_items)
+        else:
+            results = [transform_item(position) for position in positions]
+        for position, transformed_array, mask_array in sorted(results):
+            arrays.append(transformed_array)
+            transformed_by_position[position] = (transformed_array, mask_array)
+        return arrays, transformed_by_position
+
+    arrays, train_precomputed = transform_dataset(train_dataset)
     normalizer = RepresentationNormalizer.fit(arrays)
+    _, valid_precomputed = transform_dataset(valid_dataset)
     return (
-        _TimeFrequencyDataset(train_dataset, config, normalizer),
-        _TimeFrequencyDataset(valid_dataset, config, normalizer),
+        _TimeFrequencyDataset(train_dataset, config, normalizer, train_precomputed),
+        _TimeFrequencyDataset(valid_dataset, config, normalizer, valid_precomputed),
     )
 
 
@@ -484,17 +518,20 @@ def _run_deep_fold(model: Any, train_dataset: Any, valid_dataset: Any, class_wei
         pos_weight=torch.as_tensor(class_weights, dtype=torch.float32, device=device)
     )
     collate = _torch_collate if config.representation.name == "raw" else _torch_time_frequency_collate
+    pin_memory = device.type == "cuda"
     train_loader = DataLoader(
         train_dataset,
         batch_size=config.batch_size,
         shuffle=True,
         collate_fn=collate,
+        pin_memory=pin_memory,
     )
     valid_loader = DataLoader(
         valid_dataset,
         batch_size=config.batch_size,
         shuffle=False,
         collate_fn=collate,
+        pin_memory=pin_memory,
     )
     best_loss = float("inf")
     best_epoch = 0
@@ -508,10 +545,10 @@ def _run_deep_fold(model: Any, train_dataset: Any, valid_dataset: Any, class_wei
         for batch in train_loader:
             optimizer.zero_grad(set_to_none=True)
             logits, _ = model(
-                batch["windows"].to(device),
-                batch["window_mask"].to(device),
-                batch["sample_mask"].to(device),
-                _to_device(batch.get("representations"), device),
+                batch["windows"].to(device, non_blocking=pin_memory),
+                batch["window_mask"].to(device, non_blocking=pin_memory),
+                batch["sample_mask"].to(device, non_blocking=pin_memory),
+                _to_device(batch.get("representations"), device, non_blocking=pin_memory),
             )
             loss = criterion(logits, batch["targets"].to(device))
             loss.backward()
@@ -541,10 +578,10 @@ def _run_deep_fold(model: Any, train_dataset: Any, valid_dataset: Any, class_wei
     with torch.no_grad():
         for batch in valid_loader:
             logits, _ = model(
-                batch["windows"].to(device),
-                batch["window_mask"].to(device),
-                batch["sample_mask"].to(device),
-                _to_device(batch.get("representations"), device),
+                batch["windows"].to(device, non_blocking=pin_memory),
+                batch["window_mask"].to(device, non_blocking=pin_memory),
+                batch["sample_mask"].to(device, non_blocking=pin_memory),
+                _to_device(batch.get("representations"), device, non_blocking=pin_memory),
             )
             probabilities.append(torch.sigmoid(logits).cpu().numpy())
     return np.concatenate(probabilities, axis=0), {
@@ -585,8 +622,8 @@ def _torch_time_frequency_collate(items: list[dict[str, object]]) -> dict[str, A
     return batch
 
 
-def _to_device(value: Any | None, device: Any) -> Any | None:
-    return None if value is None else value.to(device)
+def _to_device(value: Any | None, device: Any, *, non_blocking: bool = False) -> Any | None:
+    return None if value is None else value.to(device, non_blocking=non_blocking)
 
 
 def _require_torch() -> tuple[Any, Any, Any]:
