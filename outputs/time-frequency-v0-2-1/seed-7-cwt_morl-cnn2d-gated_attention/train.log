@@ -1,0 +1,172 @@
+{
+  "aggregator": "gated_attention",
+  "completed_fold_count": 5,
+  "fold_count": 5,
+  "fold_metrics": [
+    {
+      "best_epoch": 20,
+      "early_stopping_monitor": null,
+      "epochs_ran": 20,
+      "fold": 0,
+      "macro_f1": 0.3063973063973064,
+      "macro_pr_auc": 0.5853078656204731,
+      "macro_recall": 0.22558922558922556,
+      "per_code": {
+        "blur": {
+          "f1": 0.5555555555555556,
+          "pr_auc": 0.7028294890523993,
+          "recall": 0.45454545454545453,
+          "valid_positive_count": 11
+        },
+        "flash": {
+          "f1": 0.36363636363636365,
+          "pr_auc": 0.9307164854313978,
+          "recall": 0.2222222222222222,
+          "valid_positive_count": 18
+        },
+        "tunnel": {
+          "f1": 0.0,
+          "pr_auc": 0.12237762237762238,
+          "recall": 0.0,
+          "valid_positive_count": 2
+        }
+      },
+      "threshold": 0.5,
+      "valid_code_count": 3
+    },
+    {
+      "best_epoch": 20,
+      "early_stopping_monitor": null,
+      "epochs_ran": 20,
+      "fold": 1,
+      "macro_f1": 0.5237373737373737,
+      "macro_pr_auc": 0.570014988971523,
+      "macro_recall": 0.6280701754385966,
+      "per_code": {
+        "blur": {
+          "f1": 0.5833333333333334,
+          "pr_auc": 0.6329523172905526,
+          "recall": 0.7,
+          "valid_positive_count": 10
+        },
+        "flash": {
+          "f1": 0.7878787878787878,
+          "pr_auc": 0.8895926496240167,
+          "recall": 0.6842105263157895,
+          "valid_positive_count": 19
+        },
+        "tunnel": {
+          "f1": 0.2,
+          "pr_auc": 0.1875,
+          "recall": 0.5,
+          "valid_positive_count": 2
+        }
+      },
+      "threshold": 0.5,
+      "valid_code_count": 3
+    },
+    {
+      "best_epoch": 20,
+      "early_stopping_monitor": null,
+      "epochs_ran": 20,
+      "fold": 2,
+      "macro_f1": 0.4681481481481482,
+      "macro_pr_auc": 0.7843579109101985,
+      "macro_recall": 0.5841750841750842,
+      "per_code": {
+        "blur": {
+          "f1": 0.4444444444444444,
+          "pr_auc": 0.7590825840825841,
+          "recall": 0.36363636363636365,
+          "valid_positive_count": 11
+        },
+        "flash": {
+          "f1": 0.56,
+          "pr_auc": 0.9273244819813449,
+          "recall": 0.3888888888888889,
+          "valid_positive_count": 18
+        },
+        "tunnel": {
+          "f1": 0.4,
+          "pr_auc": 0.6666666666666666,
+          "recall": 1.0,
+          "valid_positive_count": 2
+        }
+      },
+      "threshold": 0.5,
+      "valid_code_count": 3
+    },
+    {
+      "best_epoch": 20,
+      "early_stopping_monitor": null,
+      "epochs_ran": 20,
+      "fold": 3,
+      "macro_f1": 0.5666666666666667,
+      "macro_pr_auc": 0.6696472804100942,
+      "macro_recall": 0.6333333333333333,
+      "per_code": {
+        "blur": {
+          "f1": 0.8571428571428571,
+          "pr_auc": 0.8897546897546896,
+          "recall": 0.9,
+          "valid_positive_count": 10
+        },
+        "flash": {
+          "f1": 0.6428571428571429,
+          "pr_auc": 0.9358538181422599,
+          "recall": 0.5,
+          "valid_positive_count": 18
+        },
+        "tunnel": {
+          "f1": 0.2,
+          "pr_auc": 0.18333333333333335,
+          "recall": 0.5,
+          "valid_positive_count": 2
+        }
+      },
+      "threshold": 0.5,
+      "valid_code_count": 3
+    },
+    {
+      "best_epoch": 20,
+      "early_stopping_monitor": null,
+      "epochs_ran": 20,
+      "fold": 4,
+      "macro_f1": 0.5760132340777502,
+      "macro_pr_auc": 0.7092173421120789,
+      "macro_recall": 0.6196172248803827,
+      "per_code": {
+        "blur": {
+          "f1": 0.8,
+          "pr_auc": 0.9219502719502719,
+          "recall": 0.7272727272727273,
+          "valid_positive_count": 11
+        },
+        "flash": {
+          "f1": 0.7741935483870968,
+          "pr_auc": 0.9973684210526315,
+          "recall": 0.631578947368421,
+          "valid_positive_count": 19
+        },
+        "tunnel": {
+          "f1": 0.15384615384615385,
+          "pr_auc": 0.20833333333333331,
+          "recall": 0.5,
+          "valid_positive_count": 2
+        }
+      },
+      "threshold": 0.5,
+      "valid_code_count": 3
+    }
+  ],
+  "fold_scheme": "weld_independent",
+  "mode": "window_mil",
+  "run_folds": [
+    0,
+    1,
+    2,
+    3,
+    4
+  ],
+  "sample_count": 101
+}
