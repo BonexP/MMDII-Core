@@ -1,0 +1,24 @@
+[matrix]
+# Follow-up matrix after the first seed-7/seed-17 evidence.  The canonical
+# 103-configuration matrix remains in time_frequency_matrix.toml.
+representations = ["stft_256", "stft_512", "cwt_morl", "dwt_swt_db4"]
+encoders = ["cnn2d", "separable_cnn2d", "resnet2d_small", "convnext2d_lite"]
+aggregators = ["mean", "gated_attention"]
+dual_branches = ["raw_plus_stft", "raw_plus_cwt"]
+sentinel_aggregators = ["max", "topk_mean"]
+sentinel_configurations = [
+  "stft_256/cnn2d",
+  "cwt_morl/resnet2d_small",
+  "dwt_swt_db4/resnet2d_small",
+  "raw_plus_cwt/resnet2d_small",
+]
+fold_scheme = "weld_independent"
+epochs = 20
+fold_count = 5
+output_time_bins = 256
+
+[matrix.counts]
+main_single = 32
+main_dual = 16
+sentinel = 8
+per_seed = 56
