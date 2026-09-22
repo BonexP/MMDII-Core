@@ -18,7 +18,7 @@ class Encoder2DTests(unittest.TestCase):
 
         from mmdii.models.encoders2d import build_2d_encoder
 
-        names = ("cnn2d", "separable_cnn2d", "resnet2d_small", "convnext2d_lite")
+        names = ("cnn2d", "separable_cnn2d", "resnet2d_small", "resnet2d_multiscale", "convnext2d_lite")
         image = torch.randn(4, 3, 20, 32, requires_grad=True)
         for name in names:
             model = build_2d_encoder(name, input_channels=3, embedding_dim=17)

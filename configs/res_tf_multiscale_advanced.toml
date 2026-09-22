@@ -1,0 +1,56 @@
+[experiment]
+release_directory = "../../../data/interim/releases/weld-independent-v0-2-1-r2"
+output_directory = "outputs/res-tf-multiscale-advanced"
+target_codes = ["flash", "blur", "tunnel"]
+mode = "window_mil"
+aggregator = "gated_attention"
+seed = 7
+fold_count = 5
+fold_scheme = "weld_independent"
+epochs = 40
+batch_size = 4
+learning_rate = 0.001
+weight_decay = 0.0001
+optimizer = "adamw"
+early_stopping_patience = 0
+early_stopping_min_delta = 0.0
+gradient_clip_norm = 0.0
+device = "auto"
+target_fs = 5400.0
+window_seconds = 2.0
+stride_seconds = 1.0
+full_signal_samples = 4096
+
+[training]
+scheduler = "cosine"
+warmup_epochs = 2
+gradient_clip_norm = 1.0
+amp = false
+
+[augmentation]
+enabled = true
+amplitude_scale = 0.05
+noise_std = 0.01
+time_mask_ratio = 0.10
+max_time_masks = 1
+
+[model]
+hidden_channels = 32
+embedding_dim = 64
+kernel_size = 31
+block_count = 2
+dropout = 0.1
+top_k = 3
+attention_dim = 64
+encoder_chunk_size = 32
+
+[representation]
+name = "cwt_morl"
+encoder = "resnet2d_multiscale"
+fusion = "raw_plus_cwt"
+output_time_bins = 256
+normalization = "per_channel_zscore"
+cwt_wavelet = "morl"
+cwt_frequency_bins = 48
+cwt_min_frequency_hz = 30.0
+cwt_max_frequency_hz = 2700.0

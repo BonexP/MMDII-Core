@@ -44,7 +44,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     )
     parser.add_argument(
         "--encoder",
-        choices=("modern_tcn", "cnn2d", "separable_cnn2d", "resnet2d_small", "convnext2d_lite"),
+        choices=("modern_tcn", "cnn2d", "separable_cnn2d", "resnet2d_small", "resnet2d_multiscale", "convnext2d_lite"),
     )
     parser.add_argument("--fusion", choices=("none", "raw_plus_stft", "raw_plus_cwt"))
     parser.add_argument("--output-time-bins", type=int)
@@ -116,6 +116,10 @@ def main(argv: Sequence[str] | None = None) -> int:
         value = getattr(args, argument_name)
         if value is not None:
             overrides[config_name] = value
+    if args.gradient_clip_norm is not None:
+        overrides["training"] = replace(
+            config.training, gradient_clip_norm=args.gradient_clip_norm
+        )
     if overrides:
         config = replace(config, **overrides)
     index = DatasetIndex.from_release(

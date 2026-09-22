@@ -117,6 +117,54 @@ encoder_chunk_size = 16
             "per_channel_zscore",
         )
 
+    def test_training_strategy_defaults_are_backward_compatible(self) -> None:
+        config = ExperimentConfig.for_test()
+        self.assertEqual(config.training.scheduler, "none")
+        self.assertFalse(config.augmentation.enabled)
+
+    def test_loads_training_and_augmentation_sections(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            path = Path(temporary_directory) / "experiment.toml"
+            path.write_text(
+                """
+[experiment]
+release_directory = "release"
+output_directory = "outputs/run"
+target_codes = ["flash", "blur", "tunnel"]
+mode = "window_mil"
+aggregator = "mean"
+seed = 7
+fold_count = 5
+epochs = 4
+batch_size = 2
+learning_rate = 0.001
+weight_decay = 0.0001
+device = "cpu"
+target_fs = 5400.0
+window_seconds = 2.0
+stride_seconds = 1.0
+full_signal_samples = 256
+
+[training]
+scheduler = "cosine"
+warmup_epochs = 1
+gradient_clip_norm = 1.0
+amp = false
+
+[augmentation]
+enabled = true
+amplitude_scale = 0.02
+noise_std = 0.01
+time_mask_ratio = 0.1
+max_time_masks = 1
+""".strip()
+                + "\n",
+                encoding="utf-8",
+            )
+            config = load_experiment_config(path)
+            self.assertEqual(config.training.scheduler, "cosine")
+            self.assertTrue(config.augmentation.enabled)
+
     @unittest.skipIf(
         importlib.util.find_spec("torch") is not None,
         "PyTorch train extra is installed",

@@ -32,6 +32,12 @@ from mmdii.models.statistical import (
     fit_predict_logistic_ovr,
     fit_predict_random_forest_ovr,
 )
+from mmdii.training.strategy import (
+    AugmentationConfig,
+    RawWindowAugmenter,
+    TrainingStrategy,
+    TrainingStrategyConfig,
+)
 
 
 @dataclass(frozen=True)
@@ -64,6 +70,23 @@ class RepresentationConfig:
 
 
 @dataclass(frozen=True)
+class TrainingConfig:
+    scheduler: str = "none"
+    warmup_epochs: int = 0
+    gradient_clip_norm: float = 0.0
+    amp: bool = False
+
+
+@dataclass(frozen=True)
+class AugmentationExperimentConfig:
+    enabled: bool = False
+    amplitude_scale: float = 0.05
+    noise_std: float = 0.01
+    time_mask_ratio: float = 0.10
+    max_time_masks: int = 1
+
+
+@dataclass(frozen=True)
 class ExperimentConfig:
     config_path: Path | None
     release_directory: Path
@@ -87,6 +110,8 @@ class ExperimentConfig:
     early_stopping_patience: int = 0
     early_stopping_min_delta: float = 0.0
     gradient_clip_norm: float = 0.0
+    training: TrainingConfig = field(default_factory=TrainingConfig)
+    augmentation: AugmentationExperimentConfig = field(default_factory=AugmentationExperimentConfig)
     model: ModelConfig = field(default_factory=ModelConfig)
     representation: RepresentationConfig = field(default_factory=RepresentationConfig)
     run_folds: tuple[int, ...] = ()
@@ -116,6 +141,8 @@ class ExperimentConfig:
             early_stopping_patience=0,
             early_stopping_min_delta=0.0,
             gradient_clip_norm=0.0,
+            training=TrainingConfig(),
+            augmentation=AugmentationExperimentConfig(),
         )
 
 
@@ -127,6 +154,8 @@ def load_experiment_config(path: str | Path) -> ExperimentConfig:
         experiment = payload["experiment"]
         model_payload = payload.get("model", {})
         representation_payload = payload.get("representation", {})
+        training_payload = payload.get("training", {})
+        augmentation_payload = payload.get("augmentation", {})
         target_codes = tuple(experiment["target_codes"])
         config = ExperimentConfig(
             config_path=config_path,
@@ -151,6 +180,19 @@ def load_experiment_config(path: str | Path) -> ExperimentConfig:
             early_stopping_patience=int(experiment.get("early_stopping_patience", 0)),
             early_stopping_min_delta=float(experiment.get("early_stopping_min_delta", 0.0)),
             gradient_clip_norm=float(experiment.get("gradient_clip_norm", 0.0)),
+            training=TrainingConfig(
+                scheduler=str(training_payload.get("scheduler", "none")),
+                warmup_epochs=int(training_payload.get("warmup_epochs", 0)),
+                gradient_clip_norm=float(training_payload.get("gradient_clip_norm", experiment.get("gradient_clip_norm", 0.0))),
+                amp=bool(training_payload.get("amp", False)),
+            ),
+            augmentation=AugmentationExperimentConfig(
+                enabled=bool(augmentation_payload.get("enabled", False)),
+                amplitude_scale=float(augmentation_payload.get("amplitude_scale", 0.05)),
+                noise_std=float(augmentation_payload.get("noise_std", 0.01)),
+                time_mask_ratio=float(augmentation_payload.get("time_mask_ratio", 0.10)),
+                max_time_masks=int(augmentation_payload.get("max_time_masks", 1)),
+            ),
             model=ModelConfig(
                 **{
                     field_name: model_payload.get(field_name, getattr(ModelConfig(), field_name))
@@ -533,32 +575,55 @@ def _run_deep_fold(model: Any, train_dataset: Any, valid_dataset: Any, class_wei
         collate_fn=collate,
         pin_memory=pin_memory,
     )
+    strategy = TrainingStrategy(
+        optimizer,
+        config=TrainingStrategyConfig(
+            scheduler=config.training.scheduler,
+            warmup_epochs=config.training.warmup_epochs,
+            gradient_clip_norm=(config.training.gradient_clip_norm or config.gradient_clip_norm),
+            amp=config.training.amp,
+        ),
+        epochs=config.epochs,
+        steps_per_epoch=len(train_loader),
+        device=device,
+    )
+    augmenter = RawWindowAugmenter(
+        AugmentationConfig(
+            enabled=config.augmentation.enabled,
+            amplitude_scale=config.augmentation.amplitude_scale,
+            noise_std=config.augmentation.noise_std,
+            time_mask_ratio=config.augmentation.time_mask_ratio,
+            max_time_masks=config.augmentation.max_time_masks,
+        ),
+        seed=config.seed,
+    )
     best_loss = float("inf")
     best_epoch = 0
     best_state = None
     epochs_without_improvement = 0
     epochs_ran = 0
+    epoch_history: list[dict[str, float]] = []
     for epoch in range(config.epochs):
         model.train()
         train_loss_total = 0.0
         train_batches = 0
-        for batch in train_loader:
-            optimizer.zero_grad(set_to_none=True)
-            logits, _ = model(
-                batch["windows"].to(device, non_blocking=pin_memory),
-                batch["window_mask"].to(device, non_blocking=pin_memory),
-                batch["sample_mask"].to(device, non_blocking=pin_memory),
-                _to_device(batch.get("representations"), device, non_blocking=pin_memory),
-            )
-            loss = criterion(logits, batch["targets"].to(device))
-            loss.backward()
-            if config.gradient_clip_norm > 0:
-                torch.nn.utils.clip_grad_norm_(
-                    model.parameters(), config.gradient_clip_norm
+        for batch_index, batch in enumerate(train_loader):
+            windows = batch["windows"].to(device, non_blocking=pin_memory)
+            sample_mask = batch["sample_mask"].to(device, non_blocking=pin_memory)
+            windows = augmenter(windows, sample_mask, epoch=epoch, batch_index=batch_index)
+            with strategy.autocast():
+                logits, _ = model(
+                    windows,
+                    batch["window_mask"].to(device, non_blocking=pin_memory),
+                    sample_mask,
+                    _to_device(batch.get("representations"), device, non_blocking=pin_memory),
                 )
-            optimizer.step()
+                loss = criterion(logits, batch["targets"].to(device))
+            strategy.backward_step(loss, model)
             train_loss_total += float(loss.detach().cpu())
             train_batches += 1
+        strategy.epoch_step()
+        epoch_history.append(strategy.epoch_stats())
         epochs_ran = epoch + 1
         epoch_loss = train_loss_total / max(train_batches, 1)
         if config.early_stopping_patience > 0:
@@ -588,6 +653,10 @@ def _run_deep_fold(model: Any, train_dataset: Any, valid_dataset: Any, class_wei
         "epochs_ran": epochs_ran,
         "best_epoch": best_epoch or epochs_ran,
         "early_stopping_monitor": "train_loss" if config.early_stopping_patience > 0 else None,
+        "training_history": epoch_history,
+        "scheduler": config.training.scheduler,
+        "amp_enabled": strategy.amp_enabled,
+        "augmentation_enabled": config.augmentation.enabled,
     }
 
 
@@ -670,6 +739,18 @@ def _validate_config(config: ExperimentConfig) -> None:
         raise ValueError("early stopping values must be non-negative.")
     if config.gradient_clip_norm < 0:
         raise ValueError("gradient_clip_norm must be non-negative.")
+    if config.training.scheduler not in {"none", "cosine", "one_cycle"}:
+        raise ValueError("training.scheduler must be none, cosine or one_cycle.")
+    if config.training.warmup_epochs < 0 or config.training.warmup_epochs >= config.epochs:
+        raise ValueError("training.warmup_epochs must be in [0, epochs).")
+    if config.training.gradient_clip_norm < 0:
+        raise ValueError("training.gradient_clip_norm must be non-negative.")
+    if config.augmentation.amplitude_scale < 0 or config.augmentation.noise_std < 0:
+        raise ValueError("augmentation scales must be non-negative.")
+    if not 0.0 <= config.augmentation.time_mask_ratio <= 1.0:
+        raise ValueError("augmentation.time_mask_ratio must be in [0, 1].")
+    if config.augmentation.max_time_masks < 0:
+        raise ValueError("augmentation.max_time_masks must be non-negative.")
     if config.target_fs <= 0 or config.window_seconds <= 0 or config.stride_seconds <= 0:
         raise ValueError("Preprocessing values must be positive.")
     if config.stride_seconds > config.window_seconds:
@@ -682,7 +763,7 @@ def _validate_config(config: ExperimentConfig) -> None:
     if representation.name == "raw" and representation.encoder != "modern_tcn":
         raise ValueError("raw representation requires encoder=modern_tcn.")
     if representation.name != "raw" and representation.encoder not in {
-        "cnn2d", "separable_cnn2d", "resnet2d_small", "convnext2d_lite"
+        "cnn2d", "separable_cnn2d", "resnet2d_small", "resnet2d_multiscale", "convnext2d_lite"
     }:
         raise ValueError("Invalid time-frequency encoder.")
     if representation.fusion not in {"none", "raw_plus_stft", "raw_plus_cwt"}:
