@@ -1,0 +1,50 @@
+[matrix]
+representations = ["stft_256", "stft_512", "cwt_morl", "dwt_swt_db4"]
+encoders = ["cnn2d", "separable_cnn2d", "resnet2d_small", "convnext2d_lite"]
+aggregators = ["mean", "max", "topk_mean", "gated_attention"]
+dual_branches = ["raw_plus_stft", "raw_plus_cwt"]
+seeds = [7, 17, 27]
+epochs = 20
+fold_count = 5
+fold_scheme = "weld_independent"
+batch_size = 4
+learning_rate = 0.001
+weight_decay = 0.0001
+optimizer = "adamw"
+early_stopping_patience = 0
+device = "auto"
+target_fs = 5400.0
+window_seconds = 2.0
+stride_seconds = 1.0
+full_signal_samples = 4096
+output_time_bins = 256
+control_models = 7
+single_configuration_count = 64
+dual_configuration_count = 32
+total_configuration_count = 103
+total_seed_runs = 309
+
+[matrix.stft_256]
+window = "hann"
+n_fft = 256
+hop_length = 64
+value = "log1p_power"
+
+[matrix.stft_512]
+window = "hann"
+n_fft = 512
+hop_length = 128
+value = "log1p_power"
+
+[matrix.cwt_morl]
+wavelet = "morl"
+frequency_bins = 48
+min_frequency_hz = 30.0
+max_frequency_hz = 2700.0
+value = "log1p_magnitude"
+
+[matrix.dwt_swt_db4]
+wavelet = "db4"
+level = 5
+subband_count = 6
+value = "log1p_magnitude"
