@@ -109,7 +109,7 @@ class TrainingStrategy:
             self.scaler = torch.amp.GradScaler("cuda", enabled=self.amp_enabled)
         else:  # pragma: no cover - compatibility with older supported torch builds
             self.scaler = torch.cuda.amp.GradScaler(enabled=self.amp_enabled)
-        self._grad_norms: list[float] = []
+        self._grad_norms: list[Any] = []
 
     def _build_scheduler(self, torch: Any) -> Any | None:
         name = self.config.scheduler
@@ -144,7 +144,7 @@ class TrainingStrategy:
 
         return torch.autocast(device_type="cuda", dtype=torch.float16)
 
-    def backward_step(self, loss: Any, model: Any) -> float:
+    def backward_step(self, loss: Any, model: Any) -> Any:
         self.optimizer.zero_grad(set_to_none=True)
         if self.amp_enabled:
             self.scaler.scale(loss).backward()
@@ -157,7 +157,7 @@ class TrainingStrategy:
             norm = torch.nn.utils.clip_grad_norm_(
                 model.parameters(), self.config.gradient_clip_norm
             )
-            grad_norm = float(norm.detach().cpu())
+            grad_norm = norm.detach()
         else:
             grad_norm = _gradient_norm(model)
         if self.amp_enabled:
@@ -175,21 +175,26 @@ class TrainingStrategy:
             self.scheduler.step()
 
     def epoch_stats(self) -> dict[str, float]:
+        import torch
+
         values = self._grad_norms
         self._grad_norms = []
+        values = torch.stack(values) if values else None
         return {
             "learning_rate": float(self.optimizer.param_groups[0]["lr"]),
-            "gradient_norm_mean": float(sum(values) / len(values)) if values else 0.0,
-            "gradient_norm_max": float(max(values)) if values else 0.0,
+            "gradient_norm_mean": 0.0 if values is None else float(values.mean().detach().cpu()),
+            "gradient_norm_max": 0.0 if values is None else float(values.max().detach().cpu()),
         }
 
 
-def _gradient_norm(model: Any) -> float:
-    total = 0.0
+def _gradient_norm(model: Any) -> Any:
+    import torch
+    total = None
     for parameter in model.parameters():
         if parameter.grad is not None:
-            total += float(parameter.grad.detach().square().sum().cpu())
-    return math.sqrt(total)
+            value = parameter.grad.detach().square().sum()
+            total = value if total is None else total + value
+    return torch.zeros((), device=next(model.parameters()).device) if total is None else total.sqrt()
 
 
 __all__ = [

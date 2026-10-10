@@ -16,6 +16,50 @@ import numpy as np
 from scipy.signal import stft as scipy_stft
 
 
+def stft_representation_torch(
+    signal: "object", *, target_fs: float = 5400.0, n_fft: int = 256,
+    hop_length: int = 64, sample_mask: "object | None" = None,
+    output_time_bins: int | None = 256, device: "object" = "cuda",
+) -> tuple["object", "object"]:
+    """GPU STFT matching the existing SciPy spectrum convention.
+
+    Input is ``[batch, channels, samples]`` and output is ``[batch, channels,
+    frequency, time]``.  This deliberately handles STFT only; CWT/SWT retain
+    PyWavelets as the reference implementation.
+    """
+    import torch
+    import torch.nn.functional as functional
+
+    values = torch.as_tensor(signal, dtype=torch.float32, device=device)
+    if values.ndim != 3 or values.shape[-1] < 2:
+        raise ValueError("signal must have shape [batch, channels, samples].")
+    valid = (torch.ones(values.shape[0], values.shape[-1], dtype=torch.bool, device=device)
+             if sample_mask is None else torch.as_tensor(sample_mask, dtype=torch.bool, device=device))
+    if valid.shape != values.shape[:1] + values.shape[2:]:
+        raise ValueError("sample_mask must have shape [batch, samples].")
+    if values.shape[-1] < n_fft:
+        pad = n_fft - values.shape[-1]
+        values = functional.pad(values, (0, pad))
+        valid = functional.pad(valid, (0, pad), value=False)
+    window = torch.hann_window(n_fft, periodic=True, dtype=values.dtype, device=values.device)
+    coeff = torch.stft(values.reshape(-1, values.shape[-1]), n_fft=n_fft,
+                       hop_length=hop_length, win_length=n_fft, window=window,
+                       center=False, pad_mode="reflect", normalized=False,
+                       onesided=True, return_complex=True)
+    coeff = coeff.reshape(values.shape[0], values.shape[1], coeff.shape[-2], coeff.shape[-1])
+    coeff = coeff / window.sum()
+    result = torch.log1p(coeff.abs().square())
+    starts = torch.arange(result.shape[-1], device=device) * hop_length
+    frame_mask = torch.stack([valid[:, start:start + n_fft].any(dim=1) for start in starts], dim=1)
+    if output_time_bins is not None and result.shape[-1] != output_time_bins:
+        result = functional.interpolate(result.reshape(-1, 1, result.shape[-2], result.shape[-1]),
+                                         size=(result.shape[-2], output_time_bins), mode="bilinear",
+                                         align_corners=True).reshape(result.shape[0], result.shape[1], result.shape[2], output_time_bins)
+        frame_mask = functional.interpolate(frame_mask.float().unsqueeze(1), size=output_time_bins,
+                                            mode="linear", align_corners=True).squeeze(1) >= 0.999
+    return result, frame_mask
+
+
 def _signal(signal: np.ndarray) -> np.ndarray:
     values = np.asarray(signal, dtype=np.float64)
     if values.ndim != 2 or values.shape[0] < 1 or values.shape[1] < 2:
@@ -243,19 +287,33 @@ class RepresentationNormalizer:
 
     @classmethod
     def fit(cls, arrays: Iterable[np.ndarray]) -> "RepresentationNormalizer":
-        values = tuple(np.asarray(array, dtype=np.float64) for array in arrays)
-        if not values:
+        count = 0
+        mean = None
+        m2 = None
+        channels = None
+        for array in arrays:
+            values = np.asarray(array, dtype=np.float64)
+            if values.ndim not in (3, 4) or not np.isfinite(values).all():
+                raise ValueError("Representations must be finite [C,F,T] or [N,C,F,T] arrays.")
+            channels = values.shape[-3] if channels is None else channels
+            if values.shape[-3] != channels:
+                raise ValueError("Representations must have a common channel count.")
+            flat = values.reshape((-1, channels) + values.shape[-2:])
+            batch_count = flat.shape[0] * flat.shape[2] * flat.shape[3]
+            batch_mean = flat.mean(axis=(0, 2, 3))
+            batch_m2 = np.square(flat - batch_mean.reshape(1, channels, 1, 1)).sum(axis=(0, 2, 3))
+            if mean is None:
+                mean, m2, count = batch_mean, batch_m2, batch_count
+            else:
+                delta = batch_mean - mean
+                total = count + batch_count
+                m2 = m2 + batch_m2 + np.square(delta) * count * batch_count / total
+                mean = mean + delta * batch_count / total
+                count = total
+        if mean is None or count == 0:
             raise ValueError("At least one training representation is required.")
-        if any(array.ndim not in (3, 4) or not np.isfinite(array).all() for array in values):
-            raise ValueError("Representations must be finite [C,F,T] or [N,C,F,T] arrays.")
-        channels = values[0].shape[-3]
-        if any(array.shape[-3] != channels for array in values):
-            raise ValueError("Representations must have a common channel count.")
-        joined = np.concatenate(
-            [array.reshape((-1, channels) + array.shape[-2:]) for array in values], axis=0
-        )
-        means = joined.mean(axis=(0, 2, 3))
-        stds = np.where(joined.std(axis=(0, 2, 3)) == 0.0, 1.0, joined.std(axis=(0, 2, 3)))
+        means = mean
+        stds = np.where(np.sqrt(m2 / count) == 0.0, 1.0, np.sqrt(m2 / count))
         return cls(means=means, stds=stds)
 
     def transform(self, representation: np.ndarray) -> np.ndarray:

@@ -5,10 +5,12 @@ from __future__ import annotations
 from dataclasses import asdict, dataclass, field
 import copy
 import csv
+import hashlib
 import json
 import os
 from pathlib import Path
 import random
+import shutil
 import tomllib
 from concurrent.futures import ThreadPoolExecutor
 from typing import Any
@@ -115,6 +117,9 @@ class ExperimentConfig:
     model: ModelConfig = field(default_factory=ModelConfig)
     representation: RepresentationConfig = field(default_factory=RepresentationConfig)
     run_folds: tuple[int, ...] = ()
+    pipeline_backend: str = "cpu"
+    preprocess_cache_directory: Path | None = None
+    gpu_cache_gib: float = 4.0
 
     @classmethod
     def for_test(cls) -> "ExperimentConfig":
@@ -143,6 +148,9 @@ class ExperimentConfig:
             gradient_clip_norm=0.0,
             training=TrainingConfig(),
             augmentation=AugmentationExperimentConfig(),
+            pipeline_backend="cpu",
+            preprocess_cache_directory=None,
+            gpu_cache_gib=4.0,
         )
 
 
@@ -193,6 +201,12 @@ def load_experiment_config(path: str | Path) -> ExperimentConfig:
                 time_mask_ratio=float(augmentation_payload.get("time_mask_ratio", 0.10)),
                 max_time_masks=int(augmentation_payload.get("max_time_masks", 1)),
             ),
+            pipeline_backend=str(experiment.get("pipeline_backend", "cpu")),
+            preprocess_cache_directory=(
+                None if experiment.get("preprocess_cache_directory") in (None, "")
+                else (config_path.parent / str(experiment["preprocess_cache_directory"])).resolve()
+            ),
+            gpu_cache_gib=float(experiment.get("gpu_cache_gib", 4.0)),
             model=ModelConfig(
                 **{
                     field_name: model_payload.get(field_name, getattr(ModelConfig(), field_name))
@@ -502,11 +516,48 @@ def _time_frequency_datasets(
 ) -> tuple[Any, Any]:
     from mmdii.data.time_frequency import RepresentationNormalizer, transform_representation
 
-    def transform_dataset(dataset: Any) -> tuple[list[np.ndarray], dict[int, tuple[np.ndarray, np.ndarray]]]:
+    def cache_path(dataset: Any, split: str) -> Path | None:
+        if config.preprocess_cache_directory is None:
+            return None
+        manifest = dataset.source.index.release_directory / "dataset_manifest.json"
+        release_hash = hashlib.sha256(manifest.read_bytes()).hexdigest()
+        payload = {"cache_version": 1, "release_hash": release_hash,
+                   "records": [record.sample_id for record in dataset.source.records],
+                   "spec": repr(dataset.source.spec), "representation": asdict(config.representation), "split": split}
+        key = hashlib.sha256(json.dumps(payload, sort_keys=True, default=str).encode()).hexdigest()[:24]
+        return config.preprocess_cache_directory / key
+
+    def transform_dataset(dataset: Any, split: str) -> tuple[list[np.ndarray], dict[int, tuple[np.ndarray, np.ndarray]]]:
+        cached_path = cache_path(dataset, split)
+        if cached_path is not None and cached_path.exists() and (
+            not cached_path.is_dir() or not (cached_path / "COMPLETE").exists()
+        ):
+            shutil.rmtree(cached_path, ignore_errors=True)
+        if cached_path is not None and cached_path.is_dir() and (cached_path / "COMPLETE").exists():
+            try:
+                arrays = [np.load(cached_path / f"array-{i}.npy", mmap_mode="r") for i in range(len(dataset))]
+                masks = [np.load(cached_path / f"mask-{i}.npy", mmap_mode="r") for i in range(len(dataset))]
+                return arrays, {i: (arrays[i], masks[i]) for i in range(len(arrays))}
+            except (OSError, ValueError):
+                shutil.rmtree(cached_path, ignore_errors=True)
+        gpu_stft = False
+        gpu_device = None
+        if config.pipeline_backend == "cuda":
+            torch, _, _ = _require_torch()
+            gpu_device = _device(config.device, torch)
+            gpu_stft = gpu_device.type == "cuda" and config.representation.name.startswith("stft_")
+
         def transform_item(position: int) -> tuple[int, np.ndarray, np.ndarray]:
             item = dataset[position]
             windows = np.asarray(item["windows"], dtype=np.float64)
             masks = np.asarray(item["sample_mask"], dtype=bool)
+            if gpu_stft:
+                from mmdii.data.time_frequency import stft_representation_torch
+                transformed, time_masks = stft_representation_torch(
+                    windows, sample_mask=masks, target_fs=config.target_fs,
+                    output_time_bins=config.representation.output_time_bins,
+                    device=gpu_device, **_representation_transform_parameters(config))
+                return position, transformed.detach().cpu().numpy(), time_masks.detach().cpu().numpy()
             transformed: list[np.ndarray] = []
             time_masks: list[np.ndarray] = []
             for window, mask in zip(windows, masks, strict=True):
@@ -526,7 +577,7 @@ def _time_frequency_datasets(
         transformed_by_position: dict[int, tuple[np.ndarray, np.ndarray]] = {}
         positions = range(len(dataset))
         worker_count = max(1, int(os.environ.get("MMDII_TRANSFORM_WORKERS", "1")))
-        if worker_count > 1 and len(dataset) > 1:
+        if worker_count > 1 and len(dataset) > 1 and not gpu_stft:
             with ThreadPoolExecutor(max_workers=worker_count) as executor:
                 transformed_items = executor.map(transform_item, positions)
                 results = list(transformed_items)
@@ -535,11 +586,24 @@ def _time_frequency_datasets(
         for position, transformed_array, mask_array in sorted(results):
             arrays.append(transformed_array)
             transformed_by_position[position] = (transformed_array, mask_array)
+        if cached_path is not None:
+            cached_path.parent.mkdir(parents=True, exist_ok=True)
+            temporary = cached_path.with_name(cached_path.name + f".{os.getpid()}.tmp")
+            shutil.rmtree(temporary, ignore_errors=True)
+            temporary.mkdir(parents=True, exist_ok=True)
+            for position, transformed_array in enumerate(arrays):
+                np.save(temporary / f"array-{position}.npy", transformed_array, allow_pickle=False)
+                np.save(temporary / f"mask-{position}.npy", transformed_by_position[position][1], allow_pickle=False)
+            (temporary / "COMPLETE").write_text("v1\n", encoding="ascii")
+            if not cached_path.exists():
+                os.replace(temporary, cached_path)
+            else:
+                shutil.rmtree(temporary, ignore_errors=True)
         return arrays, transformed_by_position
 
-    arrays, train_precomputed = transform_dataset(train_dataset)
+    arrays, train_precomputed = transform_dataset(train_dataset, "train")
     normalizer = RepresentationNormalizer.fit(arrays)
-    _, valid_precomputed = transform_dataset(valid_dataset)
+    _, valid_precomputed = transform_dataset(valid_dataset, "valid")
     return (
         _TimeFrequencyDataset(train_dataset, config, normalizer, train_precomputed),
         _TimeFrequencyDataset(valid_dataset, config, normalizer, valid_precomputed),
@@ -548,6 +612,13 @@ def _time_frequency_datasets(
 
 def _run_deep_fold(model: Any, train_dataset: Any, valid_dataset: Any, class_weights: np.ndarray, config: ExperimentConfig, torch: Any, nn: Any, DataLoader: Any) -> tuple[np.ndarray, dict[str, object]]:
     device = _device(config.device, torch)
+    gpu_dataset = None
+    if (config.pipeline_backend == "cuda" and device.type == "cuda"
+            and not config.augmentation.enabled):
+        estimated_bytes = _estimate_gpu_dataset_bytes(train_dataset) + _estimate_gpu_dataset_bytes(valid_dataset)
+        if estimated_bytes <= int(config.gpu_cache_gib * (1024 ** 3)):
+            gpu_dataset = (_cache_dataset_on_gpu(train_dataset, device, torch),
+                           _cache_dataset_on_gpu(valid_dataset, device, torch))
     model.to(device)
     optimizer_class = {
         "adamw": torch.optim.AdamW,
@@ -562,18 +633,18 @@ def _run_deep_fold(model: Any, train_dataset: Any, valid_dataset: Any, class_wei
     collate = _torch_collate if config.representation.name == "raw" else _torch_time_frequency_collate
     pin_memory = device.type == "cuda"
     train_loader = DataLoader(
-        train_dataset,
+        range(len(train_dataset)) if gpu_dataset is not None else train_dataset,
         batch_size=config.batch_size,
         shuffle=True,
-        collate_fn=collate,
-        pin_memory=pin_memory,
+        collate_fn=(list if gpu_dataset is not None else collate),
+        pin_memory=pin_memory and gpu_dataset is None,
     )
     valid_loader = DataLoader(
-        valid_dataset,
+        range(len(valid_dataset)) if gpu_dataset is not None else valid_dataset,
         batch_size=config.batch_size,
         shuffle=False,
-        collate_fn=collate,
-        pin_memory=pin_memory,
+        collate_fn=(list if gpu_dataset is not None else collate),
+        pin_memory=pin_memory and gpu_dataset is None,
     )
     strategy = TrainingStrategy(
         optimizer,
@@ -605,27 +676,29 @@ def _run_deep_fold(model: Any, train_dataset: Any, valid_dataset: Any, class_wei
     epoch_history: list[dict[str, float]] = []
     for epoch in range(config.epochs):
         model.train()
-        train_loss_total = 0.0
+        train_loss_total = None
         train_batches = 0
         for batch_index, batch in enumerate(train_loader):
-            windows = batch["windows"].to(device, non_blocking=pin_memory)
-            sample_mask = batch["sample_mask"].to(device, non_blocking=pin_memory)
+            if gpu_dataset is not None:
+                batch = _gpu_batch(batch, gpu_dataset[0], torch)
+            windows = batch["windows"].to(device, non_blocking=pin_memory and gpu_dataset is None)
+            sample_mask = batch["sample_mask"].to(device, non_blocking=pin_memory and gpu_dataset is None)
             windows = augmenter(windows, sample_mask, epoch=epoch, batch_index=batch_index)
             with strategy.autocast():
                 logits, _ = model(
                     windows,
-                    batch["window_mask"].to(device, non_blocking=pin_memory),
+                    batch["window_mask"].to(device, non_blocking=pin_memory and gpu_dataset is None),
                     sample_mask,
-                    _to_device(batch.get("representations"), device, non_blocking=pin_memory),
+                    _to_device(batch.get("representations"), device, non_blocking=pin_memory and gpu_dataset is None),
                 )
-                loss = criterion(logits, batch["targets"].to(device))
+                loss = criterion(logits, batch["targets"].to(device, non_blocking=pin_memory and gpu_dataset is None))
             strategy.backward_step(loss, model)
-            train_loss_total += float(loss.detach().cpu())
+            train_loss_total = loss.detach() if train_loss_total is None else train_loss_total + loss.detach()
             train_batches += 1
         strategy.epoch_step()
         epoch_history.append(strategy.epoch_stats())
         epochs_ran = epoch + 1
-        epoch_loss = train_loss_total / max(train_batches, 1)
+        epoch_loss = float((train_loss_total / max(train_batches, 1)).cpu())
         if config.early_stopping_patience > 0:
             if epoch_loss < best_loss - config.early_stopping_min_delta:
                 best_loss = epoch_loss
@@ -642,11 +715,13 @@ def _run_deep_fold(model: Any, train_dataset: Any, valid_dataset: Any, class_wei
     probabilities = []
     with torch.no_grad():
         for batch in valid_loader:
+            if gpu_dataset is not None:
+                batch = _gpu_batch(batch, gpu_dataset[1], torch)
             logits, _ = model(
-                batch["windows"].to(device, non_blocking=pin_memory),
-                batch["window_mask"].to(device, non_blocking=pin_memory),
-                batch["sample_mask"].to(device, non_blocking=pin_memory),
-                _to_device(batch.get("representations"), device, non_blocking=pin_memory),
+                batch["windows"].to(device, non_blocking=pin_memory and gpu_dataset is None),
+                batch["window_mask"].to(device, non_blocking=pin_memory and gpu_dataset is None),
+                batch["sample_mask"].to(device, non_blocking=pin_memory and gpu_dataset is None),
+                _to_device(batch.get("representations"), device, non_blocking=pin_memory and gpu_dataset is None),
             )
             probabilities.append(torch.sigmoid(logits).cpu().numpy())
     return np.concatenate(probabilities, axis=0), {
@@ -658,6 +733,58 @@ def _run_deep_fold(model: Any, train_dataset: Any, valid_dataset: Any, class_wei
         "amp_enabled": strategy.amp_enabled,
         "augmentation_enabled": config.augmentation.enabled,
     }
+
+
+def _estimate_gpu_dataset_bytes(dataset: Any) -> int:
+    total = 0
+    for position in range(len(dataset)):
+        item = dataset[position]
+        for key in ("windows", "window_mask", "sample_mask", "targets", "representations"):
+            if key in item:
+                total += np.asarray(item[key]).nbytes
+    return total
+
+
+def _cache_dataset_on_gpu(dataset: Any, device: Any, torch: Any) -> dict[str, Any]:
+    columns: dict[str, list[Any]] = {key: [] for key in ("windows", "window_mask", "sample_mask", "targets", "representations")}
+    metadata = {key: [] for key in ("sample_ids", "weld_ids", "image_groups", "folds")}
+    for position in range(len(dataset)):
+        item = dataset[position]
+        for key in columns:
+            if key in item:
+                columns[key].append(torch.as_tensor(np.asarray(item[key]), device=device))
+        metadata["sample_ids"].append(str(item["sample_id"]))
+        metadata["weld_ids"].append(str(item["weld_id"]))
+        metadata["image_groups"].append(str(item["image_group"]))
+        metadata["folds"].append(int(item["fold"]))
+    return {**{key: value for key, value in metadata.items()},
+            **{key: value for key, value in columns.items() if value}}
+
+
+def _gpu_batch(indices: list[int], cached: dict[str, Any], torch: Any) -> dict[str, Any]:
+    positions = [int(index) for index in indices]
+    windows = [cached["windows"][index] for index in positions]
+    max_windows = max(value.shape[0] for value in windows)
+    batch: dict[str, Any] = {}
+    for key in ("windows", "sample_mask", "representations"):
+        if key not in cached:
+            continue
+        source = cached[key]
+        tail = source[0].shape[1:]
+        output = torch.zeros((len(windows), max_windows, *tail), dtype=source[0].dtype, device=source[0].device)
+        for row, position in enumerate(positions):
+            value = source[position]
+            output[row, :value.shape[0]] = value
+        batch[key] = output
+    window_mask = torch.zeros((len(windows), max_windows), dtype=torch.bool, device=windows[0].device)
+    targets = []
+    for row, position in enumerate(positions):
+        value = cached["windows"][position]
+        window_mask[row, :value.shape[0]] = True
+        targets.append(cached["targets"][position])
+    batch["window_mask"] = window_mask
+    batch["targets"] = torch.stack(targets)
+    return batch
 
 
 def _torch_collate(items: list[dict[str, object]]) -> dict[str, Any]:
@@ -751,6 +878,10 @@ def _validate_config(config: ExperimentConfig) -> None:
         raise ValueError("augmentation.time_mask_ratio must be in [0, 1].")
     if config.augmentation.max_time_masks < 0:
         raise ValueError("augmentation.max_time_masks must be non-negative.")
+    if config.pipeline_backend not in {"cpu", "cuda"}:
+        raise ValueError("pipeline_backend must be cpu or cuda.")
+    if config.gpu_cache_gib <= 0:
+        raise ValueError("gpu_cache_gib must be positive.")
     if config.target_fs <= 0 or config.window_seconds <= 0 or config.stride_seconds <= 0:
         raise ValueError("Preprocessing values must be positive.")
     if config.stride_seconds > config.window_seconds:
@@ -804,6 +935,9 @@ def _json_config(config: ExperimentConfig) -> dict[str, object]:
     result["config_path"] = None if config.config_path is None else config.config_path.as_posix()
     result["release_directory"] = config.release_directory.as_posix()
     result["output_directory"] = config.output_directory.as_posix()
+    result["preprocess_cache_directory"] = (
+        None if config.preprocess_cache_directory is None else config.preprocess_cache_directory.as_posix()
+    )
     result["representation_parameters"] = _representation_parameters(config)
     return result
 

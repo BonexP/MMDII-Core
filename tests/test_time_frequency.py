@@ -8,6 +8,7 @@ from mmdii.data.time_frequency import (
     cwt_representation,
     dwt_representation,
     stft_representation,
+    stft_representation_torch,
     transform_representation,
 )
 
@@ -42,6 +43,23 @@ class TimeFrequencyTests(unittest.TestCase):
         self.assertEqual(transformed.shape, (3, 129, 16))
         self.assertEqual(mask.shape, (16,))
         self.assertTrue(mask.any())
+
+    @unittest.skipUnless(importlib.util.find_spec("torch") is not None, "PyTorch is required")
+    def test_torch_stft_matches_reference_and_mask(self) -> None:
+        import torch
+
+        sample_mask = np.zeros(self.signal.shape[1], dtype=bool)
+        sample_mask[:1500] = True
+        expected, expected_mask = stft_representation(
+            self.signal, n_fft=256, hop_length=64, sample_mask=sample_mask,
+            output_time_bins=37,
+        )
+        actual, actual_mask = stft_representation_torch(
+            self.signal[None], n_fft=256, hop_length=64,
+            sample_mask=sample_mask[None], output_time_bins=37, device="cpu",
+        )
+        np.testing.assert_allclose(actual.detach().numpy()[0], expected, rtol=1e-4, atol=1e-6)
+        np.testing.assert_array_equal(actual_mask.detach().numpy()[0], expected_mask)
 
     @unittest.skipUnless(PYWT_AVAILABLE, "PyWavelets is required for CWT/DWT tests")
     def test_cwt_and_dwt_have_fixed_time_axis(self) -> None:

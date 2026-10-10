@@ -37,6 +37,9 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("--early-stopping-min-delta", type=float)
     parser.add_argument("--gradient-clip-norm", type=float)
     parser.add_argument("--device", choices=("auto", "cpu", "cuda"))
+    parser.add_argument("--pipeline-backend", choices=("cpu", "cuda"))
+    parser.add_argument("--preprocess-cache-directory", type=Path)
+    parser.add_argument("--gpu-cache-gib", type=float)
     parser.add_argument("--fold-scheme", choices=("weld_independent", "image_group"))
     parser.add_argument(
         "--representation",
@@ -67,6 +70,12 @@ def main(argv: Sequence[str] | None = None) -> int:
         overrides["output_directory"] = args.output_dir.resolve()
     if args.fold_scheme is not None:
         overrides["fold_scheme"] = args.fold_scheme
+    if args.pipeline_backend is not None:
+        overrides["pipeline_backend"] = args.pipeline_backend
+    if args.preprocess_cache_directory is not None:
+        overrides["preprocess_cache_directory"] = args.preprocess_cache_directory.resolve()
+    if args.gpu_cache_gib is not None:
+        overrides["gpu_cache_gib"] = args.gpu_cache_gib
     if args.mode is not None:
         overrides["mode"] = args.mode
     if args.aggregator is not None:

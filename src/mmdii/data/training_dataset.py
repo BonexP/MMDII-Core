@@ -188,15 +188,32 @@ class FoldNormalizer:
 
     @classmethod
     def from_arrays(cls, arrays: Iterable[np.ndarray]) -> "FoldNormalizer":
-        values = tuple(np.asarray(array, dtype=np.float64) for array in arrays)
-        if not values:
+        count = 0
+        mean = None
+        m2 = None
+        channel_count = None
+        for array in arrays:
+            values = np.asarray(array, dtype=np.float64)
+            if values.ndim != 2 or (channel_count is not None and values.shape[0] != channel_count):
+                raise ValueError("Training signals must have a common channel count.")
+            channel_count = values.shape[0]
+            n = values.shape[1]
+            if n == 0:
+                continue
+            batch_mean = values.mean(axis=1)
+            batch_m2 = np.square(values - batch_mean[:, None]).sum(axis=1)
+            if mean is None:
+                mean, m2, count = batch_mean, batch_m2, n
+            else:
+                delta = batch_mean - mean
+                total = count + n
+                m2 = m2 + batch_m2 + np.square(delta) * count * n / total
+                mean = mean + delta * n / total
+                count = total
+        if mean is None or count == 0:
             raise ValueError("At least one training signal is required.")
-        channel_count = values[0].shape[0]
-        if any(array.ndim != 2 or array.shape[0] != channel_count for array in values):
-            raise ValueError("Training signals must have a common channel count.")
-        joined = np.concatenate(values, axis=1)
-        means = joined.mean(axis=1)
-        stds = joined.std(axis=1)
+        means = mean
+        stds = np.sqrt(m2 / count)
         stds = np.where(stds == 0.0, 1.0, stds)
         return cls(means=means, stds=stds)
 
