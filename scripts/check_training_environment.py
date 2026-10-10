@@ -7,6 +7,7 @@ import json
 from pathlib import Path
 from typing import Sequence
 
+from mmdii.reporting import configure_logging
 from mmdii.training.cross_validation import load_experiment_config
 from mmdii.training.readiness import inspect_environment
 
@@ -18,6 +19,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("--output-dir", type=Path)
     parser.add_argument("--json", action="store_true")
     args = parser.parse_args(argv)
+    configure_logging()
 
     config = load_experiment_config(args.config)
     report = inspect_environment(

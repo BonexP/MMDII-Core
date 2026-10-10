@@ -107,6 +107,25 @@ metrics, the resolved configuration and a summary JSON. `pore` remains in the
 release metadata but is excluded from the first three formal targets. Attention
 weights are candidate windows for review, not validated defect locations.
 
+### Training progress logs
+
+Training entry points emit line-based progress to **stderr**; stdout stays
+machine-readable JSON. The library is silent by default, and progress is enabled
+only by the CLI and suite entry points. Set the level with `MMDII_LOG_LEVEL`
+(default `info`):
+
+```bash
+MMDII_LOG_LEVEL=info python scripts/train_baseline.py --config configs/moderntcn_mil_weld_independent_v0_2_1.toml
+```
+
+Each fold logs its split and metric summary. Neural-network folds also log
+per-epoch loss/learning-rate/gradient statistics with elapsed time and ETA,
+throttled batch progress, and an early-stop notice when applicable. Statistical
+folds log feature extraction progress; time-frequency runs log transform
+progress and cache hits. The final results table is written after cross-validation.
+Because detached suites capture stderr into each run's `train.log`,
+`tail -f <run>/train.log` follows live progress.
+
 Experiment order is B0 statistical features, E0 full-signal ModernTCN, then
 windowed mean/max/top-k/gated MIL. The v0.2.1 main protocol uses deterministic
 weld-independent folds; the same release also carries `folds_image_group.csv`

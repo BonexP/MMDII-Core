@@ -23,6 +23,30 @@ status() {
         "$1" "$2" "$(date --iso-8601=seconds)" > "$OUTPUT_ROOT/status.txt"
 }
 
+report_metrics() {
+    local destination="$1"
+    "$PYTHON" - "$destination" <<'PY' || true
+import json, statistics, sys
+run = sys.argv[1]
+try:
+    summary = json.load(open(run + "/training_summary.json", encoding="utf-8"))
+    folds = json.load(open(run + "/fold_metrics.json", encoding="utf-8"))
+except (OSError, ValueError):
+    sys.exit(0)
+
+def mean(key):
+    values = [row[key] for row in folds if isinstance(row, dict) and row.get(key) is not None]
+    return f"{statistics.mean(values):.4f}" if values else "n/a"
+
+print(
+    f"  metrics: samples={summary.get('sample_count', 'n/a')} "
+    f"folds={summary.get('completed_fold_count', 'n/a')} "
+    f"macro_f1={mean('macro_f1')} macro_recall={mean('macro_recall')} "
+    f"macro_pr_auc={mean('macro_pr_auc')}"
+)
+PY
+}
+
 run_experiment() {
     local name="$1"
     shift
@@ -37,6 +61,7 @@ run_experiment() {
     status running "$name"
     mkdir -p "$destination"
     echo "[$(date --iso-8601=seconds)] start experiment: $name"
+    echo "  live: tail -f '$destination/train.log'"
     "$PYTHON" scripts/train_baseline.py \
         --config "$CONFIG" \
         --release-dir "$RELEASE_DIR" \
@@ -48,6 +73,7 @@ run_experiment() {
     [[ -s "$destination/oof_predictions.csv" ]]
     [[ "$(wc -l < "$destination/oof_predictions.csv")" -eq "$EXPECTED_CSV_ROWS" ]]
     touch "$destination/.complete"
+    report_metrics "$destination"
     echo "[$(date --iso-8601=seconds)] complete experiment: $name"
 }
 

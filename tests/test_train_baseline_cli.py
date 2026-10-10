@@ -18,6 +18,18 @@ import train_baseline
 
 
 class TrainBaselineCliTests(unittest.TestCase):
+    def tearDown(self) -> None:
+        # train_baseline.main() calls configure_logging(); restore the silent
+        # default so library logging never leaks into other tests.
+        import logging
+
+        logger = logging.getLogger("mmdii")
+        for handler in list(logger.handlers):
+            logger.removeHandler(handler)
+        logger.addHandler(logging.NullHandler())
+        logger.setLevel(logging.NOTSET)
+        logger.propagate = False
+
     def test_cli_loads_config_and_prints_summary(self) -> None:
         summary = {"mode": "window_mil", "sample_count": 101}
         output = io.StringIO()

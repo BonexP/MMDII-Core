@@ -8,6 +8,7 @@ from pathlib import Path
 import sys
 from typing import Sequence
 
+from mmdii.reporting import configure_logging
 from mmdii.training.cross_validation import load_experiment_config
 from mmdii.training.readiness import run_real_data_smoke
 
@@ -20,6 +21,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("--batch-size", type=int, default=1)
     parser.add_argument("--device")
     args = parser.parse_args(argv)
+    configure_logging()
 
     config = load_experiment_config(args.config)
     try:
