@@ -1,10 +1,13 @@
 from __future__ import annotations
 
 import importlib.util
+from dataclasses import replace
 from pathlib import Path
 import sys
 import tempfile
 import unittest
+
+import numpy as np
 
 
 CORE_ROOT = Path(__file__).resolve().parents[1]
@@ -14,8 +17,16 @@ from mmdii.training.cross_validation import (
     ExperimentConfig,
     RepresentationConfig,
     _json_config,
+    _time_frequency_datasets,
     load_experiment_config,
     run_cross_validation,
+)
+from mmdii.data.training_dataset import (
+    DatasetIndex,
+    FoldNormalizer,
+    WeldRecord,
+    WeldWindowDataset,
+    WindowSpec,
 )
 
 
@@ -121,6 +132,72 @@ encoder_chunk_size = 16
         config = ExperimentConfig.for_test()
         self.assertEqual(config.training.scheduler, "none")
         self.assertFalse(config.augmentation.enabled)
+
+    def test_time_frequency_cache_uses_weld_window_dataset_contract(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            root = Path(temporary_directory)
+            (root / "dataset_manifest.json").write_text("{}", encoding="utf-8")
+            time = np.arange(256, dtype=np.float64) / 32.0
+            records = []
+            for index, fold in enumerate((0, 1)):
+                sample_id = f"sample-{index}"
+                signal_path = root / f"{sample_id}.npz"
+                signal = np.vstack(
+                    [np.sin(time * (index + channel + 1)) for channel in range(3)]
+                )
+                np.savez(
+                    signal_path,
+                    time=time,
+                    af=signal[0],
+                    sf=signal[1],
+                    axialf=signal[2],
+                )
+                records.append(
+                    WeldRecord(
+                        sample_id=sample_id,
+                        weld_id=sample_id,
+                        image_group=sample_id,
+                        fold=fold,
+                        target=(float(index), 0.0, 0.0),
+                        defect_codes=(),
+                        is_normal=index == 0,
+                        signal_path=signal_path,
+                        metadata=(),
+                    )
+                )
+            index = DatasetIndex(root, ("flash", "blur", "tunnel"), tuple(records))
+            spec = WindowSpec(target_fs=32.0, window_seconds=8.0, stride_seconds=8.0)
+            normalizer = FoldNormalizer.fit(index, (records[1],))
+            train = WeldWindowDataset(index, {1}, spec, normalizer)
+            valid = WeldWindowDataset(index, {0}, spec, normalizer)
+            config = replace(
+                ExperimentConfig.for_test(),
+                target_fs=32.0,
+                window_seconds=8.0,
+                stride_seconds=8.0,
+                preprocess_cache_directory=root / "cache",
+                representation=RepresentationConfig(
+                    name="stft_256", encoder="cnn2d", output_time_bins=16
+                ),
+            )
+
+            wrapped_datasets = []
+            try:
+                for _ in range(2):
+                    train_tf, valid_tf = _time_frequency_datasets(train, valid, config)
+                    wrapped_datasets.extend((train_tf, valid_tf))
+                    self.assertEqual(train_tf[0]["representations"].shape[-1], 16)
+                    self.assertEqual(valid_tf[0]["representations"].shape[-1], 16)
+
+                cache_entries = list((root / "cache").iterdir())
+                self.assertEqual(len(cache_entries), 2)
+                self.assertTrue(all((entry / "COMPLETE").is_file() for entry in cache_entries))
+            finally:
+                for dataset in wrapped_datasets:
+                    for arrays in dataset._precomputed.values():
+                        for array in arrays:
+                            if isinstance(array, np.memmap):
+                                array._mmap.close()
 
     def test_loads_training_and_augmentation_sections(self) -> None:
         with tempfile.TemporaryDirectory() as temporary_directory:

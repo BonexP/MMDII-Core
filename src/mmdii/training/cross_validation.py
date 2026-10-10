@@ -519,11 +519,11 @@ def _time_frequency_datasets(
     def cache_path(dataset: Any, split: str) -> Path | None:
         if config.preprocess_cache_directory is None:
             return None
-        manifest = dataset.source.index.release_directory / "dataset_manifest.json"
+        manifest = dataset.index.release_directory / "dataset_manifest.json"
         release_hash = hashlib.sha256(manifest.read_bytes()).hexdigest()
         payload = {"cache_version": 1, "release_hash": release_hash,
-                   "records": [record.sample_id for record in dataset.source.records],
-                   "spec": repr(dataset.source.spec), "representation": asdict(config.representation), "split": split}
+                   "records": [record.sample_id for record in dataset.records],
+                   "spec": repr(dataset.spec), "representation": asdict(config.representation), "split": split}
         key = hashlib.sha256(json.dumps(payload, sort_keys=True, default=str).encode()).hexdigest()[:24]
         return config.preprocess_cache_directory / key
 
