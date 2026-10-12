@@ -10,6 +10,11 @@ from typing import Any
 
 import numpy as np
 
+from mmdii.reporting import configure_logging, get_logger
+
+
+_LOGGER = get_logger("mmdii.calibrate")
+
 
 def _load(path: Path) -> tuple[list[dict[str, str]], tuple[str, ...]]:
     with path.open(newline="", encoding="utf-8") as handle:
@@ -59,6 +64,12 @@ def _average_precision(truth: np.ndarray, scores: np.ndarray) -> float | None:
 
 def calibrate(path: Path) -> dict[str, Any]:
     rows, codes = _load(path)
+    _LOGGER.info(
+        "calibrate start oof=%s samples=%d codes=%s",
+        path,
+        len(rows),
+        ",".join(codes),
+    )
     truth = _truth(rows, codes)
     scores = np.asarray([[float(row[f"prob_{code}"]) for code in codes] for row in rows])
     folds = np.asarray([int(row["fold"]) for row in rows])
@@ -72,6 +83,7 @@ def calibrate(path: Path) -> dict[str, Any]:
         thresholds = [_best_threshold(truth[train, position], scores[train, position]) for position in range(len(codes))]
         predictions = scores[valid] >= np.asarray(thresholds)
         reports.append({"fold": int(fold), "thresholds": dict(zip(codes, thresholds, strict=True)), "valid_count": int(valid.sum())})
+        _LOGGER.info("calibrate fold %s valid=%d", int(fold), int(valid.sum()))
         pooled_truth.append(truth[valid])
         pooled_pred.append(predictions)
         pooled_scores.append(scores[valid])
@@ -90,6 +102,7 @@ def calibrate(path: Path) -> dict[str, Any]:
             "recall": None if positive.sum() == 0 else tp / (tp + fn),
             "f1": 0.0 if 2 * tp + fp + fn == 0 else 2 * tp / (2 * tp + fp + fn),
         }
+    _LOGGER.info("calibrate complete folds=%d", len(reports))
     return {"oof_path": str(path.resolve()), "fold_count": len(reports), "sample_count": len(rows), "target_codes": list(codes), "folds": reports, "pooled_per_code": per_code}
 
 
@@ -98,6 +111,7 @@ def main() -> int:
     parser.add_argument("--oof", required=True, type=Path)
     parser.add_argument("--output", type=Path)
     args = parser.parse_args()
+    configure_logging()
     result = calibrate(args.oof.resolve())
     payload = json.dumps(result, ensure_ascii=True, indent=2, sort_keys=True) + "\n"
     if args.output:

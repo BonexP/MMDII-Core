@@ -21,11 +21,37 @@ invoking it when needed.
 EOF
 }
 
+report_metrics() {
+    local destination="$1"
+    "$PYTHON" - "$destination" <<'PY' || true
+import json, statistics, sys
+run = sys.argv[1]
+try:
+    summary = json.load(open(run + "/training_summary.json", encoding="utf-8"))
+    folds = json.load(open(run + "/fold_metrics.json", encoding="utf-8"))
+except (OSError, ValueError):
+    sys.exit(0)
+
+def mean(key):
+    values = [row[key] for row in folds if isinstance(row, dict) and row.get(key) is not None]
+    return f"{statistics.mean(values):.4f}" if values else "n/a"
+
+print(
+    f"  metrics: samples={summary.get('sample_count', 'n/a')} "
+    f"folds={summary.get('completed_fold_count', 'n/a')} "
+    f"macro_f1={mean('macro_f1')} macro_recall={mean('macro_recall')} "
+    f"macro_pr_auc={mean('macro_pr_auc')}"
+)
+PY
+}
+
 run_one() {
     local name="$1" mode="$2" aggregator="$3" seed="$4"
     local destination="$OUTPUT_ROOT/$name"
     [[ -f "$destination/.complete" ]] && return
     mkdir -p "$destination"
+    echo "[$(date --iso-8601=seconds)] start experiment: $name"
+    echo "  live: tail -f '$destination/train.log'"
     local options=(
         --config "$CONFIG" --release-dir "$RELEASE_DIR" --output-dir "$destination"
         --mode "$mode" --aggregator "$aggregator" --seed "$seed"
@@ -41,6 +67,8 @@ run_one() {
         rm -f "$destination/.complete"
         return 1
     fi
+    report_metrics "$destination"
+    echo "[$(date --iso-8601=seconds)] complete experiment: $name"
 }
 
 worker() {

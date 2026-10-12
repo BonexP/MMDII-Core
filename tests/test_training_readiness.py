@@ -31,6 +31,18 @@ TORCH_AVAILABLE = __import__("importlib.util").util.find_spec("torch") is not No
 
 
 class TrainingReadinessTests(unittest.TestCase):
+    def tearDown(self) -> None:
+        # The CLI entry points call configure_logging(); restore the silent
+        # default so library logging never leaks into other tests.
+        import logging
+
+        logger = logging.getLogger("mmdii")
+        for handler in list(logger.handlers):
+            logger.removeHandler(handler)
+        logger.addHandler(logging.NullHandler())
+        logger.setLevel(logging.NOTSET)
+        logger.propagate = False
+
     def test_environment_report_covers_packages_dataset_device_and_output(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

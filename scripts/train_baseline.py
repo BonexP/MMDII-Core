@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import Sequence
 
 from mmdii.data.training_dataset import DatasetIndex
+from mmdii.reporting import configure_logging
 from mmdii.training.cross_validation import (
     ExperimentConfig,
     RepresentationConfig,
@@ -62,6 +63,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("--dwt-level", type=int)
     parser.add_argument("--fold", type=int, action="append", dest="run_folds")
     args = parser.parse_args(argv)
+    configure_logging()
     config = load_experiment_config(args.config)
     overrides: dict[str, object] = {}
     if args.release_dir is not None:

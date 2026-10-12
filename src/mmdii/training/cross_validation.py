@@ -11,6 +11,7 @@ import os
 from pathlib import Path
 import random
 import shutil
+import time
 import tomllib
 from concurrent.futures import ThreadPoolExecutor
 from typing import Any
@@ -40,6 +41,19 @@ from mmdii.training.strategy import (
     TrainingStrategy,
     TrainingStrategyConfig,
 )
+from mmdii.reporting import (
+    ProgressReporter,
+    format_eta,
+    get_logger,
+    log_banner,
+    log_dataset,
+    log_epoch,
+    log_fold_summary,
+    log_results_table,
+)
+
+
+_LOGGER = get_logger("mmdii.training")
 
 
 @dataclass(frozen=True)
@@ -246,17 +260,42 @@ def run_cross_validation(
     fold_reports: list[dict[str, object]] = []
 
     folds = config.run_folds or tuple(range(config.fold_count))
+    log_banner(
+        _LOGGER,
+        experiment=config.output_directory.name,
+        mode=config.mode,
+        aggregator=config.aggregator,
+        seed=config.seed,
+        folds=folds,
+        epochs=config.epochs,
+        device=config.device,
+        representation=config.representation.name,
+    )
+    log_dataset(
+        _LOGGER,
+        sample_count=len(index.records),
+        fold_count=config.fold_count,
+        target_codes=config.target_codes,
+        representation=config.representation.name,
+    )
     for fold in folds:
         train_records = tuple(record for record in index.records if record.fold != fold)
         valid_records = tuple(record for record in index.records if record.fold == fold)
         if not train_records or not valid_records:
             raise ValueError(f"Fold {fold} has no train or validation records.")
+        _LOGGER.info(
+            "fold %s/%s start train=%d valid=%d",
+            fold,
+            len(folds),
+            len(train_records),
+            len(valid_records),
+        )
         train_targets = np.asarray([record.target for record in train_records], dtype=np.float64)
         class_weights = compute_positive_class_weights(train_targets)
         training_info: dict[str, object] = {}
         if config.mode in {"statistical", "random_forest"}:
             probabilities = _run_statistical_fold(
-                index, train_records, valid_records, config
+                index, train_records, valid_records, config, fold=fold
             )
         else:
             normalizer = FoldNormalizer.fit(index, train_records)
@@ -289,6 +328,7 @@ def run_cross_validation(
                 torch,
                 nn,
                 DataLoader,
+                fold=fold,
             )
         truth = np.asarray([record.target for record in valid_records], dtype=np.float64)
         metrics = evaluate_multilabel(
@@ -299,6 +339,7 @@ def run_cross_validation(
         metrics.update(training_info)
         metrics["fold"] = fold
         fold_reports.append(metrics)
+        log_fold_summary(_LOGGER, fold=fold, metrics=metrics)
         for record, row_probabilities in zip(valid_records, probabilities, strict=True):
             oof_rows.append(
                 {
@@ -338,16 +379,38 @@ def run_cross_validation(
         json.dumps(summary, ensure_ascii=True, indent=2, sort_keys=True) + "\n",
         encoding="utf-8",
     )
+    log_results_table(
+        _LOGGER,
+        rows=fold_reports,
+        columns=("fold", "macro_f1", "macro_recall", "macro_pr_auc", "epochs_ran"),
+    )
     return summary
 
 
-def _run_statistical_fold(index: DatasetIndex, train_records: tuple[Any, ...], valid_records: tuple[Any, ...], config: ExperimentConfig) -> np.ndarray:
-    train_features = np.stack(
-        [extract_statistical_features(index.load_signal(record)[0]) for record in train_records]
+def _run_statistical_fold(index: DatasetIndex, train_records: tuple[Any, ...], valid_records: tuple[Any, ...], config: ExperimentConfig, *, fold: int | None = None) -> np.ndarray:
+    total = len(train_records) + len(valid_records)
+    progress = ProgressReporter(
+        _LOGGER,
+        total=total,
+        label=f"fold {fold} stat features",
+        every_steps=max(1, total // 10),
+        every_seconds=15.0,
     )
-    valid_features = np.stack(
-        [extract_statistical_features(index.load_signal(record)[0]) for record in valid_records]
-    )
+    train_features_list: list[np.ndarray] = []
+    for record in train_records:
+        train_features_list.append(
+            extract_statistical_features(index.load_signal(record)[0])
+        )
+        progress.update(len(train_features_list))
+    valid_features_list: list[np.ndarray] = []
+    for record in valid_records:
+        valid_features_list.append(
+            extract_statistical_features(index.load_signal(record)[0])
+        )
+        progress.update(len(train_features_list) + len(valid_features_list))
+    progress.close()
+    train_features = np.stack(train_features_list)
+    valid_features = np.stack(valid_features_list)
     predictor = fit_predict_random_forest_ovr if config.mode == "random_forest" else fit_predict_logistic_ovr
     return predictor(
         train_features,
@@ -537,6 +600,7 @@ def _time_frequency_datasets(
             try:
                 arrays = [np.load(cached_path / f"array-{i}.npy", mmap_mode="r") for i in range(len(dataset))]
                 masks = [np.load(cached_path / f"mask-{i}.npy", mmap_mode="r") for i in range(len(dataset))]
+                _LOGGER.info("tf transform %s cache hit records=%d", split, len(dataset))
                 return arrays, {i: (arrays[i], masks[i]) for i in range(len(arrays))}
             except (OSError, ValueError):
                 shutil.rmtree(cached_path, ignore_errors=True)
@@ -576,13 +640,27 @@ def _time_frequency_datasets(
         arrays: list[np.ndarray] = []
         transformed_by_position: dict[int, tuple[np.ndarray, np.ndarray]] = {}
         positions = range(len(dataset))
+        progress = ProgressReporter(
+            _LOGGER,
+            total=len(dataset),
+            label=f"tf transform {split}",
+            every_steps=max(1, len(dataset) // 20),
+            every_seconds=15.0,
+        )
         worker_count = max(1, int(os.environ.get("MMDII_TRANSFORM_WORKERS", "1")))
         if worker_count > 1 and len(dataset) > 1 and not gpu_stft:
             with ThreadPoolExecutor(max_workers=worker_count) as executor:
                 transformed_items = executor.map(transform_item, positions)
-                results = list(transformed_items)
+                results = []
+                for completed, item in enumerate(transformed_items):
+                    results.append(item)
+                    progress.update(completed + 1)
         else:
-            results = [transform_item(position) for position in positions]
+            results = []
+            for completed, position in enumerate(positions):
+                results.append(transform_item(position))
+                progress.update(completed + 1)
+        progress.close()
         for position, transformed_array, mask_array in sorted(results):
             arrays.append(transformed_array)
             transformed_by_position[position] = (transformed_array, mask_array)
@@ -595,6 +673,7 @@ def _time_frequency_datasets(
                 np.save(temporary / f"array-{position}.npy", transformed_array, allow_pickle=False)
                 np.save(temporary / f"mask-{position}.npy", transformed_by_position[position][1], allow_pickle=False)
             (temporary / "COMPLETE").write_text("v1\n", encoding="ascii")
+            _LOGGER.info("tf transform %s cache write arrays=%d", split, len(arrays))
             if not cached_path.exists():
                 os.replace(temporary, cached_path)
             else:
@@ -610,7 +689,7 @@ def _time_frequency_datasets(
     )
 
 
-def _run_deep_fold(model: Any, train_dataset: Any, valid_dataset: Any, class_weights: np.ndarray, config: ExperimentConfig, torch: Any, nn: Any, DataLoader: Any) -> tuple[np.ndarray, dict[str, object]]:
+def _run_deep_fold(model: Any, train_dataset: Any, valid_dataset: Any, class_weights: np.ndarray, config: ExperimentConfig, torch: Any, nn: Any, DataLoader: Any, *, fold: int | None = None) -> tuple[np.ndarray, dict[str, object]]:
     device = _device(config.device, torch)
     gpu_dataset = None
     if (config.pipeline_backend == "cuda" and device.type == "cuda"
@@ -674,7 +753,22 @@ def _run_deep_fold(model: Any, train_dataset: Any, valid_dataset: Any, class_wei
     epochs_without_improvement = 0
     epochs_ran = 0
     epoch_history: list[dict[str, float]] = []
+    training_start = time.monotonic()
+    _LOGGER.info(
+        "fold %s train start epochs=%d steps/epoch=%d",
+        fold,
+        config.epochs,
+        len(train_loader),
+    )
     for epoch in range(config.epochs):
+        epoch_start = time.monotonic()
+        epoch_reporter = ProgressReporter(
+            _LOGGER,
+            total=len(train_loader),
+            label=f"fold {fold} train",
+            every_steps=max(1, len(train_loader) // 10),
+            every_seconds=30.0,
+        )
         model.train()
         train_loss_total = None
         train_batches = 0
@@ -695,10 +789,26 @@ def _run_deep_fold(model: Any, train_dataset: Any, valid_dataset: Any, class_wei
             strategy.backward_step(loss, model)
             train_loss_total = loss.detach() if train_loss_total is None else train_loss_total + loss.detach()
             train_batches += 1
+            epoch_reporter.update(batch_index + 1)
+        epoch_reporter.close()
         strategy.epoch_step()
         epoch_history.append(strategy.epoch_stats())
         epochs_ran = epoch + 1
         epoch_loss = float((train_loss_total / max(train_batches, 1)).cpu())
+        epoch_elapsed = time.monotonic() - epoch_start
+        epoch_stats = epoch_history[-1]
+        log_epoch(
+            _LOGGER,
+            fold=fold,
+            epoch=epoch + 1,
+            total_epochs=config.epochs,
+            train_loss=epoch_loss,
+            learning_rate=float(epoch_stats.get("learning_rate", 0.0)),
+            gradient_norm_mean=float(epoch_stats.get("gradient_norm_mean", 0.0)),
+            gradient_norm_max=float(epoch_stats.get("gradient_norm_max", 0.0)),
+            elapsed=epoch_elapsed,
+            eta=format_eta(epoch + 1, config.epochs, time.monotonic() - training_start),
+        )
         if config.early_stopping_patience > 0:
             if epoch_loss < best_loss - config.early_stopping_min_delta:
                 best_loss = epoch_loss
@@ -708,11 +818,19 @@ def _run_deep_fold(model: Any, train_dataset: Any, valid_dataset: Any, class_wei
             else:
                 epochs_without_improvement += 1
                 if epochs_without_improvement >= config.early_stopping_patience:
+                    _LOGGER.info(
+                        "fold %s early_stop epoch=%d best_loss=%.4f patience=%d monitor=train_loss",
+                        fold,
+                        epoch + 1,
+                        best_loss,
+                        config.early_stopping_patience,
+                    )
                     break
     if best_state is not None:
         model.load_state_dict(best_state)
     model.eval()
     probabilities = []
+    _LOGGER.info("fold %s validation start batches=%d", fold, len(valid_loader))
     with torch.no_grad():
         for batch in valid_loader:
             if gpu_dataset is not None:

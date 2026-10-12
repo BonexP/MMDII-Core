@@ -17,6 +17,8 @@ Versioning.
 - Nonlinear Random Forest reference using the existing fold-local statistical
   features.
 - Cross-fitted per-class OOF threshold calibration utility.
+- Line-based stderr training progress logging with experiment banners, per-fold
+  summaries, epoch metrics and ETA, controlled by `MMDII_LOG_LEVEL`.
 
 ### Changed
 

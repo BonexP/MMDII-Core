@@ -20,6 +20,10 @@ from mmdii.data.training_dataset import (
 )
 from mmdii.evaluation.multilabel import compute_positive_class_weights
 from mmdii.training.cross_validation import ExperimentConfig, _build_deep_model
+from mmdii.reporting import get_logger
+
+
+_LOGGER = get_logger("mmdii.readiness")
 
 
 def inspect_environment(
@@ -125,6 +129,13 @@ def run_real_data_smoke(
         config.target_codes,
         fold_scheme=config.fold_scheme,
     )
+    _LOGGER.info(
+        "smoke start fold=%d batch_size=%d device=%s samples=%d",
+        fold,
+        batch_size,
+        device_override or config.device,
+        len(index.records),
+    )
     train_records = tuple(record for record in index.records if record.fold != fold)
     train_folds = {record.fold for record in train_records}
     if not train_records or train_folds != set(range(config.fold_count)) - {fold}:
@@ -219,6 +230,11 @@ def _execute_smoke_batch(
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     else:
         device = torch.device(requested_device)
+    _LOGGER.info(
+        "smoke batch start device=%s batch=%d",
+        device,
+        min(batch_size, len(dataset)),
+    )
 
     torch.manual_seed(config.seed)
     if torch.cuda.is_available():
@@ -264,6 +280,11 @@ def _execute_smoke_batch(
     if not math.isfinite(gradient_norm) or gradient_norm <= 0.0 or parameter_delta <= 0.0:
         raise RuntimeError("Smoke training did not produce a finite parameter update.")
 
+    _LOGGER.info(
+        "smoke batch complete loss=%.4f grad_norm=%.4f",
+        float(loss.detach().item()),
+        gradient_norm,
+    )
     return {
         "ok": True,
         "held_out_fold": held_out_fold,
