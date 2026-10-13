@@ -1,0 +1,24 @@
+# Offline late fusion of two archived OOF runs.
+#
+# Consumed directly by scripts/fuse_oof.py; this file is NOT an
+# ExperimentConfig and is never passed to load_experiment_config.
+#
+# fusion weight convention: p = alpha * p_tree + (1 - alpha) * p_deep
+#
+# alpha_selection = "fold_local" chooses alpha for each held-out fold using
+# only the other folds, which is the only defensible protocol with 101 welds.
+# per_class = true is available for exploration but must not support a claim:
+# tunnel has ten positive welds in total.
+
+[fusion]
+enabled = true
+tree_run = "outputs/time-frequency-v0-2-1/seed-7-random-forest"
+deep_run = "outputs/time-frequency-v0-2-1/seed-7-e1c-gated-attention"
+alpha_selection = "fold_local"
+alpha = 0.5
+alpha_grid = 0.05
+per_class = false
+n_boot = 2000
+confidence = 0.95
+bootstrap_seed = 7
+output_name = "seed-7-late-fusion-random-forest-e1c-gated-attention"

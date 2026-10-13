@@ -42,6 +42,53 @@ class WeldMIL(nn.Module):
             self.attention_w = nn.Linear(attention_dim, num_targets, bias=False)
             self.attention_classifier = nn.Linear(embedding_dim, num_targets)
 
+    @property
+    def representation_shared(self) -> bool:
+        """True when every target shares one weld-level representation.
+
+        Mean aggregation pools the window embeddings once, so the per-target
+        slices of :meth:`pool` are identical copies.  Consumers that build a
+        feature matrix should keep a single slice in that case instead of
+        stacking ``num_targets`` redundant copies.
+        """
+
+        return self.mode == "mean"
+
+    def pool(self, embeddings: torch.Tensor, window_mask: torch.Tensor) -> torch.Tensor:
+        """Return the weld-level representation ``[batch, num_targets, embedding_dim]``.
+
+        ``forward`` and ``pool`` must stay consistent: for ``mean`` the pooled
+        vector feeds the same ``window_classifier``, and for ``gated_attention``
+        it is the same attention-weighted vector fed to ``attention_classifier``.
+        Tests assert that consistency so the two cannot drift apart.
+
+        The per-target representation produced by ``max`` and ``topk_mean`` is
+        not a single well-defined vector (the top windows differ per target), so
+        those modes refuse to expose one rather than silently inventing it.
+        """
+
+        if embeddings.ndim != 3 or window_mask.shape != embeddings.shape[:2]:
+            raise ValueError("embeddings or window_mask has an invalid shape.")
+        mask = window_mask.to(dtype=torch.bool, device=embeddings.device)
+        if not mask.any(dim=1).all():
+            raise ValueError("Each weld must contain at least one valid window.")
+        if self.mode == "mean":
+            weights = mask.unsqueeze(-1).to(dtype=embeddings.dtype)
+            pooled = (embeddings * weights).sum(dim=1) / weights.sum(dim=1).clamp_min(1.0)
+            return pooled.unsqueeze(1).expand(-1, self.num_targets, -1)
+        if self.mode == "gated_attention":
+            scores = self.attention_w(
+                torch.tanh(self.attention_v(embeddings))
+                * torch.sigmoid(self.attention_u(embeddings))
+            ).transpose(1, 2)
+            scores = scores.masked_fill(~mask.unsqueeze(1), float("-inf"))
+            attention = torch.softmax(scores, dim=2)
+            return torch.einsum("bkn,bnd->bkd", attention, embeddings)
+        raise ValueError(
+            "Weld-level representations are only defined for mean and "
+            "gated_attention aggregation."
+        )
+
     def forward(
         self,
         embeddings: torch.Tensor,

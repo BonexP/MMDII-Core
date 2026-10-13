@@ -2,10 +2,13 @@ from __future__ import annotations
 
 import importlib.util
 from dataclasses import replace
+import json
 from pathlib import Path
 import sys
 import tempfile
+from types import SimpleNamespace
 import unittest
+from unittest.mock import patch
 
 import numpy as np
 
@@ -16,11 +19,15 @@ sys.path.insert(0, str(CORE_ROOT / "src"))
 from mmdii.training.cross_validation import (
     ExperimentConfig,
     RepresentationConfig,
+    SecondStageConfig,
+    TreeConfig,
     _json_config,
     _time_frequency_datasets,
+    _validate_config,
     load_experiment_config,
     run_cross_validation,
 )
+import mmdii.training.cross_validation as cross_validation
 from mmdii.data.training_dataset import (
     DatasetIndex,
     FoldNormalizer,
@@ -127,6 +134,31 @@ encoder_chunk_size = 16
             payload["representation_parameters"]["normalization"],
             "per_channel_zscore",
         )
+
+    def test_raw_dwt_fusion_is_a_valid_representation_contract(self) -> None:
+        config = replace(
+            ExperimentConfig.for_test(),
+            representation=RepresentationConfig(
+                name="dwt_swt_db4",
+                encoder="cnn2d",
+                fusion="raw_plus_dwt",
+            ),
+        )
+
+        _validate_config(config)
+        self.assertEqual(_json_config(config)["representation"]["fusion"], "raw_plus_dwt")
+
+    def test_raw_dwt_fusion_rejects_a_non_dwt_representation(self) -> None:
+        config = replace(
+            ExperimentConfig.for_test(),
+            representation=RepresentationConfig(
+                name="cwt_morl",
+                encoder="cnn2d",
+                fusion="raw_plus_dwt",
+            ),
+        )
+        with self.assertRaisesRegex(ValueError, "requires dwt_swt_db4"):
+            _validate_config(config)
 
     def test_training_strategy_defaults_are_backward_compatible(self) -> None:
         config = ExperimentConfig.for_test()
@@ -251,6 +283,215 @@ max_time_masks = 1
 
         with self.assertRaisesRegex(RuntimeError, "train extra"):
             run_cross_validation(None, config)
+
+
+def _synthetic_index(root: Path, weld_count: int = 10):
+    """A tiny five-fold release used to pin artifact bytes."""
+
+    (root / "dataset_manifest.json").write_text("{}", encoding="utf-8")
+    time = np.arange(128, dtype=np.float64) / 32.0
+    records = []
+    for position in range(weld_count):
+        sample_id = f"sample-{position}"
+        signal = np.vstack(
+            [np.sin(time * (position + channel + 1)) for channel in range(3)]
+        )
+        signal_path = root / f"{sample_id}.npz"
+        np.savez(signal_path, time=time, af=signal[0], sf=signal[1], axialf=signal[2])
+        records.append(
+            WeldRecord(
+                sample_id=sample_id,
+                weld_id=sample_id,
+                image_group=sample_id,
+                fold=position % 5,
+                target=(
+                    float(position % 2),
+                    float((position // 2) % 2),
+                    float((position // 4) % 2),
+                ),
+                defect_codes=(),
+                is_normal=False,
+                signal_path=signal_path,
+                metadata=(),
+            )
+        )
+    return DatasetIndex(root, ("flash", "blur", "tunnel"), tuple(records))
+
+
+def _deep_config(root: Path, output: Path) -> ExperimentConfig:
+    return replace(
+        ExperimentConfig.for_test(),
+        release_directory=root,
+        output_directory=output,
+        mode="full_signal",
+        aggregator="mean",
+        target_fs=32.0,
+        window_seconds=8.0,
+        stride_seconds=8.0,
+        full_signal_samples=64,
+        epochs=1,
+    )
+
+
+@unittest.skipUnless(
+    importlib.util.find_spec("torch") is not None,
+    "PyTorch train extra is not installed",
+)
+class DefaultBehaviourRegressionTests(unittest.TestCase):
+    """The tree and second-stage extensions must not disturb ordinary runs."""
+
+    def test_defaults_are_inert_for_the_deep_path(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            root = Path(temporary_directory)
+            index = _synthetic_index(root)
+            first = root / "run-a"
+            second = root / "run-b"
+
+            run_cross_validation(index, _deep_config(root, first))
+            run_cross_validation(
+                index,
+                replace(
+                    _deep_config(root, second),
+                    tree=TreeConfig(),
+                    second_stage=SecondStageConfig(),
+                ),
+            )
+
+            for name in ("oof_predictions.csv", "fold_metrics.json", "training_summary.json"):
+                self.assertEqual(
+                    (first / name).read_bytes(),
+                    (second / name).read_bytes(),
+                    f"{name} changed when the new tables are present at their defaults",
+                )
+
+    def test_deep_fold_reports_gain_no_second_stage_key(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            root = Path(temporary_directory)
+            index = _synthetic_index(root)
+            output = root / "run"
+            run_cross_validation(index, _deep_config(root, output))
+
+            reports = json.loads((output / "fold_metrics.json").read_text(encoding="utf-8"))
+            for report in reports:
+                self.assertNotIn("second_stage", report)
+                self.assertNotIn("alpha", report)
+                for key in ("macro_pr_auc", "macro_f1", "macro_recall", "per_code", "threshold"):
+                    self.assertIn(key, report)
+
+    def test_run_config_gains_only_the_two_new_tables(self) -> None:
+        config = _deep_config(Path("."), Path("out"))
+        payload = _json_config(config)
+
+        self.assertEqual(payload["tree"], {"learner": "random_forest", "n_estimators": 300, "min_samples_leaf": 1})
+        self.assertEqual(
+            payload["second_stage"],
+            {
+                "enabled": False,
+                "feature_source": "stats",
+                "representation_mode": "window_mil",
+                "inner_folds": 4,
+                "encoder_epochs": 0,
+            },
+        )
+        self.assertEqual(payload["mode"], "full_signal")
+        self.assertEqual(payload["aggregator"], "mean")
+        self.assertNotIn("fusion", payload)
+
+    def test_committed_baseline_config_still_loads_with_defaults(self) -> None:
+        config = load_experiment_config(
+            CORE_ROOT / "configs" / "moderntcn_mil_weld_independent_v0_2_1.toml"
+        )
+
+        self.assertEqual(config.tree, TreeConfig())
+        self.assertEqual(config.second_stage, SecondStageConfig())
+
+    @unittest.skipUnless(
+        importlib.util.find_spec("torch") is not None,
+        "PyTorch train extra is not installed",
+    )
+    def test_second_stage_inner_encoder_weights_exclude_inner_validation_labels(self) -> None:
+        records = tuple(
+            SimpleNamespace(
+                sample_id=f"f{fold}-w{position}",
+                fold=fold,
+                target=(
+                    float(fold in {1, 3}),
+                    float(position % 2 == 0),
+                    float((fold == 2 and position == 0) or (fold == 4 and position == 1)),
+                ),
+            )
+            for fold in range(5)
+            for position in range(3)
+        )
+        train_records = tuple(record for record in records if record.fold != 0)
+        valid_records = tuple(record for record in records if record.fold == 0)
+        config = replace(
+            ExperimentConfig.for_test(),
+            mode="second_stage",
+            aggregator="mean",
+            second_stage=SecondStageConfig(
+                enabled=True,
+                feature_source="embedding",
+                representation_mode="full_signal",
+                inner_folds=4,
+                encoder_epochs=1,
+            ),
+        )
+        observed: list[tuple[tuple[str, ...], np.ndarray]] = []
+
+        def fake_run_deep_records(
+            _index,
+            subset_train,
+            subset_valid,
+            _config,
+            *,
+            class_weights,
+            **_kwargs,
+        ):
+            observed.append(
+                (
+                    tuple(record.sample_id for record in subset_train),
+                    np.asarray(class_weights, dtype=np.float64),
+                )
+            )
+            return np.zeros((len(subset_valid), 3)), {
+                "weld_representations": np.zeros((len(subset_valid), 1, 4)),
+                "sample_ids": tuple(record.sample_id for record in subset_valid),
+            }
+
+        with (
+            patch.object(cross_validation, "_run_deep_records", fake_run_deep_records),
+            patch.object(
+                cross_validation,
+                "fit_predict_forest_ovr",
+                return_value=np.zeros((len(valid_records), 3)),
+            ),
+        ):
+            outer_weights = cross_validation.compute_positive_class_weights(
+                np.asarray([record.target for record in train_records])
+            )
+            cross_validation._run_second_stage(
+                object(),
+                train_records,
+                valid_records,
+                config,
+                fold=0,
+                class_weights=outer_weights,
+                torch=None,
+                nn=None,
+                DataLoader=None,
+            )
+
+        self.assertEqual(len(observed), 5)
+        for training_ids, weights in observed[:-1]:
+            training_subset = tuple(
+                record for record in train_records if record.sample_id in training_ids
+            )
+            expected = cross_validation.compute_positive_class_weights(
+                np.asarray([record.target for record in training_subset])
+            )
+            np.testing.assert_allclose(weights, expected)
+        np.testing.assert_allclose(observed[-1][1], outer_weights)
 
 
 if __name__ == "__main__":

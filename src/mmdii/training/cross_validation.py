@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import asdict, dataclass, field
+from dataclasses import asdict, dataclass, field, replace
 import copy
 import csv
 import hashlib
@@ -31,15 +31,21 @@ from mmdii.evaluation.multilabel import (
     evaluate_multilabel,
 )
 from mmdii.models.statistical import (
+    LEARNERS,
+    STATISTIC_NAMES,
     extract_statistical_features,
+    fit_predict_forest_ovr,
     fit_predict_logistic_ovr,
-    fit_predict_random_forest_ovr,
 )
 from mmdii.training.strategy import (
     AugmentationConfig,
     RawWindowAugmenter,
     TrainingStrategy,
     TrainingStrategyConfig,
+)
+from mmdii.training.second_stage import (
+    FEATURE_SOURCES,
+    run_second_stage_fold,
 )
 from mmdii.reporting import (
     ProgressReporter,
@@ -103,6 +109,35 @@ class AugmentationExperimentConfig:
 
 
 @dataclass(frozen=True)
+class TreeConfig:
+    """Settings for the non-neural tree ensemble over tabular features.
+
+    The learner stays a config value rather than a separate ``mode`` so that
+    the ensemble family can be swept as an ablation without changing the
+    training dispatch, the output schema, or the tabular feature pipeline.
+    """
+
+    learner: str = "random_forest"
+    n_estimators: int = 300
+    min_samples_leaf: int = 1
+
+
+@dataclass(frozen=True)
+class SecondStageConfig:
+    """Settings for fitting a tree on weld-level features instead of the deep head.
+
+    Disabled by default; when ``enabled`` is false and the mode is anything
+    other than ``second_stage`` the training pipeline behaves exactly as before.
+    """
+
+    enabled: bool = False
+    feature_source: str = "stats"
+    representation_mode: str = "window_mil"
+    inner_folds: int = 4
+    encoder_epochs: int = 0
+
+
+@dataclass(frozen=True)
 class ExperimentConfig:
     config_path: Path | None
     release_directory: Path
@@ -130,6 +165,8 @@ class ExperimentConfig:
     augmentation: AugmentationExperimentConfig = field(default_factory=AugmentationExperimentConfig)
     model: ModelConfig = field(default_factory=ModelConfig)
     representation: RepresentationConfig = field(default_factory=RepresentationConfig)
+    tree: TreeConfig = field(default_factory=TreeConfig)
+    second_stage: SecondStageConfig = field(default_factory=SecondStageConfig)
     run_folds: tuple[int, ...] = ()
     pipeline_backend: str = "cpu"
     preprocess_cache_directory: Path | None = None
@@ -178,6 +215,8 @@ def load_experiment_config(path: str | Path) -> ExperimentConfig:
         representation_payload = payload.get("representation", {})
         training_payload = payload.get("training", {})
         augmentation_payload = payload.get("augmentation", {})
+        tree_payload = payload.get("tree", {})
+        second_stage_payload = payload.get("second_stage", {})
         target_codes = tuple(experiment["target_codes"])
         config = ExperimentConfig(
             config_path=config_path,
@@ -235,6 +274,34 @@ def load_experiment_config(path: str | Path) -> ExperimentConfig:
                     for field_name in RepresentationConfig.__dataclass_fields__
                 }
             ),
+            tree=TreeConfig(
+                learner=str(tree_payload.get("learner", TreeConfig().learner)),
+                n_estimators=int(tree_payload.get("n_estimators", TreeConfig().n_estimators)),
+                min_samples_leaf=int(
+                    tree_payload.get("min_samples_leaf", TreeConfig().min_samples_leaf)
+                ),
+            ),
+            second_stage=SecondStageConfig(
+                enabled=bool(second_stage_payload.get("enabled", False)),
+                feature_source=str(
+                    second_stage_payload.get(
+                        "feature_source", SecondStageConfig().feature_source
+                    )
+                ),
+                representation_mode=str(
+                    second_stage_payload.get(
+                        "representation_mode", SecondStageConfig().representation_mode
+                    )
+                ),
+                inner_folds=int(
+                    second_stage_payload.get("inner_folds", SecondStageConfig().inner_folds)
+                ),
+                encoder_epochs=int(
+                    second_stage_payload.get(
+                        "encoder_epochs", SecondStageConfig().encoder_epochs
+                    )
+                ),
+            ),
         )
     except (KeyError, TypeError, ValueError) as error:
         raise ValueError(f"Invalid experiment configuration: {error}") from error
@@ -247,7 +314,7 @@ def run_cross_validation(
 ) -> dict[str, object]:
     """Run one model per held-out weld fold and publish weld-level OOF output."""
 
-    if config.mode not in {"statistical", "random_forest"}:
+    if config.mode not in {"statistical", "random_forest"} and not _mode_is_tabular_only(config):
         torch, nn, DataLoader = _require_torch()
     else:
         torch = nn = DataLoader = None
@@ -297,38 +364,43 @@ def run_cross_validation(
             probabilities = _run_statistical_fold(
                 index, train_records, valid_records, config, fold=fold
             )
-        else:
-            normalizer = FoldNormalizer.fit(index, train_records)
-            if config.mode == "full_signal":
-                spec: WindowSpec | FullSignalSpec = FullSignalSpec(
-                    target_fs=config.target_fs,
-                    output_samples=config.full_signal_samples,
+        elif config.mode == "second_stage":
+            if config.second_stage.feature_source == "stats":
+                probabilities = _run_statistical_fold(
+                    index, train_records, valid_records, config, fold=fold
                 )
-                aggregator = "mean"
+                training_info["second_stage"] = {
+                    "feature_source": "stats",
+                    "feature_count": len(STATISTIC_NAMES) * 3,
+                    "inner_folds": 0,
+                }
             else:
-                spec = WindowSpec(
-                    target_fs=config.target_fs,
-                    window_seconds=config.window_seconds,
-                    stride_seconds=config.stride_seconds,
+                probabilities, training_info = _run_second_stage(
+                    index,
+                    train_records,
+                    valid_records,
+                    config,
+                    fold=fold,
+                    class_weights=class_weights,
+                    torch=torch,
+                    nn=nn,
+                    DataLoader=DataLoader,
                 )
-                aggregator = config.aggregator
-            train_dataset = WeldWindowDataset(index, {record.fold for record in train_records}, spec, normalizer)
-            valid_dataset = WeldWindowDataset(index, {fold}, spec, normalizer)
-            if config.representation.name != "raw":
-                train_dataset, valid_dataset = _time_frequency_datasets(
-                    train_dataset, valid_dataset, config
-                )
-            model = _build_deep_model(config, aggregator, torch)
-            probabilities, training_info = _run_deep_fold(
-                model,
-                train_dataset,
-                valid_dataset,
-                class_weights,
+        else:
+            spec_kind = "full_signal" if config.mode == "full_signal" else "window"
+            aggregator = "mean" if spec_kind == "full_signal" else config.aggregator
+            probabilities, training_info = _run_deep_records(
+                index,
+                train_records,
+                valid_records,
                 config,
-                torch,
-                nn,
-                DataLoader,
                 fold=fold,
+                class_weights=class_weights,
+                torch=torch,
+                nn=nn,
+                DataLoader=DataLoader,
+                spec_kind=spec_kind,
+                aggregator=aggregator,
             )
         truth = np.asarray([record.target for record in valid_records], dtype=np.float64)
         metrics = evaluate_multilabel(
@@ -411,13 +483,23 @@ def _run_statistical_fold(index: DatasetIndex, train_records: tuple[Any, ...], v
     progress.close()
     train_features = np.stack(train_features_list)
     valid_features = np.stack(valid_features_list)
-    predictor = fit_predict_random_forest_ovr if config.mode == "random_forest" else fit_predict_logistic_ovr
-    return predictor(
+    if config.mode == "statistical":
+        return fit_predict_logistic_ovr(
+            train_features,
+            np.asarray([record.target for record in train_records], dtype=np.float64),
+            valid_features,
+            target_codes=config.target_codes,
+            random_state=config.seed,
+        )
+    return fit_predict_forest_ovr(
         train_features,
         np.asarray([record.target for record in train_records], dtype=np.float64),
         valid_features,
         target_codes=config.target_codes,
         random_state=config.seed,
+        learner=config.tree.learner,
+        n_estimators=config.tree.n_estimators,
+        min_samples_leaf=config.tree.min_samples_leaf,
     )
 
 
@@ -469,7 +551,7 @@ def _build_deep_model(config: ExperimentConfig, aggregator: str, torch: Any) -> 
             self.encoder = encoder
             self.head = head
 
-        def forward(
+        def window_embeddings(
             self,
             windows: Any,
             window_mask: Any,
@@ -513,8 +595,34 @@ def _build_deep_model(config: ExperimentConfig, aggregator: str, torch: Any) -> 
                 (batch_size * window_count, valid_embeddings.shape[1])
             )
             embeddings[valid_windows] = valid_embeddings
-            embeddings = embeddings.reshape(batch_size, window_count, -1)
+            return embeddings.reshape(batch_size, window_count, -1)
+
+        def forward(
+            self,
+            windows: Any,
+            window_mask: Any,
+            sample_mask: Any,
+            representations: Any | None = None,
+        ) -> Any:
+            embeddings = self.window_embeddings(
+                windows, window_mask, sample_mask, representations
+            )
             return self.head(embeddings, window_mask)
+
+        def forward_with_representation(
+            self,
+            windows: Any,
+            window_mask: Any,
+            sample_mask: Any,
+            representations: Any | None = None,
+        ) -> tuple[Any, Any]:
+            """One forward pass returning both the head output and the pooled weld vector."""
+
+            embeddings = self.window_embeddings(
+                windows, window_mask, sample_mask, representations
+            )
+            pooled = self.head.pool(embeddings, window_mask)
+            return self.head(embeddings, window_mask), pooled
 
     return WeldModel()
 
@@ -689,7 +797,155 @@ def _time_frequency_datasets(
     )
 
 
-def _run_deep_fold(model: Any, train_dataset: Any, valid_dataset: Any, class_weights: np.ndarray, config: ExperimentConfig, torch: Any, nn: Any, DataLoader: Any, *, fold: int | None = None) -> tuple[np.ndarray, dict[str, object]]:
+def _mode_is_tabular_only(config: ExperimentConfig) -> bool:
+    """True when the run can be completed without importing torch."""
+
+    return config.mode == "second_stage" and config.second_stage.feature_source == "stats"
+
+
+def _deep_spec(config: ExperimentConfig, spec_kind: str) -> WindowSpec | FullSignalSpec:
+    if spec_kind == "full_signal":
+        return FullSignalSpec(
+            target_fs=config.target_fs, output_samples=config.full_signal_samples
+        )
+    if spec_kind == "window":
+        return WindowSpec(
+            target_fs=config.target_fs,
+            window_seconds=config.window_seconds,
+            stride_seconds=config.stride_seconds,
+        )
+    raise ValueError("spec_kind must be window or full_signal.")
+
+
+def _run_deep_records(
+    index: DatasetIndex,
+    train_records: tuple[Any, ...],
+    valid_records: tuple[Any, ...],
+    config: ExperimentConfig,
+    *,
+    fold: int | None,
+    class_weights: np.ndarray,
+    torch: Any,
+    nn: Any,
+    DataLoader: Any,
+    spec_kind: str,
+    aggregator: str,
+    harvest_embeddings: bool = False,
+    epochs: int | None = None,
+) -> tuple[np.ndarray, dict[str, object]]:
+    """Build the deep model for one record split and train it.
+
+    Shared by the ordinary deep modes and by the encoder stages of the
+    second-stage experiment so both use identical windowing, normalisation,
+    representation and optimisation code.
+    """
+
+    if epochs is not None and epochs != config.epochs:
+        config = replace(config, epochs=epochs)
+    normalizer = FoldNormalizer.fit(index, train_records)
+    spec = _deep_spec(config, spec_kind)
+    train_dataset = WeldWindowDataset(
+        index, {record.fold for record in train_records}, spec, normalizer
+    )
+    valid_dataset = WeldWindowDataset(
+        index, {record.fold for record in valid_records}, spec, normalizer
+    )
+    if config.representation.name != "raw":
+        train_dataset, valid_dataset = _time_frequency_datasets(
+            train_dataset, valid_dataset, config
+        )
+    model = _build_deep_model(config, aggregator, torch)
+    return _run_deep_fold(
+        model,
+        train_dataset,
+        valid_dataset,
+        class_weights,
+        config,
+        torch,
+        nn,
+        DataLoader,
+        fold=fold,
+        harvest_embeddings=harvest_embeddings,
+    )
+
+
+def _run_second_stage(
+    index: DatasetIndex,
+    train_records: tuple[Any, ...],
+    valid_records: tuple[Any, ...],
+    config: ExperimentConfig,
+    *,
+    fold: int | None,
+    class_weights: np.ndarray,
+    torch: Any,
+    nn: Any,
+    DataLoader: Any,
+) -> tuple[np.ndarray, dict[str, object]]:
+    """Fit a tree on weld-level features for one outer fold."""
+
+    from mmdii.models.mil import WeldMIL
+
+    spec_kind = (
+        "full_signal"
+        if config.second_stage.representation_mode == "full_signal"
+        else "window"
+    )
+    aggregator = "mean" if spec_kind == "full_signal" else config.aggregator
+    encoder_epochs = config.second_stage.encoder_epochs or config.epochs
+    representation_shared = WeldMIL(
+        embedding_dim=1, num_targets=1, mode=aggregator
+    ).representation_shared
+
+    def run_deep(train_subset, valid_subset, *, harvest_embeddings=False):
+        subset_class_weights = class_weights
+        if len(train_subset) != len(train_records):
+            # Inner OOS representations must not use labels from their held-out
+            # partition, including labels that affect the weighted BCE loss.
+            subset_targets = np.asarray(
+                [record.target for record in train_subset], dtype=np.float64
+            )
+            subset_class_weights = compute_positive_class_weights(subset_targets)
+        return _run_deep_records(
+            index,
+            train_subset,
+            valid_subset,
+            config,
+            fold=fold,
+            class_weights=subset_class_weights,
+            torch=torch,
+            nn=nn,
+            DataLoader=DataLoader,
+            spec_kind=spec_kind,
+            aggregator=aggregator,
+            harvest_embeddings=harvest_embeddings,
+            epochs=encoder_epochs,
+        )
+
+    def fit_tree(train_features: np.ndarray, train_targets: np.ndarray, valid_features: np.ndarray) -> np.ndarray:
+        return fit_predict_forest_ovr(
+            train_features,
+            train_targets,
+            valid_features,
+            target_codes=config.target_codes,
+            random_state=config.seed,
+            learner=config.tree.learner,
+            n_estimators=config.tree.n_estimators,
+            min_samples_leaf=config.tree.min_samples_leaf,
+        )
+
+    return run_second_stage_fold(
+        index=index,
+        train_records=train_records,
+        valid_records=valid_records,
+        config=config,
+        fold=fold,
+        run_deep=run_deep,
+        fit_tree=fit_tree,
+        representation_shared=representation_shared,
+    )
+
+
+def _run_deep_fold(model: Any, train_dataset: Any, valid_dataset: Any, class_weights: np.ndarray, config: ExperimentConfig, torch: Any, nn: Any, DataLoader: Any, *, fold: int | None = None, harvest_embeddings: bool = False) -> tuple[np.ndarray, dict[str, object]]:
     device = _device(config.device, torch)
     gpu_dataset = None
     if (config.pipeline_backend == "cuda" and device.type == "cuda"
@@ -830,19 +1086,36 @@ def _run_deep_fold(model: Any, train_dataset: Any, valid_dataset: Any, class_wei
         model.load_state_dict(best_state)
     model.eval()
     probabilities = []
+    harvest_representations: list[Any] = []
+    harvest_sample_ids: list[str] = []
     _LOGGER.info("fold %s validation start batches=%d", fold, len(valid_loader))
     with torch.no_grad():
         for batch in valid_loader:
+            batch_indices = None
             if gpu_dataset is not None:
-                batch = _gpu_batch(batch, gpu_dataset[1], torch)
-            logits, _ = model(
-                batch["windows"].to(device, non_blocking=pin_memory and gpu_dataset is None),
-                batch["window_mask"].to(device, non_blocking=pin_memory and gpu_dataset is None),
-                batch["sample_mask"].to(device, non_blocking=pin_memory and gpu_dataset is None),
-                _to_device(batch.get("representations"), device, non_blocking=pin_memory and gpu_dataset is None),
+                batch_indices = [int(index) for index in batch]
+                batch = _gpu_batch(batch_indices, gpu_dataset[1], torch)
+            windows = batch["windows"].to(device, non_blocking=pin_memory and gpu_dataset is None)
+            window_mask = batch["window_mask"].to(device, non_blocking=pin_memory and gpu_dataset is None)
+            sample_mask = batch["sample_mask"].to(device, non_blocking=pin_memory and gpu_dataset is None)
+            representations = _to_device(
+                batch.get("representations"), device, non_blocking=pin_memory and gpu_dataset is None
             )
+            if harvest_embeddings:
+                (logits, _), pooled = model.forward_with_representation(
+                    windows, window_mask, sample_mask, representations
+                )
+                harvest_representations.append(pooled.detach().cpu().numpy())
+                if batch_indices is not None:
+                    harvest_sample_ids.extend(
+                        str(gpu_dataset[1]["sample_ids"][index]) for index in batch_indices
+                    )
+                else:
+                    harvest_sample_ids.extend(str(value) for value in batch["sample_ids"])
+            else:
+                logits, _ = model(windows, window_mask, sample_mask, representations)
             probabilities.append(torch.sigmoid(logits).cpu().numpy())
-    return np.concatenate(probabilities, axis=0), {
+    training_info: dict[str, object] = {
         "epochs_ran": epochs_ran,
         "best_epoch": best_epoch or epochs_ran,
         "early_stopping_monitor": "train_loss" if config.early_stopping_patience > 0 else None,
@@ -851,6 +1124,10 @@ def _run_deep_fold(model: Any, train_dataset: Any, valid_dataset: Any, class_wei
         "amp_enabled": strategy.amp_enabled,
         "augmentation_enabled": config.augmentation.enabled,
     }
+    if harvest_embeddings:
+        training_info["weld_representations"] = np.concatenate(harvest_representations, axis=0)
+        training_info["sample_ids"] = tuple(harvest_sample_ids)
+    return np.concatenate(probabilities, axis=0), training_info
 
 
 def _estimate_gpu_dataset_bytes(dataset: Any) -> int:
@@ -968,8 +1245,10 @@ def _seed_everything(seed: int, torch: Any) -> None:
 
 
 def _validate_config(config: ExperimentConfig) -> None:
-    if config.mode not in {"statistical", "random_forest", "full_signal", "window_mil"}:
-        raise ValueError("mode must be statistical, random_forest, full_signal or window_mil.")
+    if config.mode not in {"statistical", "random_forest", "full_signal", "window_mil", "second_stage"}:
+        raise ValueError(
+            "mode must be statistical, random_forest, full_signal, window_mil or second_stage."
+        )
     if config.aggregator not in {"mean", "max", "topk_mean", "gated_attention"}:
         raise ValueError("Invalid aggregator.")
     if not config.target_codes or len(config.target_codes) != len(set(config.target_codes)):
@@ -996,6 +1275,24 @@ def _validate_config(config: ExperimentConfig) -> None:
         raise ValueError("augmentation.time_mask_ratio must be in [0, 1].")
     if config.augmentation.max_time_masks < 0:
         raise ValueError("augmentation.max_time_masks must be non-negative.")
+    if config.tree.learner not in LEARNERS:
+        raise ValueError("tree.learner must be random_forest or extra_trees.")
+    if config.tree.n_estimators < 1 or config.tree.min_samples_leaf < 1:
+        raise ValueError("tree.n_estimators and tree.min_samples_leaf must be positive.")
+    if config.second_stage.feature_source not in FEATURE_SOURCES:
+        raise ValueError("second_stage.feature_source must be stats, embedding or both.")
+    if config.second_stage.representation_mode not in {"window_mil", "full_signal"}:
+        raise ValueError("second_stage.representation_mode must be window_mil or full_signal.")
+    if not 2 <= config.second_stage.inner_folds <= config.fold_count - 1:
+        raise ValueError("second_stage.inner_folds must be between 2 and fold_count - 1.")
+    if config.second_stage.encoder_epochs < 0:
+        raise ValueError("second_stage.encoder_epochs must be non-negative.")
+    if config.mode == "second_stage" and config.second_stage.feature_source != "stats":
+        if config.aggregator not in {"mean", "gated_attention"}:
+            raise ValueError(
+                "second_stage with a deep representation requires mean or "
+                "gated_attention aggregation."
+            )
     if config.pipeline_backend not in {"cpu", "cuda"}:
         raise ValueError("pipeline_backend must be cpu or cuda.")
     if config.gpu_cache_gib <= 0:
@@ -1015,12 +1312,19 @@ def _validate_config(config: ExperimentConfig) -> None:
         "cnn2d", "separable_cnn2d", "resnet2d_small", "resnet2d_multiscale", "convnext2d_lite"
     }:
         raise ValueError("Invalid time-frequency encoder.")
-    if representation.fusion not in {"none", "raw_plus_stft", "raw_plus_cwt"}:
+    if representation.fusion not in {
+        "none",
+        "raw_plus_stft",
+        "raw_plus_cwt",
+        "raw_plus_dwt",
+    }:
         raise ValueError("Invalid fusion mode.")
     if representation.fusion == "raw_plus_stft" and representation.name not in {"stft_256", "stft_512"}:
         raise ValueError("raw_plus_stft requires an STFT representation.")
     if representation.fusion == "raw_plus_cwt" and representation.name != "cwt_morl":
         raise ValueError("raw_plus_cwt requires cwt_morl.")
+    if representation.fusion == "raw_plus_dwt" and representation.name != "dwt_swt_db4":
+        raise ValueError("raw_plus_dwt requires dwt_swt_db4.")
     if representation.output_time_bins < 1:
         raise ValueError("output_time_bins must be positive.")
     if representation.normalization != "per_channel_zscore":

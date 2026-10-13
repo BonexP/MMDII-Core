@@ -13,6 +13,8 @@ from mmdii.reporting import configure_logging
 from mmdii.training.cross_validation import (
     ExperimentConfig,
     RepresentationConfig,
+    SecondStageConfig,
+    TreeConfig,
     load_experiment_config,
     run_cross_validation,
 )
@@ -23,7 +25,10 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("--config", required=True, type=Path)
     parser.add_argument("--release-dir", type=Path)
     parser.add_argument("--output-dir", type=Path)
-    parser.add_argument("--mode", choices=("statistical", "random_forest", "full_signal", "window_mil"))
+    parser.add_argument(
+        "--mode",
+        choices=("statistical", "random_forest", "full_signal", "window_mil", "second_stage"),
+    )
     parser.add_argument(
         "--aggregator",
         choices=("mean", "max", "topk_mean", "gated_attention"),
@@ -50,7 +55,10 @@ def main(argv: Sequence[str] | None = None) -> int:
         "--encoder",
         choices=("modern_tcn", "cnn2d", "separable_cnn2d", "resnet2d_small", "resnet2d_multiscale", "convnext2d_lite"),
     )
-    parser.add_argument("--fusion", choices=("none", "raw_plus_stft", "raw_plus_cwt"))
+    parser.add_argument(
+        "--fusion",
+        choices=("none", "raw_plus_stft", "raw_plus_cwt", "raw_plus_dwt"),
+    )
     parser.add_argument("--output-time-bins", type=int)
     parser.add_argument("--representation-normalization", choices=("per_channel_zscore",))
     parser.add_argument("--stft-n-fft", type=int)
@@ -61,6 +69,25 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("--cwt-max-frequency-hz", type=float)
     parser.add_argument("--dwt-wavelet")
     parser.add_argument("--dwt-level", type=int)
+    parser.add_argument(
+        "--tree-learner",
+        choices=("random_forest", "extra_trees"),
+        help="Tree ensemble used by the tabular random-forest mode.",
+    )
+    parser.add_argument("--tree-n-estimators", type=int)
+    parser.add_argument("--tree-min-samples-leaf", type=int)
+    parser.add_argument(
+        "--second-stage-source",
+        choices=("stats", "embedding", "both"),
+        help="Weld-level features the second-stage tree is fitted on.",
+    )
+    parser.add_argument(
+        "--second-stage-mode",
+        choices=("window_mil", "full_signal"),
+        help="Encoder input layout used to build weld-level representations.",
+    )
+    parser.add_argument("--second-stage-inner-folds", type=int)
+    parser.add_argument("--second-stage-encoder-epochs", type=int)
     parser.add_argument("--fold", type=int, action="append", dest="run_folds")
     args = parser.parse_args(argv)
     configure_logging()
@@ -112,6 +139,41 @@ def main(argv: Sequence[str] | None = None) -> int:
         )
     if args.run_folds is not None:
         overrides["run_folds"] = tuple(args.run_folds)
+    tree_overrides = {
+        "learner": args.tree_learner,
+        "n_estimators": args.tree_n_estimators,
+        "min_samples_leaf": args.tree_min_samples_leaf,
+    }
+    tree_overrides = {key: value for key, value in tree_overrides.items() if value is not None}
+    if tree_overrides:
+        overrides["tree"] = TreeConfig(
+            **{
+                field_name: tree_overrides.get(
+                    field_name, getattr(config.tree, field_name)
+                )
+                for field_name in TreeConfig.__dataclass_fields__
+            }
+        )
+    second_stage_overrides = {
+        "feature_source": args.second_stage_source,
+        "representation_mode": args.second_stage_mode,
+        "inner_folds": args.second_stage_inner_folds,
+        "encoder_epochs": args.second_stage_encoder_epochs,
+    }
+    second_stage_overrides = {
+        key: value for key, value in second_stage_overrides.items() if value is not None
+    }
+    if args.mode == "second_stage":
+        second_stage_overrides.setdefault("enabled", True)
+    if second_stage_overrides:
+        overrides["second_stage"] = SecondStageConfig(
+            **{
+                field_name: second_stage_overrides.get(
+                    field_name, getattr(config.second_stage, field_name)
+                )
+                for field_name in SecondStageConfig.__dataclass_fields__
+            }
+        )
     for argument_name, config_name in (
         ("seed", "seed"),
         ("epochs", "epochs"),

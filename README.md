@@ -247,3 +247,41 @@ attention and the statistical baselines:
 The worker uses `.venv/bin/python` directly, so shell activation is not needed
 after launch. `nohup` protects against terminal disconnection; it cannot keep a
 process alive if the hosting platform suspends or destroys the entire instance.
+
+### v0.3 deep-embedding tree suite
+
+The v0.3 second-stage suite tests whether a tree classifier can use a
+fold-safe deep representation more effectively than the neural classification
+head. It is a fixed 4-candidate matrix:
+
+| Candidate | Representation | Encoder | Aggregator |
+| --- | --- | --- | --- |
+| raw + STFT | `stft_256` | `resnet2d_small` | mean |
+| raw + CWT | `cwt_morl` | `convnext2d_lite` | mean |
+| raw + DWT | `dwt_swt_db4` | `resnet2d_small` | mean |
+| raw + STFT | `stft_256` | `cnn2d` | gated attention |
+
+Each candidate is evaluated with `embedding` and `both` features and with
+`random_forest` and `extra_trees`, using the same weld-independent five-fold
+protocol. The tree is trained only on out-of-sample inner-fold embeddings;
+the outer fold remains untouched. The default plan is 16 runs per seed and
+48 runs across seeds 7, 17, and 27:
+
+```bash
+RELEASE=/path/to/weld-independent-v0-2-1-r2
+SEEDS="7 17 27" \
+  PYTHON=.venv/bin/python CUDA_VISIBLE_DEVICES=0 \
+  PIPELINE_BACKEND=cuda \
+  bash scripts/run_tree_on_deep_v0_3_suite.sh \
+  "$RELEASE" outputs/tree-on-deep-v0-3
+```
+
+The suite can resume into the same output directory. It writes
+`run-metadata.txt`, `configuration-manifest.txt`, one validated output
+directory per run, and a suite-level `status.txt`. `TREE_LEARNERS` and
+`FEATURE_SOURCES` may be narrowed for a staged run; the fixed candidate list
+itself is intentionally not configurable.
+
+Set `PIPELINE_BACKEND=cpu` for a CPU-only check. On a GPU host,
+`PREPROCESS_CACHE_DIRECTORY=/path/to/cache` enables the explicit preprocessing
+cache path and `GPU_CACHE_GIB` controls the in-memory dataset cache budget.

@@ -17,6 +17,9 @@ STATISTIC_NAMES = (
 )
 
 
+LEARNERS = ("random_forest", "extra_trees")
+
+
 def extract_statistical_features(signal: np.ndarray) -> np.ndarray:
     """Return six fixed summary features for each input channel."""
 
@@ -90,19 +93,24 @@ def fit_predict_logistic_ovr(
     return probabilities
 
 
-def fit_predict_random_forest_ovr(
+def fit_predict_forest_ovr(
     train_features: np.ndarray,
     train_targets: np.ndarray,
     test_features: np.ndarray,
     *,
     target_codes: Iterable[str],
     random_state: int,
+    learner: str = "random_forest",
     n_estimators: int = 300,
+    min_samples_leaf: int = 1,
 ) -> np.ndarray:
-    """Fit one balanced random-forest model per target.
+    """Fit one balanced tree ensemble per target and return probabilities.
 
-    This is a nonlinear, non-neural reference using exactly the same fold-local
-    statistical features as B0. It is intentionally not a window model.
+    ``learner`` selects the ensemble family. Extra trees sample the split
+    threshold at random instead of searching for the best one, which is a
+    cheaper, lower-variance ensemble on the small fold-local design matrices
+    used here. Both learners share every other setting so that a comparison
+    isolates the ensemble family alone.
     """
 
     train_x = np.asarray(train_features, dtype=np.float64)
@@ -117,23 +125,30 @@ def fit_predict_random_forest_ovr(
         or train_x.shape[1] != test_x.shape[1]
         or train_y.shape[1] != len(codes)
         or not codes
+        or learner not in LEARNERS
         or n_estimators < 1
+        or min_samples_leaf < 1
     ):
-        raise ValueError("Feature, target and random-forest settings are invalid.")
+        raise ValueError("Feature, target and tree-ensemble settings are invalid.")
     try:
-        from sklearn.ensemble import RandomForestClassifier
+        from sklearn.ensemble import ExtraTreesClassifier, RandomForestClassifier
     except ImportError as error:
         raise RuntimeError(
-            "Random-forest training requires the MMDII-Core train extra."
+            "Tree training requires the MMDII-Core train extra."
         ) from error
+    estimator_class = {
+        "random_forest": RandomForestClassifier,
+        "extra_trees": ExtraTreesClassifier,
+    }[learner]
 
     probabilities = np.empty((test_x.shape[0], len(codes)), dtype=np.float64)
     for position, code in enumerate(codes):
         target = train_y[:, position]
         if np.unique(target).size != 2:
             raise ValueError(f"Training target {code!r} contains only one class.")
-        model = RandomForestClassifier(
+        model = estimator_class(
             n_estimators=n_estimators,
+            min_samples_leaf=min_samples_leaf,
             class_weight="balanced",
             random_state=random_state,
             n_jobs=-1,
@@ -141,3 +156,59 @@ def fit_predict_random_forest_ovr(
         model.fit(train_x, target)
         probabilities[:, position] = model.predict_proba(test_x)[:, 1]
     return probabilities
+
+
+def fit_predict_random_forest_ovr(
+    train_features: np.ndarray,
+    train_targets: np.ndarray,
+    test_features: np.ndarray,
+    *,
+    target_codes: Iterable[str],
+    random_state: int,
+    n_estimators: int = 300,
+    min_samples_leaf: int = 1,
+) -> np.ndarray:
+    """Fit one balanced random-forest model per target.
+
+    This is a nonlinear, non-neural reference using exactly the same fold-local
+    statistical features as B0. It is intentionally not a window model.
+    """
+
+    return fit_predict_forest_ovr(
+        train_features,
+        train_targets,
+        test_features,
+        target_codes=target_codes,
+        random_state=random_state,
+        learner="random_forest",
+        n_estimators=n_estimators,
+        min_samples_leaf=min_samples_leaf,
+    )
+
+
+def fit_predict_extra_trees_ovr(
+    train_features: np.ndarray,
+    train_targets: np.ndarray,
+    test_features: np.ndarray,
+    *,
+    target_codes: Iterable[str],
+    random_state: int,
+    n_estimators: int = 300,
+    min_samples_leaf: int = 1,
+) -> np.ndarray:
+    """Fit one balanced extremely-randomized-trees model per target.
+
+    Mirrors :func:`fit_predict_random_forest_ovr` exactly except for the
+    ensemble family, so any metric difference is attributable to the learner.
+    """
+
+    return fit_predict_forest_ovr(
+        train_features,
+        train_targets,
+        test_features,
+        target_codes=target_codes,
+        random_state=random_state,
+        learner="extra_trees",
+        n_estimators=n_estimators,
+        min_samples_leaf=min_samples_leaf,
+    )
