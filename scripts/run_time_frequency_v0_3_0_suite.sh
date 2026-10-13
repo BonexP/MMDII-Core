@@ -20,6 +20,7 @@ PIPELINE_BACKEND="${PIPELINE_BACKEND:-}"
 PREPROCESS_CACHE_DIRECTORY="${PREPROCESS_CACHE_DIRECTORY:-}"
 GPU_CACHE_GIB="${GPU_CACHE_GIB:-}"
 MMDII_TRANSFORM_WORKERS="${MMDII_TRANSFORM_WORKERS:-2}"
+MMDII_GPU_STFT="${MMDII_GPU_STFT:-auto}"
 BRANCHES=(raw_plus_stft raw_plus_cwt raw_plus_dwt)
 ENCODERS=(cnn2d resnet2d_small convnext2d_lite)
 AGGREGATORS=(mean gated_attention)
@@ -148,7 +149,7 @@ run_control() {
 
 worker() {
   cd "$ROOT"
-  export MMDII_TRANSFORM_WORKERS
+  export MMDII_TRANSFORM_WORKERS MMDII_GPU_STFT
   check_dependencies
   mkdir -p "$OUTPUT_ROOT"
   CONFIG_MANIFEST="$OUTPUT_ROOT/configuration-manifest.txt"
@@ -157,10 +158,10 @@ worker() {
   trap 'code=$?; printf "status=failed\nfinished_at=%s\nexit_code=%s\n" "$(date --iso-8601=seconds)" "$code" > "$OUTPUT_ROOT/status.txt"; exit "$code"' ERR
 
   cp "$ROOT/configs/time_frequency_v0_3_0_matrix.toml" "$OUTPUT_ROOT/matrix-config.toml"
-  printf 'started_at=%s\ncommit=%s\nrelease=%s\nbase_config=%s\nseeds=%s\nepochs=%s\nbatch_size=%s\nlearning_rate=%s\nweight_decay=%s\noptimizer=adamw\nearly_stopping_patience=0\nfold_scheme=weld_independent\ndevice=%s\npipeline_backend=%s\npreprocess_cache_directory=%s\ngpu_cache_gib=%s\ntransform_workers=%s\n' \
+  printf 'started_at=%s\ncommit=%s\nrelease=%s\nbase_config=%s\nseeds=%s\nepochs=%s\nbatch_size=%s\nlearning_rate=%s\nweight_decay=%s\noptimizer=adamw\nearly_stopping_patience=0\nfold_scheme=weld_independent\ndevice=%s\npipeline_backend=%s\ngpu_stft=%s\npreprocess_cache_directory=%s\ngpu_cache_gib=%s\ntransform_workers=%s\n' \
     "$(date --iso-8601=seconds)" "$(git rev-parse HEAD)" "$RELEASE_DIR" "$BASE_CONFIG" \
     "$SEEDS" "$EPOCHS" "$BATCH_SIZE" "$LEARNING_RATE" "$WEIGHT_DECAY" "$DEVICE" \
-    "$PIPELINE_BACKEND" "$PREPROCESS_CACHE_DIRECTORY" "$GPU_CACHE_GIB" "$MMDII_TRANSFORM_WORKERS" \
+    "$PIPELINE_BACKEND" "$MMDII_GPU_STFT" "$PREPROCESS_CACHE_DIRECTORY" "$GPU_CACHE_GIB" "$MMDII_TRANSFORM_WORKERS" \
     > "$OUTPUT_ROOT/run-metadata.txt"
 
   for seed in $SEEDS; do

@@ -687,6 +687,23 @@ def _time_frequency_datasets(
 ) -> tuple[Any, Any]:
     from mmdii.data.time_frequency import RepresentationNormalizer, transform_representation
 
+    gpu_stft_mode = os.environ.get("MMDII_GPU_STFT", "auto").lower()
+    if gpu_stft_mode not in {"auto", "0", "1"}:
+        raise ValueError("MMDII_GPU_STFT must be auto, 0, or 1.")
+    gpu_stft = False
+    gpu_device = None
+    if config.pipeline_backend == "cuda" and gpu_stft_mode != "0":
+        torch, _, _ = _require_torch()
+        gpu_device = _device(config.device, torch)
+        gpu_stft = gpu_device.type == "cuda" and config.representation.name.startswith("stft_")
+        if gpu_stft_mode == "1" and not gpu_stft:
+            raise RuntimeError(
+                "MMDII_GPU_STFT=1 requires a CUDA device and an STFT representation."
+            )
+    gpu_stft_state = [gpu_stft]
+    if config.representation.name.startswith("stft_") and gpu_stft_mode == "0":
+        _LOGGER.info("GPU STFT disabled by MMDII_GPU_STFT=0; using CPU preprocessing.")
+
     def cache_path(dataset: Any, split: str) -> Path | None:
         if config.preprocess_cache_directory is None:
             return None
@@ -712,24 +729,29 @@ def _time_frequency_datasets(
                 return arrays, {i: (arrays[i], masks[i]) for i in range(len(arrays))}
             except (OSError, ValueError):
                 shutil.rmtree(cached_path, ignore_errors=True)
-        gpu_stft = False
-        gpu_device = None
-        if config.pipeline_backend == "cuda":
-            torch, _, _ = _require_torch()
-            gpu_device = _device(config.device, torch)
-            gpu_stft = gpu_device.type == "cuda" and config.representation.name.startswith("stft_")
-
         def transform_item(position: int) -> tuple[int, np.ndarray, np.ndarray]:
             item = dataset[position]
             windows = np.asarray(item["windows"], dtype=np.float64)
             masks = np.asarray(item["sample_mask"], dtype=bool)
-            if gpu_stft:
+            if gpu_stft_state[0]:
                 from mmdii.data.time_frequency import stft_representation_torch
-                transformed, time_masks = stft_representation_torch(
-                    windows, sample_mask=masks, target_fs=config.target_fs,
-                    output_time_bins=config.representation.output_time_bins,
-                    device=gpu_device, **_representation_transform_parameters(config))
-                return position, transformed.detach().cpu().numpy(), time_masks.detach().cpu().numpy()
+                try:
+                    transformed, time_masks = stft_representation_torch(
+                        windows, sample_mask=masks, target_fs=config.target_fs,
+                        output_time_bins=config.representation.output_time_bins,
+                        device=gpu_device, **_representation_transform_parameters(config))
+                    return position, transformed.detach().cpu().numpy(), time_masks.detach().cpu().numpy()
+                except RuntimeError as error:
+                    message = str(error).lower()
+                    if "cufft" not in message and "cuda" not in message:
+                        raise
+                    gpu_stft_state[0] = False
+                    _LOGGER.warning(
+                        "GPU STFT failed for %s (%s); falling back to CPU STFT "
+                        "for this run while keeping model training on CUDA.",
+                        split,
+                        error,
+                    )
             transformed: list[np.ndarray] = []
             time_masks: list[np.ndarray] = []
             for window, mask in zip(windows, masks, strict=True):

@@ -36,6 +36,7 @@ GPU_CACHE_GIB="${GPU_CACHE_GIB:-4.0}"
 FOLD_SCHEME="${FOLD_SCHEME:-weld_independent}"
 FOLDS="${FOLDS:-}"
 MMDII_TRANSFORM_WORKERS="${MMDII_TRANSFORM_WORKERS:-2}"
+MMDII_GPU_STFT="${MMDII_GPU_STFT:-auto}"
 
 usage() {
   echo "Usage: bash scripts/run_tree_on_deep_v0_3_suite.sh RELEASE_DIR [OUTPUT_DIR] [CONFIG]"
@@ -162,7 +163,7 @@ run_one() {
 
 worker() {
   cd "$ROOT"
-  export MMDII_TRANSFORM_WORKERS
+  export MMDII_TRANSFORM_WORKERS MMDII_GPU_STFT
   check_dependencies
   mkdir -p "$OUTPUT_ROOT"
   CONFIG_MANIFEST="$OUTPUT_ROOT/configuration-manifest.txt"
@@ -177,10 +178,10 @@ worker() {
   trap 'code=$?; printf "status=failed\nfinished_at=%s\nexit_code=%s\n" "$(date --iso-8601=seconds)" "$code" > "$OUTPUT_ROOT/status.txt"; exit "$code"' ERR
 
   cp "$BASE_CONFIG" "$OUTPUT_ROOT/base-config.toml"
-  printf 'started_at=%s\ncommit=%s\nrelease=%s\nbase_config=%s\nseeds=%s\ntree_learners=%s\nfeature_sources=%s\ninner_folds=%s\nencoder_epochs=%s\nepochs=%s\nbatch_size=%s\nlearning_rate=%s\nweight_decay=%s\noptimizer=adamw\ndevice=%s\npipeline_backend=%s\npreprocess_cache_directory=%s\ngpu_cache_gib=%s\nfold_scheme=%s\nfolds=%s\n' \
+  printf 'started_at=%s\ncommit=%s\nrelease=%s\nbase_config=%s\nseeds=%s\ntree_learners=%s\nfeature_sources=%s\ninner_folds=%s\nencoder_epochs=%s\nepochs=%s\nbatch_size=%s\nlearning_rate=%s\nweight_decay=%s\noptimizer=adamw\ndevice=%s\npipeline_backend=%s\ngpu_stft=%s\npreprocess_cache_directory=%s\ngpu_cache_gib=%s\nfold_scheme=%s\nfolds=%s\n' \
     "$(date --iso-8601=seconds)" "$(git rev-parse HEAD)" "$RELEASE_DIR" "$BASE_CONFIG" \
     "$SEEDS" "$TREE_LEARNERS" "$FEATURE_SOURCES" "$INNER_FOLDS" "$ENCODER_EPOCHS" \
-    "$EPOCHS" "$BATCH_SIZE" "$LEARNING_RATE" "$WEIGHT_DECAY" "$DEVICE" "$PIPELINE_BACKEND" \
+    "$EPOCHS" "$BATCH_SIZE" "$LEARNING_RATE" "$WEIGHT_DECAY" "$DEVICE" "$PIPELINE_BACKEND" "$MMDII_GPU_STFT" \
     "$PREPROCESS_CACHE_DIRECTORY" "$GPU_CACHE_GIB" "$FOLD_SCHEME" "$FOLDS" \
     > "$OUTPUT_ROOT/run-metadata.txt"
 

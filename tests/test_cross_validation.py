@@ -3,6 +3,7 @@ from __future__ import annotations
 import importlib.util
 from dataclasses import replace
 import json
+import os
 from pathlib import Path
 import sys
 import tempfile
@@ -204,6 +205,8 @@ encoder_chunk_size = 16
             valid = WeldWindowDataset(index, {0}, spec, normalizer)
             config = replace(
                 ExperimentConfig.for_test(),
+                device="cpu",
+                pipeline_backend="cuda",
                 target_fs=32.0,
                 window_seconds=8.0,
                 stride_seconds=8.0,
@@ -215,11 +218,12 @@ encoder_chunk_size = 16
 
             wrapped_datasets = []
             try:
-                for _ in range(2):
-                    train_tf, valid_tf = _time_frequency_datasets(train, valid, config)
-                    wrapped_datasets.extend((train_tf, valid_tf))
-                    self.assertEqual(train_tf[0]["representations"].shape[-1], 16)
-                    self.assertEqual(valid_tf[0]["representations"].shape[-1], 16)
+                with patch.dict(os.environ, {"MMDII_GPU_STFT": "0"}):
+                    for _ in range(2):
+                        train_tf, valid_tf = _time_frequency_datasets(train, valid, config)
+                        wrapped_datasets.extend((train_tf, valid_tf))
+                        self.assertEqual(train_tf[0]["representations"].shape[-1], 16)
+                        self.assertEqual(valid_tf[0]["representations"].shape[-1], 16)
 
                 cache_entries = list((root / "cache").iterdir())
                 self.assertEqual(len(cache_entries), 2)

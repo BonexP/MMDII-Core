@@ -285,3 +285,38 @@ itself is intentionally not configurable.
 Set `PIPELINE_BACKEND=cpu` for a CPU-only check. On a GPU host,
 `PREPROCESS_CACHE_DIRECTORY=/path/to/cache` enables the explicit preprocessing
 cache path and `GPU_CACHE_GIB` controls the in-memory dataset cache budget.
+
+If a GPU host raises `cuFFT error: CUFFT_INTERNAL_ERROR` while preparing an
+STFT, keep model training on CUDA and disable only the GPU STFT preprocessing:
+
+```bash
+cd ~/PROJECT/MMDII/MMDII-Core
+export RELEASE=/data/mmdii/releases/weld-independent-v0-2-1-r2
+export PYTHON="$PWD/.venv/bin/python"
+MMDII_GPU_STFT=0 CUDA_VISIBLE_DEVICES=0 \
+  "$PYTHON" scripts/train_baseline.py \
+  --config configs/time_frequency_v0_3_0_matrix.toml \
+  --release-dir "$RELEASE" \
+  --output-dir outputs/v0-3-smoke/seed-7-raw-plus-stft-resnet2d-small-mean-cpu-stft \
+  --mode window_mil \
+  --representation stft_256 \
+  --encoder resnet2d_small \
+  --fusion raw_plus_stft \
+  --aggregator mean \
+  --seed 7 \
+  --fold 0 \
+  --epochs 20 \
+  --batch-size 4 \
+  --learning-rate 0.001 \
+  --weight-decay 0.0001 \
+  --optimizer adamw \
+  --early-stopping-patience 0 \
+  --device auto \
+  --pipeline-backend cuda \
+  --fold-scheme weld_independent
+```
+
+`MMDII_GPU_STFT=auto` is the default: it attempts GPU STFT and falls back to
+CPU STFT on a cuFFT/CUDA runtime error, while the neural model remains on the
+GPU. The selected value is recorded in suite `run-metadata.txt`. Set
+`MMDII_GPU_STFT=1` only when diagnosing the GPU STFT path.
