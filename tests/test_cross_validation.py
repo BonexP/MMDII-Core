@@ -23,6 +23,8 @@ from mmdii.training.cross_validation import (
     SecondStageConfig,
     TreeConfig,
     _json_config,
+    _cache_dataset_on_gpu,
+    _torch_collate,
     _time_frequency_datasets,
     _validate_config,
     load_experiment_config,
@@ -39,6 +41,51 @@ from mmdii.data.training_dataset import (
 
 
 class CrossValidationTests(unittest.TestCase):
+    def test_torch_batch_contract_uses_model_dtypes(self) -> None:
+        import torch
+
+        item = {
+            "windows": np.ones((2, 3, 8), dtype=np.float64),
+            "window_mask": np.array([True, True]),
+            "sample_mask": np.ones((2, 8), dtype=bool),
+            "starts_seconds": np.array([0.0, 1.0], dtype=np.float64),
+            "targets": np.array([1.0, 0.0, 1.0], dtype=np.float64),
+            "sample_id": "sample-0",
+            "weld_id": "weld-0",
+            "image_group": "image-0",
+            "fold": 0,
+        }
+
+        batch = _torch_collate([item])
+
+        self.assertEqual(batch["windows"].dtype, torch.float32)
+        self.assertEqual(batch["targets"].dtype, torch.float32)
+        self.assertEqual(batch["window_mask"].dtype, torch.bool)
+        self.assertEqual(batch["sample_mask"].dtype, torch.bool)
+
+    def test_gpu_dataset_cache_uses_model_dtypes(self) -> None:
+        import torch
+
+        item = {
+            "windows": np.ones((2, 3, 8), dtype=np.float64),
+            "window_mask": np.array([True, True]),
+            "sample_mask": np.ones((2, 8), dtype=bool),
+            "targets": np.array([1.0, 0.0, 1.0], dtype=np.float64),
+            "representations": np.ones((2, 3, 4, 5), dtype=np.float64),
+            "sample_id": "sample-0",
+            "weld_id": "weld-0",
+            "image_group": "image-0",
+            "fold": 0,
+        }
+
+        cached = _cache_dataset_on_gpu([item], torch.device("cpu"), torch)
+
+        self.assertEqual(cached["windows"][0].dtype, torch.float32)
+        self.assertEqual(cached["targets"][0].dtype, torch.float32)
+        self.assertEqual(cached["representations"][0].dtype, torch.float32)
+        self.assertEqual(cached["window_mask"][0].dtype, torch.bool)
+        self.assertEqual(cached["sample_mask"][0].dtype, torch.bool)
+
     def test_loads_explicit_experiment_configuration(self) -> None:
         with tempfile.TemporaryDirectory() as temporary_directory:
             path = Path(temporary_directory) / "experiment.toml"

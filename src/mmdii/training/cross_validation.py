@@ -1169,7 +1169,10 @@ def _cache_dataset_on_gpu(dataset: Any, device: Any, torch: Any) -> dict[str, An
         item = dataset[position]
         for key in columns:
             if key in item:
-                columns[key].append(torch.as_tensor(np.asarray(item[key]), device=device))
+                dtype = torch.float32 if key in {"windows", "targets", "representations"} else torch.bool
+                columns[key].append(
+                    torch.as_tensor(np.asarray(item[key]), dtype=dtype, device=device)
+                )
         metadata["sample_ids"].append(str(item["sample_id"]))
         metadata["weld_ids"].append(str(item["weld_id"]))
         metadata["image_groups"].append(str(item["image_group"]))
@@ -1210,7 +1213,10 @@ def _torch_collate(items: list[dict[str, object]]) -> dict[str, Any]:
     batch = collate_weld_batch(items)
     return {
         **{
-            key: torch.as_tensor(batch[key])
+            key: torch.as_tensor(
+                batch[key],
+                dtype=torch.float32 if key in {"windows", "targets"} else torch.bool,
+            )
             for key in ("windows", "window_mask", "sample_mask", "targets")
         },
         "sample_ids": batch["sample_ids"],
