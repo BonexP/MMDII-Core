@@ -1,0 +1,2111 @@
+[2026-10-13 19:21:42] INFO  training: experiment=seed-27-raw_plus_cwt-resnet2d_small-gated_attention mode=window_mil aggregator=gated_attention seed=27 folds=[0, 1, 2, 3, 4] epochs=20 device=auto representation=cwt_morl
+[2026-10-13 19:21:42] INFO  training: dataset samples=101 fold_count=5 targets=flash,blur,tunnel representation=cwt_morl
+[2026-10-13 19:21:42] INFO  training: fold 0/5 start train=81 valid=20
+[2026-10-13 19:21:55] INFO  training: tf transform train 4/81 (5%) elapsed=00:00:11 eta=00:03:30
+[2026-10-13 19:22:02] INFO  training: tf transform train 8/81 (10%) elapsed=00:00:18 eta=00:02:46
+[2026-10-13 19:22:10] INFO  training: tf transform train 12/81 (15%) elapsed=00:00:26 eta=00:02:28
+[2026-10-13 19:22:16] INFO  training: tf transform train 16/81 (20%) elapsed=00:00:32 eta=00:02:10
+[2026-10-13 19:22:26] INFO  training: tf transform train 20/81 (25%) elapsed=00:00:42 eta=00:02:09
+[2026-10-13 19:22:36] INFO  training: tf transform train 24/81 (30%) elapsed=00:00:52 eta=00:02:02
+[2026-10-13 19:22:46] INFO  training: tf transform train 28/81 (35%) elapsed=00:01:02 eta=00:01:57
+[2026-10-13 19:22:57] INFO  training: tf transform train 32/81 (40%) elapsed=00:01:13 eta=00:01:51
+[2026-10-13 19:23:06] INFO  training: tf transform train 36/81 (44%) elapsed=00:01:22 eta=00:01:42
+[2026-10-13 19:23:15] INFO  training: tf transform train 40/81 (49%) elapsed=00:01:31 eta=00:01:33
+[2026-10-13 19:23:29] INFO  training: tf transform train 44/81 (54%) elapsed=00:01:45 eta=00:01:28
+[2026-10-13 19:23:40] INFO  training: tf transform train 48/81 (59%) elapsed=00:01:56 eta=00:01:20
+[2026-10-13 19:23:51] INFO  training: tf transform train 52/81 (64%) elapsed=00:02:07 eta=00:01:11
+[2026-10-13 19:24:02] INFO  training: tf transform train 56/81 (69%) elapsed=00:02:18 eta=00:01:01
+[2026-10-13 19:24:13] INFO  training: tf transform train 60/81 (74%) elapsed=00:02:29 eta=00:00:52
+[2026-10-13 19:24:22] INFO  training: tf transform train 64/81 (79%) elapsed=00:02:38 eta=00:00:42
+[2026-10-13 19:24:30] INFO  training: tf transform train 68/81 (84%) elapsed=00:02:46 eta=00:00:32
+[2026-10-13 19:24:37] INFO  training: tf transform train 72/81 (89%) elapsed=00:02:53 eta=00:00:22
+[2026-10-13 19:24:45] INFO  training: tf transform train 76/81 (94%) elapsed=00:03:01 eta=00:00:12
+[2026-10-13 19:24:51] INFO  training: tf transform train 80/81 (99%) elapsed=00:03:07 eta=00:00:02
+[2026-10-13 19:24:51] INFO  training: tf transform train 81/81 (100%) elapsed=00:03:07 eta=00:00:00
+[2026-10-13 19:24:55] INFO  training: tf transform valid 1/20 (5%) elapsed=00:00:03 eta=00:00:56
+[2026-10-13 19:24:57] INFO  training: tf transform valid 2/20 (10%) elapsed=00:00:05 eta=00:00:45
+[2026-10-13 19:24:59] INFO  training: tf transform valid 3/20 (15%) elapsed=00:00:07 eta=00:00:39
+[2026-10-13 19:25:00] INFO  training: tf transform valid 4/20 (20%) elapsed=00:00:08 eta=00:00:33
+[2026-10-13 19:25:04] INFO  training: tf transform valid 5/20 (25%) elapsed=00:00:13 eta=00:00:38
+[2026-10-13 19:25:05] INFO  training: tf transform valid 6/20 (30%) elapsed=00:00:13 eta=00:00:30
+[2026-10-13 19:25:09] INFO  training: tf transform valid 7/20 (35%) elapsed=00:00:17 eta=00:00:32
+[2026-10-13 19:25:09] INFO  training: tf transform valid 8/20 (40%) elapsed=00:00:17 eta=00:00:26
+[2026-10-13 19:25:15] INFO  training: tf transform valid 9/20 (45%) elapsed=00:00:23 eta=00:00:28
+[2026-10-13 19:25:15] INFO  training: tf transform valid 10/20 (50%) elapsed=00:00:23 eta=00:00:23
+[2026-10-13 19:25:18] INFO  training: tf transform valid 11/20 (55%) elapsed=00:00:26 eta=00:00:22
+[2026-10-13 19:25:19] INFO  training: tf transform valid 12/20 (60%) elapsed=00:00:28 eta=00:00:18
+[2026-10-13 19:25:25] INFO  training: tf transform valid 13/20 (65%) elapsed=00:00:33 eta=00:00:18
+[2026-10-13 19:25:25] INFO  training: tf transform valid 14/20 (70%) elapsed=00:00:34 eta=00:00:14
+[2026-10-13 19:25:30] INFO  training: tf transform valid 15/20 (75%) elapsed=00:00:38 eta=00:00:13
+[2026-10-13 19:25:31] INFO  training: tf transform valid 16/20 (80%) elapsed=00:00:39 eta=00:00:10
+[2026-10-13 19:25:34] INFO  training: tf transform valid 17/20 (85%) elapsed=00:00:43 eta=00:00:08
+[2026-10-13 19:25:35] INFO  training: tf transform valid 18/20 (90%) elapsed=00:00:43 eta=00:00:05
+[2026-10-13 19:25:38] INFO  training: tf transform valid 19/20 (95%) elapsed=00:00:46 eta=00:00:02
+[2026-10-13 19:25:38] INFO  training: tf transform valid 20/20 (100%) elapsed=00:00:46 eta=00:00:00
+[2026-10-13 19:26:06] INFO  training: fold 0 train start epochs=20 steps/epoch=21
+[2026-10-13 19:26:07] INFO  training: fold 0 train 2/21 (10%) elapsed=00:00:01 eta=00:00:14
+[2026-10-13 19:26:07] INFO  training: fold 0 train 4/21 (19%) elapsed=00:00:02 eta=00:00:08
+[2026-10-13 19:26:08] INFO  training: fold 0 train 6/21 (29%) elapsed=00:00:02 eta=00:00:05
+[2026-10-13 19:26:08] INFO  training: fold 0 train 8/21 (38%) elapsed=00:00:02 eta=00:00:04
+[2026-10-13 19:26:08] INFO  training: fold 0 train 10/21 (48%) elapsed=00:00:03 eta=00:00:03
+[2026-10-13 19:26:09] INFO  training: fold 0 train 12/21 (57%) elapsed=00:00:03 eta=00:00:02
+[2026-10-13 19:26:09] INFO  training: fold 0 train 14/21 (67%) elapsed=00:00:03 eta=00:00:02
+[2026-10-13 19:26:09] INFO  training: fold 0 train 16/21 (76%) elapsed=00:00:04 eta=00:00:01
+[2026-10-13 19:26:10] INFO  training: fold 0 train 18/21 (86%) elapsed=00:00:04 eta=00:00:01
+[2026-10-13 19:26:10] INFO  training: fold 0 train 20/21 (95%) elapsed=00:00:04 eta=00:00:00
+[2026-10-13 19:26:10] INFO  training: fold 0 train 21/21 (100%) elapsed=00:00:04 eta=00:00:00
+[2026-10-13 19:26:10] INFO  training: fold 0 epoch 1/20 loss=0.6744 lr=1.00e-03 grad_mean=0.625 grad_max=1.445 elapsed=00:00:05 eta=00:01:26
+[2026-10-13 19:26:10] INFO  training: fold 0 train 2/21 (10%) elapsed=00:00:00 eta=00:00:03
+[2026-10-13 19:26:11] INFO  training: fold 0 train 4/21 (19%) elapsed=00:00:01 eta=00:00:03
+[2026-10-13 19:26:11] INFO  training: fold 0 train 6/21 (29%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:26:11] INFO  training: fold 0 train 8/21 (38%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:26:12] INFO  training: fold 0 train 10/21 (48%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:26:12] INFO  training: fold 0 train 12/21 (57%) elapsed=00:00:02 eta=00:00:01
+[2026-10-13 19:26:12] INFO  training: fold 0 train 14/21 (67%) elapsed=00:00:02 eta=00:00:01
+[2026-10-13 19:26:13] INFO  training: fold 0 train 16/21 (76%) elapsed=00:00:02 eta=00:00:01
+[2026-10-13 19:26:13] INFO  training: fold 0 train 18/21 (86%) elapsed=00:00:03 eta=00:00:00
+[2026-10-13 19:26:13] INFO  training: fold 0 train 20/21 (95%) elapsed=00:00:03 eta=00:00:00
+[2026-10-13 19:26:13] INFO  training: fold 0 train 21/21 (100%) elapsed=00:00:03 eta=00:00:00
+[2026-10-13 19:26:13] INFO  training: fold 0 epoch 2/20 loss=0.6021 lr=1.00e-03 grad_mean=0.624 grad_max=0.950 elapsed=00:00:03 eta=00:01:09
+[2026-10-13 19:26:14] INFO  training: fold 0 train 2/21 (10%) elapsed=00:00:00 eta=00:00:03
+[2026-10-13 19:26:14] INFO  training: fold 0 train 4/21 (19%) elapsed=00:00:01 eta=00:00:03
+[2026-10-13 19:26:14] INFO  training: fold 0 train 6/21 (29%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:26:15] INFO  training: fold 0 train 8/21 (38%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:26:15] INFO  training: fold 0 train 10/21 (48%) elapsed=00:00:02 eta=00:00:02
+[2026-10-13 19:26:15] INFO  training: fold 0 train 12/21 (57%) elapsed=00:00:02 eta=00:00:01
+[2026-10-13 19:26:15] INFO  training: fold 0 train 14/21 (67%) elapsed=00:00:02 eta=00:00:01
+[2026-10-13 19:26:16] INFO  training: fold 0 train 16/21 (76%) elapsed=00:00:02 eta=00:00:01
+[2026-10-13 19:26:16] INFO  training: fold 0 train 18/21 (86%) elapsed=00:00:03 eta=00:00:00
+[2026-10-13 19:26:16] INFO  training: fold 0 train 20/21 (95%) elapsed=00:00:03 eta=00:00:00
+[2026-10-13 19:26:16] INFO  training: fold 0 train 21/21 (100%) elapsed=00:00:03 eta=00:00:00
+[2026-10-13 19:26:16] INFO  training: fold 0 epoch 3/20 loss=0.5136 lr=1.00e-03 grad_mean=1.075 grad_max=3.213 elapsed=00:00:03 eta=00:01:01
+[2026-10-13 19:26:17] INFO  training: fold 0 train 2/21 (10%) elapsed=00:00:00 eta=00:00:02
+[2026-10-13 19:26:17] INFO  training: fold 0 train 4/21 (19%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:26:17] INFO  training: fold 0 train 6/21 (29%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:26:18] INFO  training: fold 0 train 8/21 (38%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:26:18] INFO  training: fold 0 train 10/21 (48%) elapsed=00:00:02 eta=00:00:02
+[2026-10-13 19:26:18] INFO  training: fold 0 train 12/21 (57%) elapsed=00:00:02 eta=00:00:01
+[2026-10-13 19:26:19] INFO  training: fold 0 train 14/21 (67%) elapsed=00:00:02 eta=00:00:01
+[2026-10-13 19:26:19] INFO  training: fold 0 train 16/21 (76%) elapsed=00:00:02 eta=00:00:01
+[2026-10-13 19:26:19] INFO  training: fold 0 train 18/21 (86%) elapsed=00:00:03 eta=00:00:00
+[2026-10-13 19:26:19] INFO  training: fold 0 train 20/21 (95%) elapsed=00:00:03 eta=00:00:00
+[2026-10-13 19:26:19] INFO  training: fold 0 train 21/21 (100%) elapsed=00:00:03 eta=00:00:00
+[2026-10-13 19:26:20] INFO  training: fold 0 epoch 4/20 loss=0.4525 lr=1.00e-03 grad_mean=1.435 grad_max=3.545 elapsed=00:00:03 eta=00:00:55
+[2026-10-13 19:26:20] INFO  training: fold 0 train 2/21 (10%) elapsed=00:00:00 eta=00:00:02
+[2026-10-13 19:26:20] INFO  training: fold 0 train 4/21 (19%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:26:20] INFO  training: fold 0 train 6/21 (29%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:26:21] INFO  training: fold 0 train 8/21 (38%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:26:21] INFO  training: fold 0 train 10/21 (48%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:26:21] INFO  training: fold 0 train 12/21 (57%) elapsed=00:00:02 eta=00:00:01
+[2026-10-13 19:26:22] INFO  training: fold 0 train 14/21 (67%) elapsed=00:00:02 eta=00:00:01
+[2026-10-13 19:26:22] INFO  training: fold 0 train 16/21 (76%) elapsed=00:00:02 eta=00:00:01
+[2026-10-13 19:26:22] INFO  training: fold 0 train 18/21 (86%) elapsed=00:00:03 eta=00:00:00
+[2026-10-13 19:26:22] INFO  training: fold 0 train 20/21 (95%) elapsed=00:00:03 eta=00:00:00
+[2026-10-13 19:26:23] INFO  training: fold 0 train 21/21 (100%) elapsed=00:00:03 eta=00:00:00
+[2026-10-13 19:26:23] INFO  training: fold 0 epoch 5/20 loss=0.3825 lr=1.00e-03 grad_mean=1.497 grad_max=7.785 elapsed=00:00:03 eta=00:00:51
+[2026-10-13 19:26:23] INFO  training: fold 0 train 2/21 (10%) elapsed=00:00:00 eta=00:00:02
+[2026-10-13 19:26:23] INFO  training: fold 0 train 4/21 (19%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:26:23] INFO  training: fold 0 train 6/21 (29%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:26:24] INFO  training: fold 0 train 8/21 (38%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:26:24] INFO  training: fold 0 train 10/21 (48%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:26:24] INFO  training: fold 0 train 12/21 (57%) elapsed=00:00:02 eta=00:00:01
+[2026-10-13 19:26:25] INFO  training: fold 0 train 14/21 (67%) elapsed=00:00:02 eta=00:00:01
+[2026-10-13 19:26:25] INFO  training: fold 0 train 16/21 (76%) elapsed=00:00:02 eta=00:00:01
+[2026-10-13 19:26:25] INFO  training: fold 0 train 18/21 (86%) elapsed=00:00:03 eta=00:00:00
+[2026-10-13 19:26:26] INFO  training: fold 0 train 20/21 (95%) elapsed=00:00:03 eta=00:00:00
+[2026-10-13 19:26:26] INFO  training: fold 0 train 21/21 (100%) elapsed=00:00:03 eta=00:00:00
+[2026-10-13 19:26:26] INFO  training: fold 0 epoch 6/20 loss=0.4791 lr=1.00e-03 grad_mean=2.218 grad_max=11.163 elapsed=00:00:03 eta=00:00:47
+[2026-10-13 19:26:26] INFO  training: fold 0 train 2/21 (10%) elapsed=00:00:00 eta=00:00:02
+[2026-10-13 19:26:26] INFO  training: fold 0 train 4/21 (19%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:26:26] INFO  training: fold 0 train 6/21 (29%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:26:27] INFO  training: fold 0 train 8/21 (38%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:26:27] INFO  training: fold 0 train 10/21 (48%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:26:27] INFO  training: fold 0 train 12/21 (57%) elapsed=00:00:02 eta=00:00:01
+[2026-10-13 19:26:28] INFO  training: fold 0 train 14/21 (67%) elapsed=00:00:02 eta=00:00:01
+[2026-10-13 19:26:28] INFO  training: fold 0 train 16/21 (76%) elapsed=00:00:02 eta=00:00:01
+[2026-10-13 19:26:28] INFO  training: fold 0 train 18/21 (86%) elapsed=00:00:03 eta=00:00:00
+[2026-10-13 19:26:29] INFO  training: fold 0 train 20/21 (95%) elapsed=00:00:03 eta=00:00:00
+[2026-10-13 19:26:29] INFO  training: fold 0 train 21/21 (100%) elapsed=00:00:03 eta=00:00:00
+[2026-10-13 19:26:29] INFO  training: fold 0 epoch 7/20 loss=0.3816 lr=1.00e-03 grad_mean=1.363 grad_max=3.542 elapsed=00:00:03 eta=00:00:43
+[2026-10-13 19:26:29] INFO  training: fold 0 train 2/21 (10%) elapsed=00:00:00 eta=00:00:03
+[2026-10-13 19:26:29] INFO  training: fold 0 train 4/21 (19%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:26:30] INFO  training: fold 0 train 6/21 (29%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:26:30] INFO  training: fold 0 train 8/21 (38%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:26:30] INFO  training: fold 0 train 10/21 (48%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:26:30] INFO  training: fold 0 train 12/21 (57%) elapsed=00:00:02 eta=00:00:01
+[2026-10-13 19:26:31] INFO  training: fold 0 train 14/21 (67%) elapsed=00:00:02 eta=00:00:01
+[2026-10-13 19:26:31] INFO  training: fold 0 train 16/21 (76%) elapsed=00:00:02 eta=00:00:01
+[2026-10-13 19:26:31] INFO  training: fold 0 train 18/21 (86%) elapsed=00:00:03 eta=00:00:00
+[2026-10-13 19:26:32] INFO  training: fold 0 train 20/21 (95%) elapsed=00:00:03 eta=00:00:00
+[2026-10-13 19:26:32] INFO  training: fold 0 train 21/21 (100%) elapsed=00:00:03 eta=00:00:00
+[2026-10-13 19:26:32] INFO  training: fold 0 epoch 8/20 loss=0.3386 lr=1.00e-03 grad_mean=1.348 grad_max=4.828 elapsed=00:00:03 eta=00:00:39
+[2026-10-13 19:26:32] INFO  training: fold 0 train 2/21 (10%) elapsed=00:00:00 eta=00:00:02
+[2026-10-13 19:26:32] INFO  training: fold 0 train 4/21 (19%) elapsed=00:00:00 eta=00:00:02
+[2026-10-13 19:26:32] INFO  training: fold 0 train 6/21 (29%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:26:33] INFO  training: fold 0 train 8/21 (38%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:26:33] INFO  training: fold 0 train 10/21 (48%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:26:33] INFO  training: fold 0 train 12/21 (57%) elapsed=00:00:02 eta=00:00:01
+[2026-10-13 19:26:34] INFO  training: fold 0 train 14/21 (67%) elapsed=00:00:02 eta=00:00:01
+[2026-10-13 19:26:34] INFO  training: fold 0 train 16/21 (76%) elapsed=00:00:02 eta=00:00:01
+[2026-10-13 19:26:34] INFO  training: fold 0 train 18/21 (86%) elapsed=00:00:03 eta=00:00:00
+[2026-10-13 19:26:35] INFO  training: fold 0 train 20/21 (95%) elapsed=00:00:03 eta=00:00:00
+[2026-10-13 19:26:35] INFO  training: fold 0 train 21/21 (100%) elapsed=00:00:03 eta=00:00:00
+[2026-10-13 19:26:35] INFO  training: fold 0 epoch 9/20 loss=0.2868 lr=1.00e-03 grad_mean=1.326 grad_max=4.235 elapsed=00:00:03 eta=00:00:36
+[2026-10-13 19:26:35] INFO  training: fold 0 train 2/21 (10%) elapsed=00:00:00 eta=00:00:03
+[2026-10-13 19:26:35] INFO  training: fold 0 train 4/21 (19%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:26:36] INFO  training: fold 0 train 6/21 (29%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:26:36] INFO  training: fold 0 train 8/21 (38%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:26:36] INFO  training: fold 0 train 10/21 (48%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:26:36] INFO  training: fold 0 train 12/21 (57%) elapsed=00:00:02 eta=00:00:01
+[2026-10-13 19:26:37] INFO  training: fold 0 train 14/21 (67%) elapsed=00:00:02 eta=00:00:01
+[2026-10-13 19:26:37] INFO  training: fold 0 train 16/21 (76%) elapsed=00:00:02 eta=00:00:01
+[2026-10-13 19:26:37] INFO  training: fold 0 train 18/21 (86%) elapsed=00:00:03 eta=00:00:00
+[2026-10-13 19:26:38] INFO  training: fold 0 train 20/21 (95%) elapsed=00:00:03 eta=00:00:00
+[2026-10-13 19:26:38] INFO  training: fold 0 train 21/21 (100%) elapsed=00:00:03 eta=00:00:00
+[2026-10-13 19:26:38] INFO  training: fold 0 epoch 10/20 loss=0.3739 lr=1.00e-03 grad_mean=1.851 grad_max=11.111 elapsed=00:00:03 eta=00:00:32
+[2026-10-13 19:26:38] INFO  training: fold 0 train 2/21 (10%) elapsed=00:00:00 eta=00:00:02
+[2026-10-13 19:26:38] INFO  training: fold 0 train 4/21 (19%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:26:39] INFO  training: fold 0 train 6/21 (29%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:26:39] INFO  training: fold 0 train 8/21 (38%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:26:39] INFO  training: fold 0 train 10/21 (48%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:26:40] INFO  training: fold 0 train 12/21 (57%) elapsed=00:00:02 eta=00:00:01
+[2026-10-13 19:26:40] INFO  training: fold 0 train 14/21 (67%) elapsed=00:00:02 eta=00:00:01
+[2026-10-13 19:26:40] INFO  training: fold 0 train 16/21 (76%) elapsed=00:00:02 eta=00:00:01
+[2026-10-13 19:26:40] INFO  training: fold 0 train 18/21 (86%) elapsed=00:00:03 eta=00:00:00
+[2026-10-13 19:26:41] INFO  training: fold 0 train 20/21 (95%) elapsed=00:00:03 eta=00:00:00
+[2026-10-13 19:26:41] INFO  training: fold 0 train 21/21 (100%) elapsed=00:00:03 eta=00:00:00
+[2026-10-13 19:26:41] INFO  training: fold 0 epoch 11/20 loss=0.3289 lr=1.00e-03 grad_mean=1.808 grad_max=11.183 elapsed=00:00:03 eta=00:00:29
+[2026-10-13 19:26:41] INFO  training: fold 0 train 2/21 (10%) elapsed=00:00:00 eta=00:00:02
+[2026-10-13 19:26:41] INFO  training: fold 0 train 4/21 (19%) elapsed=00:00:00 eta=00:00:02
+[2026-10-13 19:26:42] INFO  training: fold 0 train 6/21 (29%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:26:42] INFO  training: fold 0 train 8/21 (38%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:26:42] INFO  training: fold 0 train 10/21 (48%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:26:43] INFO  training: fold 0 train 12/21 (57%) elapsed=00:00:02 eta=00:00:01
+[2026-10-13 19:26:43] INFO  training: fold 0 train 14/21 (67%) elapsed=00:00:02 eta=00:00:01
+[2026-10-13 19:26:43] INFO  training: fold 0 train 16/21 (76%) elapsed=00:00:02 eta=00:00:01
+[2026-10-13 19:26:43] INFO  training: fold 0 train 18/21 (86%) elapsed=00:00:03 eta=00:00:00
+[2026-10-13 19:26:44] INFO  training: fold 0 train 20/21 (95%) elapsed=00:00:03 eta=00:00:00
+[2026-10-13 19:26:44] INFO  training: fold 0 train 21/21 (100%) elapsed=00:00:03 eta=00:00:00
+[2026-10-13 19:26:44] INFO  training: fold 0 epoch 12/20 loss=0.2311 lr=1.00e-03 grad_mean=1.098 grad_max=2.958 elapsed=00:00:03 eta=00:00:25
+[2026-10-13 19:26:44] INFO  training: fold 0 train 2/21 (10%) elapsed=00:00:00 eta=00:00:02
+[2026-10-13 19:26:44] INFO  training: fold 0 train 4/21 (19%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:26:45] INFO  training: fold 0 train 6/21 (29%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:26:45] INFO  training: fold 0 train 8/21 (38%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:26:45] INFO  training: fold 0 train 10/21 (48%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:26:46] INFO  training: fold 0 train 12/21 (57%) elapsed=00:00:02 eta=00:00:01
+[2026-10-13 19:26:46] INFO  training: fold 0 train 14/21 (67%) elapsed=00:00:02 eta=00:00:01
+[2026-10-13 19:26:46] INFO  training: fold 0 train 16/21 (76%) elapsed=00:00:02 eta=00:00:01
+[2026-10-13 19:26:47] INFO  training: fold 0 train 18/21 (86%) elapsed=00:00:03 eta=00:00:00
+[2026-10-13 19:26:47] INFO  training: fold 0 train 20/21 (95%) elapsed=00:00:03 eta=00:00:00
+[2026-10-13 19:26:47] INFO  training: fold 0 train 21/21 (100%) elapsed=00:00:03 eta=00:00:00
+[2026-10-13 19:26:47] INFO  training: fold 0 epoch 13/20 loss=0.2920 lr=1.00e-03 grad_mean=1.850 grad_max=6.668 elapsed=00:00:03 eta=00:00:22
+[2026-10-13 19:26:47] INFO  training: fold 0 train 2/21 (10%) elapsed=00:00:00 eta=00:00:03
+[2026-10-13 19:26:48] INFO  training: fold 0 train 4/21 (19%) elapsed=00:00:01 eta=00:00:03
+[2026-10-13 19:26:48] INFO  training: fold 0 train 6/21 (29%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:26:48] INFO  training: fold 0 train 8/21 (38%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:26:48] INFO  training: fold 0 train 10/21 (48%) elapsed=00:00:02 eta=00:00:02
+[2026-10-13 19:26:49] INFO  training: fold 0 train 12/21 (57%) elapsed=00:00:02 eta=00:00:01
+[2026-10-13 19:26:49] INFO  training: fold 0 train 14/21 (67%) elapsed=00:00:02 eta=00:00:01
+[2026-10-13 19:26:49] INFO  training: fold 0 train 16/21 (76%) elapsed=00:00:02 eta=00:00:01
+[2026-10-13 19:26:50] INFO  training: fold 0 train 18/21 (86%) elapsed=00:00:03 eta=00:00:00
+[2026-10-13 19:26:50] INFO  training: fold 0 train 20/21 (95%) elapsed=00:00:03 eta=00:00:00
+[2026-10-13 19:26:50] INFO  training: fold 0 train 21/21 (100%) elapsed=00:00:03 eta=00:00:00
+[2026-10-13 19:26:50] INFO  training: fold 0 epoch 14/20 loss=0.2546 lr=1.00e-03 grad_mean=1.684 grad_max=10.907 elapsed=00:00:03 eta=00:00:19
+[2026-10-13 19:26:50] INFO  training: fold 0 train 2/21 (10%) elapsed=00:00:00 eta=00:00:02
+[2026-10-13 19:26:51] INFO  training: fold 0 train 4/21 (19%) elapsed=00:00:00 eta=00:00:02
+[2026-10-13 19:26:51] INFO  training: fold 0 train 6/21 (29%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:26:51] INFO  training: fold 0 train 8/21 (38%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:26:51] INFO  training: fold 0 train 10/21 (48%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:26:52] INFO  training: fold 0 train 12/21 (57%) elapsed=00:00:02 eta=00:00:01
+[2026-10-13 19:26:52] INFO  training: fold 0 train 14/21 (67%) elapsed=00:00:02 eta=00:00:01
+[2026-10-13 19:26:52] INFO  training: fold 0 train 16/21 (76%) elapsed=00:00:02 eta=00:00:01
+[2026-10-13 19:26:53] INFO  training: fold 0 train 18/21 (86%) elapsed=00:00:03 eta=00:00:00
+[2026-10-13 19:26:53] INFO  training: fold 0 train 20/21 (95%) elapsed=00:00:03 eta=00:00:00
+[2026-10-13 19:26:53] INFO  training: fold 0 train 21/21 (100%) elapsed=00:00:03 eta=00:00:00
+[2026-10-13 19:26:53] INFO  training: fold 0 epoch 15/20 loss=0.2375 lr=1.00e-03 grad_mean=1.573 grad_max=5.495 elapsed=00:00:03 eta=00:00:16
+[2026-10-13 19:26:53] INFO  training: fold 0 train 2/21 (10%) elapsed=00:00:00 eta=00:00:02
+[2026-10-13 19:26:54] INFO  training: fold 0 train 4/21 (19%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:26:54] INFO  training: fold 0 train 6/21 (29%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:26:54] INFO  training: fold 0 train 8/21 (38%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:26:55] INFO  training: fold 0 train 10/21 (48%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:26:55] INFO  training: fold 0 train 12/21 (57%) elapsed=00:00:02 eta=00:00:01
+[2026-10-13 19:26:55] INFO  training: fold 0 train 14/21 (67%) elapsed=00:00:02 eta=00:00:01
+[2026-10-13 19:26:55] INFO  training: fold 0 train 16/21 (76%) elapsed=00:00:02 eta=00:00:01
+[2026-10-13 19:26:56] INFO  training: fold 0 train 18/21 (86%) elapsed=00:00:03 eta=00:00:00
+[2026-10-13 19:26:56] INFO  training: fold 0 train 20/21 (95%) elapsed=00:00:03 eta=00:00:00
+[2026-10-13 19:26:56] INFO  training: fold 0 train 21/21 (100%) elapsed=00:00:03 eta=00:00:00
+[2026-10-13 19:26:56] INFO  training: fold 0 epoch 16/20 loss=0.2345 lr=1.00e-03 grad_mean=1.520 grad_max=4.698 elapsed=00:00:03 eta=00:00:13
+[2026-10-13 19:26:56] INFO  training: fold 0 train 2/21 (10%) elapsed=00:00:00 eta=00:00:03
+[2026-10-13 19:26:57] INFO  training: fold 0 train 4/21 (19%) elapsed=00:00:01 eta=00:00:03
+[2026-10-13 19:26:57] INFO  training: fold 0 train 6/21 (29%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:26:57] INFO  training: fold 0 train 8/21 (38%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:26:58] INFO  training: fold 0 train 10/21 (48%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:26:58] INFO  training: fold 0 train 12/21 (57%) elapsed=00:00:02 eta=00:00:01
+[2026-10-13 19:26:58] INFO  training: fold 0 train 14/21 (67%) elapsed=00:00:02 eta=00:00:01
+[2026-10-13 19:26:58] INFO  training: fold 0 train 16/21 (76%) elapsed=00:00:02 eta=00:00:01
+[2026-10-13 19:26:59] INFO  training: fold 0 train 18/21 (86%) elapsed=00:00:03 eta=00:00:00
+[2026-10-13 19:26:59] INFO  training: fold 0 train 20/21 (95%) elapsed=00:00:03 eta=00:00:00
+[2026-10-13 19:26:59] INFO  training: fold 0 train 21/21 (100%) elapsed=00:00:03 eta=00:00:00
+[2026-10-13 19:26:59] INFO  training: fold 0 epoch 17/20 loss=0.1667 lr=1.00e-03 grad_mean=0.992 grad_max=2.781 elapsed=00:00:03 eta=00:00:09
+[2026-10-13 19:26:59] INFO  training: fold 0 train 2/21 (10%) elapsed=00:00:00 eta=00:00:03
+[2026-10-13 19:27:00] INFO  training: fold 0 train 4/21 (19%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:27:00] INFO  training: fold 0 train 6/21 (29%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:27:00] INFO  training: fold 0 train 8/21 (38%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:27:01] INFO  training: fold 0 train 10/21 (48%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:27:01] INFO  training: fold 0 train 12/21 (57%) elapsed=00:00:02 eta=00:00:01
+[2026-10-13 19:27:01] INFO  training: fold 0 train 14/21 (67%) elapsed=00:00:02 eta=00:00:01
+[2026-10-13 19:27:02] INFO  training: fold 0 train 16/21 (76%) elapsed=00:00:02 eta=00:00:01
+[2026-10-13 19:27:02] INFO  training: fold 0 train 18/21 (86%) elapsed=00:00:03 eta=00:00:00
+[2026-10-13 19:27:02] INFO  training: fold 0 train 20/21 (95%) elapsed=00:00:03 eta=00:00:00
+[2026-10-13 19:27:02] INFO  training: fold 0 train 21/21 (100%) elapsed=00:00:03 eta=00:00:00
+[2026-10-13 19:27:02] INFO  training: fold 0 epoch 18/20 loss=0.3342 lr=1.00e-03 grad_mean=2.189 grad_max=11.736 elapsed=00:00:03 eta=00:00:06
+[2026-10-13 19:27:03] INFO  training: fold 0 train 2/21 (10%) elapsed=00:00:00 eta=00:00:02
+[2026-10-13 19:27:03] INFO  training: fold 0 train 4/21 (19%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:27:03] INFO  training: fold 0 train 6/21 (29%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:27:03] INFO  training: fold 0 train 8/21 (38%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:27:04] INFO  training: fold 0 train 10/21 (48%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:27:04] INFO  training: fold 0 train 12/21 (57%) elapsed=00:00:02 eta=00:00:01
+[2026-10-13 19:27:04] INFO  training: fold 0 train 14/21 (67%) elapsed=00:00:02 eta=00:00:01
+[2026-10-13 19:27:05] INFO  training: fold 0 train 16/21 (76%) elapsed=00:00:02 eta=00:00:01
+[2026-10-13 19:27:05] INFO  training: fold 0 train 18/21 (86%) elapsed=00:00:03 eta=00:00:00
+[2026-10-13 19:27:05] INFO  training: fold 0 train 20/21 (95%) elapsed=00:00:03 eta=00:00:00
+[2026-10-13 19:27:05] INFO  training: fold 0 train 21/21 (100%) elapsed=00:00:03 eta=00:00:00
+[2026-10-13 19:27:05] INFO  training: fold 0 epoch 19/20 loss=0.2178 lr=1.00e-03 grad_mean=1.789 grad_max=7.995 elapsed=00:00:03 eta=00:00:03
+[2026-10-13 19:27:06] INFO  training: fold 0 train 2/21 (10%) elapsed=00:00:00 eta=00:00:02
+[2026-10-13 19:27:06] INFO  training: fold 0 train 4/21 (19%) elapsed=00:00:00 eta=00:00:02
+[2026-10-13 19:27:06] INFO  training: fold 0 train 6/21 (29%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:27:06] INFO  training: fold 0 train 8/21 (38%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:27:07] INFO  training: fold 0 train 10/21 (48%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:27:07] INFO  training: fold 0 train 12/21 (57%) elapsed=00:00:02 eta=00:00:01
+[2026-10-13 19:27:07] INFO  training: fold 0 train 14/21 (67%) elapsed=00:00:02 eta=00:00:01
+[2026-10-13 19:27:08] INFO  training: fold 0 train 16/21 (76%) elapsed=00:00:02 eta=00:00:01
+[2026-10-13 19:27:08] INFO  training: fold 0 train 18/21 (86%) elapsed=00:00:03 eta=00:00:00
+[2026-10-13 19:27:08] INFO  training: fold 0 train 20/21 (95%) elapsed=00:00:03 eta=00:00:00
+[2026-10-13 19:27:08] INFO  training: fold 0 train 21/21 (100%) elapsed=00:00:03 eta=00:00:00
+[2026-10-13 19:27:08] INFO  training: fold 0 epoch 20/20 loss=0.2109 lr=1.00e-03 grad_mean=1.330 grad_max=2.522 elapsed=00:00:03 eta=00:00:00
+[2026-10-13 19:27:08] INFO  training: fold 0 validation start batches=5
+[2026-10-13 19:27:09] INFO  training: fold 0 summary macro_f1=0.6081 macro_recall=0.6481 macro_pr_auc=0.7109 epochs_ran=20 best_epoch=20
+[2026-10-13 19:27:09] INFO  training: fold 1/5 start train=81 valid=20
+[2026-10-13 19:27:19] INFO  training: tf transform train 4/81 (5%) elapsed=00:00:08 eta=00:02:37
+[2026-10-13 19:27:27] INFO  training: tf transform train 8/81 (10%) elapsed=00:00:17 eta=00:02:33
+[2026-10-13 19:27:34] INFO  training: tf transform train 12/81 (15%) elapsed=00:00:24 eta=00:02:17
+[2026-10-13 19:27:41] INFO  training: tf transform train 16/81 (20%) elapsed=00:00:30 eta=00:02:02
+[2026-10-13 19:27:51] INFO  training: tf transform train 20/81 (25%) elapsed=00:00:40 eta=00:02:03
+[2026-10-13 19:28:00] INFO  training: tf transform train 24/81 (30%) elapsed=00:00:50 eta=00:01:58
+[2026-10-13 19:28:08] INFO  training: tf transform train 28/81 (35%) elapsed=00:00:58 eta=00:01:49
+[2026-10-13 19:28:21] INFO  training: tf transform train 32/81 (40%) elapsed=00:01:10 eta=00:01:48
+[2026-10-13 19:28:30] INFO  training: tf transform train 36/81 (44%) elapsed=00:01:20 eta=00:01:40
+[2026-10-13 19:28:39] INFO  training: tf transform train 40/81 (49%) elapsed=00:01:29 eta=00:01:31
+[2026-10-13 19:28:51] INFO  training: tf transform train 44/81 (54%) elapsed=00:01:41 eta=00:01:25
+[2026-10-13 19:29:04] INFO  training: tf transform train 48/81 (59%) elapsed=00:01:54 eta=00:01:18
+[2026-10-13 19:29:15] INFO  training: tf transform train 52/81 (64%) elapsed=00:02:05 eta=00:01:10
+[2026-10-13 19:29:26] INFO  training: tf transform train 56/81 (69%) elapsed=00:02:15 eta=00:01:00
+[2026-10-13 19:29:37] INFO  training: tf transform train 60/81 (74%) elapsed=00:02:27 eta=00:00:51
+[2026-10-13 19:29:46] INFO  training: tf transform train 64/81 (79%) elapsed=00:02:35 eta=00:00:41
+[2026-10-13 19:29:53] INFO  training: tf transform train 68/81 (84%) elapsed=00:02:43 eta=00:00:31
+[2026-10-13 19:30:02] INFO  training: tf transform train 72/81 (89%) elapsed=00:02:52 eta=00:00:21
+[2026-10-13 19:30:09] INFO  training: tf transform train 76/81 (94%) elapsed=00:02:58 eta=00:00:12
+[2026-10-13 19:30:13] INFO  training: tf transform train 80/81 (99%) elapsed=00:03:03 eta=00:00:02
+[2026-10-13 19:30:16] INFO  training: tf transform train 81/81 (100%) elapsed=00:03:05 eta=00:00:00
+[2026-10-13 19:30:21] INFO  training: tf transform valid 1/20 (5%) elapsed=00:00:05 eta=00:01:36
+[2026-10-13 19:30:21] INFO  training: tf transform valid 2/20 (10%) elapsed=00:00:05 eta=00:00:46
+[2026-10-13 19:30:23] INFO  training: tf transform valid 3/20 (15%) elapsed=00:00:07 eta=00:00:41
+[2026-10-13 19:30:24] INFO  training: tf transform valid 4/20 (20%) elapsed=00:00:08 eta=00:00:33
+[2026-10-13 19:30:29] INFO  training: tf transform valid 5/20 (25%) elapsed=00:00:13 eta=00:00:39
+[2026-10-13 19:30:30] INFO  training: tf transform valid 6/20 (30%) elapsed=00:00:13 eta=00:00:31
+[2026-10-13 19:30:33] INFO  training: tf transform valid 7/20 (35%) elapsed=00:00:17 eta=00:00:31
+[2026-10-13 19:30:36] INFO  training: tf transform valid 8/20 (40%) elapsed=00:00:20 eta=00:00:30
+[2026-10-13 19:30:38] INFO  training: tf transform valid 9/20 (45%) elapsed=00:00:22 eta=00:00:26
+[2026-10-13 19:30:40] INFO  training: tf transform valid 10/20 (50%) elapsed=00:00:24 eta=00:00:24
+[2026-10-13 19:30:42] INFO  training: tf transform valid 11/20 (55%) elapsed=00:00:26 eta=00:00:21
+[2026-10-13 19:30:46] INFO  training: tf transform valid 12/20 (60%) elapsed=00:00:30 eta=00:00:20
+[2026-10-13 19:30:47] INFO  training: tf transform valid 13/20 (65%) elapsed=00:00:31 eta=00:00:17
+[2026-10-13 19:30:51] INFO  training: tf transform valid 14/20 (70%) elapsed=00:00:35 eta=00:00:15
+[2026-10-13 19:30:53] INFO  training: tf transform valid 15/20 (75%) elapsed=00:00:37 eta=00:00:12
+[2026-10-13 19:30:57] INFO  training: tf transform valid 16/20 (80%) elapsed=00:00:41 eta=00:00:10
+[2026-10-13 19:30:57] INFO  training: tf transform valid 17/20 (85%) elapsed=00:00:41 eta=00:00:07
+[2026-10-13 19:31:01] INFO  training: tf transform valid 18/20 (90%) elapsed=00:00:45 eta=00:00:05
+[2026-10-13 19:31:02] INFO  training: tf transform valid 19/20 (95%) elapsed=00:00:46 eta=00:00:02
+[2026-10-13 19:31:04] INFO  training: tf transform valid 20/20 (100%) elapsed=00:00:48 eta=00:00:00
+[2026-10-13 19:31:30] INFO  training: fold 1 train start epochs=20 steps/epoch=21
+[2026-10-13 19:31:30] INFO  training: fold 1 train 2/21 (10%) elapsed=00:00:00 eta=00:00:02
+[2026-10-13 19:31:31] INFO  training: fold 1 train 4/21 (19%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:31:31] INFO  training: fold 1 train 6/21 (29%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:31:31] INFO  training: fold 1 train 8/21 (38%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:31:31] INFO  training: fold 1 train 10/21 (48%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:31:32] INFO  training: fold 1 train 12/21 (57%) elapsed=00:00:02 eta=00:00:01
+[2026-10-13 19:31:32] INFO  training: fold 1 train 14/21 (67%) elapsed=00:00:02 eta=00:00:01
+[2026-10-13 19:31:32] INFO  training: fold 1 train 16/21 (76%) elapsed=00:00:02 eta=00:00:01
+[2026-10-13 19:31:33] INFO  training: fold 1 train 18/21 (86%) elapsed=00:00:03 eta=00:00:00
+[2026-10-13 19:31:33] INFO  training: fold 1 train 20/21 (95%) elapsed=00:00:03 eta=00:00:00
+[2026-10-13 19:31:33] INFO  training: fold 1 train 21/21 (100%) elapsed=00:00:03 eta=00:00:00
+[2026-10-13 19:31:33] INFO  training: fold 1 epoch 1/20 loss=0.7404 lr=1.00e-03 grad_mean=0.752 grad_max=3.327 elapsed=00:00:03 eta=00:00:58
+[2026-10-13 19:31:33] INFO  training: fold 1 train 2/21 (10%) elapsed=00:00:00 eta=00:00:02
+[2026-10-13 19:31:34] INFO  training: fold 1 train 4/21 (19%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:31:34] INFO  training: fold 1 train 6/21 (29%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:31:34] INFO  training: fold 1 train 8/21 (38%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:31:34] INFO  training: fold 1 train 10/21 (48%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:31:35] INFO  training: fold 1 train 12/21 (57%) elapsed=00:00:02 eta=00:00:01
+[2026-10-13 19:31:35] INFO  training: fold 1 train 14/21 (67%) elapsed=00:00:02 eta=00:00:01
+[2026-10-13 19:31:35] INFO  training: fold 1 train 16/21 (76%) elapsed=00:00:02 eta=00:00:01
+[2026-10-13 19:31:36] INFO  training: fold 1 train 18/21 (86%) elapsed=00:00:03 eta=00:00:00
+[2026-10-13 19:31:36] INFO  training: fold 1 train 20/21 (95%) elapsed=00:00:03 eta=00:00:00
+[2026-10-13 19:31:36] INFO  training: fold 1 train 21/21 (100%) elapsed=00:00:03 eta=00:00:00
+[2026-10-13 19:31:36] INFO  training: fold 1 epoch 2/20 loss=0.6130 lr=1.00e-03 grad_mean=0.687 grad_max=1.449 elapsed=00:00:03 eta=00:00:55
+[2026-10-13 19:31:36] INFO  training: fold 1 train 2/21 (10%) elapsed=00:00:00 eta=00:00:02
+[2026-10-13 19:31:37] INFO  training: fold 1 train 4/21 (19%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:31:37] INFO  training: fold 1 train 6/21 (29%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:31:37] INFO  training: fold 1 train 8/21 (38%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:31:38] INFO  training: fold 1 train 10/21 (48%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:31:38] INFO  training: fold 1 train 12/21 (57%) elapsed=00:00:02 eta=00:00:01
+[2026-10-13 19:31:38] INFO  training: fold 1 train 14/21 (67%) elapsed=00:00:02 eta=00:00:01
+[2026-10-13 19:31:38] INFO  training: fold 1 train 16/21 (76%) elapsed=00:00:02 eta=00:00:01
+[2026-10-13 19:31:39] INFO  training: fold 1 train 18/21 (86%) elapsed=00:00:03 eta=00:00:00
+[2026-10-13 19:31:39] INFO  training: fold 1 train 20/21 (95%) elapsed=00:00:03 eta=00:00:00
+[2026-10-13 19:31:39] INFO  training: fold 1 train 21/21 (100%) elapsed=00:00:03 eta=00:00:00
+[2026-10-13 19:31:39] INFO  training: fold 1 epoch 3/20 loss=0.5278 lr=1.00e-03 grad_mean=0.980 grad_max=2.777 elapsed=00:00:03 eta=00:00:52
+[2026-10-13 19:31:39] INFO  training: fold 1 train 2/21 (10%) elapsed=00:00:00 eta=00:00:02
+[2026-10-13 19:31:40] INFO  training: fold 1 train 4/21 (19%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:31:40] INFO  training: fold 1 train 6/21 (29%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:31:40] INFO  training: fold 1 train 8/21 (38%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:31:41] INFO  training: fold 1 train 10/21 (48%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:31:41] INFO  training: fold 1 train 12/21 (57%) elapsed=00:00:02 eta=00:00:01
+[2026-10-13 19:31:41] INFO  training: fold 1 train 14/21 (67%) elapsed=00:00:02 eta=00:00:01
+[2026-10-13 19:31:41] INFO  training: fold 1 train 16/21 (76%) elapsed=00:00:02 eta=00:00:01
+[2026-10-13 19:31:42] INFO  training: fold 1 train 18/21 (86%) elapsed=00:00:03 eta=00:00:00
+[2026-10-13 19:31:42] INFO  training: fold 1 train 20/21 (95%) elapsed=00:00:03 eta=00:00:00
+[2026-10-13 19:31:42] INFO  training: fold 1 train 21/21 (100%) elapsed=00:00:03 eta=00:00:00
+[2026-10-13 19:31:42] INFO  training: fold 1 epoch 4/20 loss=0.6181 lr=1.00e-03 grad_mean=1.845 grad_max=7.348 elapsed=00:00:03 eta=00:00:49
+[2026-10-13 19:31:42] INFO  training: fold 1 train 2/21 (10%) elapsed=00:00:00 eta=00:00:02
+[2026-10-13 19:31:43] INFO  training: fold 1 train 4/21 (19%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:31:43] INFO  training: fold 1 train 6/21 (29%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:31:43] INFO  training: fold 1 train 8/21 (38%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:31:44] INFO  training: fold 1 train 10/21 (48%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:31:44] INFO  training: fold 1 train 12/21 (57%) elapsed=00:00:02 eta=00:00:01
+[2026-10-13 19:31:44] INFO  training: fold 1 train 14/21 (67%) elapsed=00:00:02 eta=00:00:01
+[2026-10-13 19:31:45] INFO  training: fold 1 train 16/21 (76%) elapsed=00:00:02 eta=00:00:01
+[2026-10-13 19:31:45] INFO  training: fold 1 train 18/21 (86%) elapsed=00:00:03 eta=00:00:00
+[2026-10-13 19:31:45] INFO  training: fold 1 train 20/21 (95%) elapsed=00:00:03 eta=00:00:00
+[2026-10-13 19:31:45] INFO  training: fold 1 train 21/21 (100%) elapsed=00:00:03 eta=00:00:00
+[2026-10-13 19:31:45] INFO  training: fold 1 epoch 5/20 loss=0.5204 lr=1.00e-03 grad_mean=0.907 grad_max=1.927 elapsed=00:00:03 eta=00:00:46
+[2026-10-13 19:31:46] INFO  training: fold 1 train 2/21 (10%) elapsed=00:00:00 eta=00:00:02
+[2026-10-13 19:31:46] INFO  training: fold 1 train 4/21 (19%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:31:46] INFO  training: fold 1 train 6/21 (29%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:31:46] INFO  training: fold 1 train 8/21 (38%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:31:47] INFO  training: fold 1 train 10/21 (48%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:31:47] INFO  training: fold 1 train 12/21 (57%) elapsed=00:00:02 eta=00:00:01
+[2026-10-13 19:31:47] INFO  training: fold 1 train 14/21 (67%) elapsed=00:00:02 eta=00:00:01
+[2026-10-13 19:31:48] INFO  training: fold 1 train 16/21 (76%) elapsed=00:00:02 eta=00:00:01
+[2026-10-13 19:31:48] INFO  training: fold 1 train 18/21 (86%) elapsed=00:00:03 eta=00:00:00
+[2026-10-13 19:31:48] INFO  training: fold 1 train 20/21 (95%) elapsed=00:00:03 eta=00:00:00
+[2026-10-13 19:31:48] INFO  training: fold 1 train 21/21 (100%) elapsed=00:00:03 eta=00:00:00
+[2026-10-13 19:31:48] INFO  training: fold 1 epoch 6/20 loss=0.4589 lr=1.00e-03 grad_mean=1.130 grad_max=3.033 elapsed=00:00:03 eta=00:00:43
+[2026-10-13 19:31:49] INFO  training: fold 1 train 2/21 (10%) elapsed=00:00:00 eta=00:00:03
+[2026-10-13 19:31:49] INFO  training: fold 1 train 4/21 (19%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:31:49] INFO  training: fold 1 train 6/21 (29%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:31:50] INFO  training: fold 1 train 8/21 (38%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:31:50] INFO  training: fold 1 train 10/21 (48%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:31:50] INFO  training: fold 1 train 12/21 (57%) elapsed=00:00:02 eta=00:00:01
+[2026-10-13 19:31:50] INFO  training: fold 1 train 14/21 (67%) elapsed=00:00:02 eta=00:00:01
+[2026-10-13 19:31:51] INFO  training: fold 1 train 16/21 (76%) elapsed=00:00:02 eta=00:00:01
+[2026-10-13 19:31:51] INFO  training: fold 1 train 18/21 (86%) elapsed=00:00:03 eta=00:00:00
+[2026-10-13 19:31:51] INFO  training: fold 1 train 20/21 (95%) elapsed=00:00:03 eta=00:00:00
+[2026-10-13 19:31:51] INFO  training: fold 1 train 21/21 (100%) elapsed=00:00:03 eta=00:00:00
+[2026-10-13 19:31:51] INFO  training: fold 1 epoch 7/20 loss=0.4189 lr=1.00e-03 grad_mean=1.682 grad_max=7.483 elapsed=00:00:03 eta=00:00:40
+[2026-10-13 19:31:52] INFO  training: fold 1 train 2/21 (10%) elapsed=00:00:00 eta=00:00:03
+[2026-10-13 19:31:52] INFO  training: fold 1 train 4/21 (19%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:31:52] INFO  training: fold 1 train 6/21 (29%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:31:53] INFO  training: fold 1 train 8/21 (38%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:31:53] INFO  training: fold 1 train 10/21 (48%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:31:53] INFO  training: fold 1 train 12/21 (57%) elapsed=00:00:02 eta=00:00:01
+[2026-10-13 19:31:53] INFO  training: fold 1 train 14/21 (67%) elapsed=00:00:02 eta=00:00:01
+[2026-10-13 19:31:54] INFO  training: fold 1 train 16/21 (76%) elapsed=00:00:02 eta=00:00:01
+[2026-10-13 19:31:54] INFO  training: fold 1 train 18/21 (86%) elapsed=00:00:03 eta=00:00:00
+[2026-10-13 19:31:54] INFO  training: fold 1 train 20/21 (95%) elapsed=00:00:03 eta=00:00:00
+[2026-10-13 19:31:54] INFO  training: fold 1 train 21/21 (100%) elapsed=00:00:03 eta=00:00:00
+[2026-10-13 19:31:55] INFO  training: fold 1 epoch 8/20 loss=0.4024 lr=1.00e-03 grad_mean=1.485 grad_max=4.250 elapsed=00:00:03 eta=00:00:37
+[2026-10-13 19:31:55] INFO  training: fold 1 train 2/21 (10%) elapsed=00:00:00 eta=00:00:02
+[2026-10-13 19:31:55] INFO  training: fold 1 train 4/21 (19%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:31:55] INFO  training: fold 1 train 6/21 (29%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:31:56] INFO  training: fold 1 train 8/21 (38%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:31:56] INFO  training: fold 1 train 10/21 (48%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:31:56] INFO  training: fold 1 train 12/21 (57%) elapsed=00:00:02 eta=00:00:01
+[2026-10-13 19:31:57] INFO  training: fold 1 train 14/21 (67%) elapsed=00:00:02 eta=00:00:01
+[2026-10-13 19:31:57] INFO  training: fold 1 train 16/21 (76%) elapsed=00:00:02 eta=00:00:01
+[2026-10-13 19:31:57] INFO  training: fold 1 train 18/21 (86%) elapsed=00:00:03 eta=00:00:00
+[2026-10-13 19:31:57] INFO  training: fold 1 train 20/21 (95%) elapsed=00:00:03 eta=00:00:00
+[2026-10-13 19:31:58] INFO  training: fold 1 train 21/21 (100%) elapsed=00:00:03 eta=00:00:00
+[2026-10-13 19:31:58] INFO  training: fold 1 epoch 9/20 loss=0.3325 lr=1.00e-03 grad_mean=1.507 grad_max=5.088 elapsed=00:00:03 eta=00:00:34
+[2026-10-13 19:31:58] INFO  training: fold 1 train 2/21 (10%) elapsed=00:00:00 eta=00:00:02
+[2026-10-13 19:31:58] INFO  training: fold 1 train 4/21 (19%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:31:58] INFO  training: fold 1 train 6/21 (29%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:31:59] INFO  training: fold 1 train 8/21 (38%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:31:59] INFO  training: fold 1 train 10/21 (48%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:31:59] INFO  training: fold 1 train 12/21 (57%) elapsed=00:00:02 eta=00:00:01
+[2026-10-13 19:32:00] INFO  training: fold 1 train 14/21 (67%) elapsed=00:00:02 eta=00:00:01
+[2026-10-13 19:32:00] INFO  training: fold 1 train 16/21 (76%) elapsed=00:00:02 eta=00:00:01
+[2026-10-13 19:32:00] INFO  training: fold 1 train 18/21 (86%) elapsed=00:00:03 eta=00:00:00
+[2026-10-13 19:32:00] INFO  training: fold 1 train 20/21 (95%) elapsed=00:00:03 eta=00:00:00
+[2026-10-13 19:32:01] INFO  training: fold 1 train 21/21 (100%) elapsed=00:00:03 eta=00:00:00
+[2026-10-13 19:32:01] INFO  training: fold 1 epoch 10/20 loss=0.3046 lr=1.00e-03 grad_mean=1.488 grad_max=4.185 elapsed=00:00:03 eta=00:00:31
+[2026-10-13 19:32:01] INFO  training: fold 1 train 2/21 (10%) elapsed=00:00:00 eta=00:00:02
+[2026-10-13 19:32:01] INFO  training: fold 1 train 4/21 (19%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:32:01] INFO  training: fold 1 train 6/21 (29%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:32:02] INFO  training: fold 1 train 8/21 (38%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:32:02] INFO  training: fold 1 train 10/21 (48%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:32:02] INFO  training: fold 1 train 12/21 (57%) elapsed=00:00:02 eta=00:00:01
+[2026-10-13 19:32:03] INFO  training: fold 1 train 14/21 (67%) elapsed=00:00:02 eta=00:00:01
+[2026-10-13 19:32:03] INFO  training: fold 1 train 16/21 (76%) elapsed=00:00:02 eta=00:00:01
+[2026-10-13 19:32:03] INFO  training: fold 1 train 18/21 (86%) elapsed=00:00:03 eta=00:00:00
+[2026-10-13 19:32:03] INFO  training: fold 1 train 20/21 (95%) elapsed=00:00:03 eta=00:00:00
+[2026-10-13 19:32:04] INFO  training: fold 1 train 21/21 (100%) elapsed=00:00:03 eta=00:00:00
+[2026-10-13 19:32:04] INFO  training: fold 1 epoch 11/20 loss=0.3295 lr=1.00e-03 grad_mean=1.893 grad_max=9.152 elapsed=00:00:03 eta=00:00:28
+[2026-10-13 19:32:04] INFO  training: fold 1 train 2/21 (10%) elapsed=00:00:00 eta=00:00:02
+[2026-10-13 19:32:04] INFO  training: fold 1 train 4/21 (19%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:32:04] INFO  training: fold 1 train 6/21 (29%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:32:05] INFO  training: fold 1 train 8/21 (38%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:32:05] INFO  training: fold 1 train 10/21 (48%) elapsed=00:00:01 eta=00:00:01
+[2026-10-13 19:32:05] INFO  training: fold 1 train 12/21 (57%) elapsed=00:00:02 eta=00:00:01
+[2026-10-13 19:32:06] INFO  training: fold 1 train 14/21 (67%) elapsed=00:00:02 eta=00:00:01
+[2026-10-13 19:32:06] INFO  training: fold 1 train 16/21 (76%) elapsed=00:00:02 eta=00:00:01
+[2026-10-13 19:32:06] INFO  training: fold 1 train 18/21 (86%) elapsed=00:00:03 eta=00:00:00
+[2026-10-13 19:32:07] INFO  training: fold 1 train 20/21 (95%) elapsed=00:00:03 eta=00:00:00
+[2026-10-13 19:32:07] INFO  training: fold 1 train 21/21 (100%) elapsed=00:00:03 eta=00:00:00
+[2026-10-13 19:32:07] INFO  training: fold 1 epoch 12/20 loss=0.3749 lr=1.00e-03 grad_mean=1.706 grad_max=5.653 elapsed=00:00:03 eta=00:00:24
+[2026-10-13 19:32:07] INFO  training: fold 1 train 2/21 (10%) elapsed=00:00:00 eta=00:00:02
+[2026-10-13 19:32:07] INFO  training: fold 1 train 4/21 (19%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:32:07] INFO  training: fold 1 train 6/21 (29%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:32:08] INFO  training: fold 1 train 8/21 (38%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:32:08] INFO  training: fold 1 train 10/21 (48%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:32:08] INFO  training: fold 1 train 12/21 (57%) elapsed=00:00:02 eta=00:00:01
+[2026-10-13 19:32:09] INFO  training: fold 1 train 14/21 (67%) elapsed=00:00:02 eta=00:00:01
+[2026-10-13 19:32:09] INFO  training: fold 1 train 16/21 (76%) elapsed=00:00:02 eta=00:00:01
+[2026-10-13 19:32:09] INFO  training: fold 1 train 18/21 (86%) elapsed=00:00:03 eta=00:00:00
+[2026-10-13 19:32:10] INFO  training: fold 1 train 20/21 (95%) elapsed=00:00:03 eta=00:00:00
+[2026-10-13 19:32:10] INFO  training: fold 1 train 21/21 (100%) elapsed=00:00:03 eta=00:00:00
+[2026-10-13 19:32:10] INFO  training: fold 1 epoch 13/20 loss=0.2602 lr=1.00e-03 grad_mean=1.146 grad_max=2.522 elapsed=00:00:03 eta=00:00:21
+[2026-10-13 19:32:10] INFO  training: fold 1 train 2/21 (10%) elapsed=00:00:00 eta=00:00:02
+[2026-10-13 19:32:10] INFO  training: fold 1 train 4/21 (19%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:32:11] INFO  training: fold 1 train 6/21 (29%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:32:11] INFO  training: fold 1 train 8/21 (38%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:32:11] INFO  training: fold 1 train 10/21 (48%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:32:11] INFO  training: fold 1 train 12/21 (57%) elapsed=00:00:02 eta=00:00:01
+[2026-10-13 19:32:12] INFO  training: fold 1 train 14/21 (67%) elapsed=00:00:02 eta=00:00:01
+[2026-10-13 19:32:12] INFO  training: fold 1 train 16/21 (76%) elapsed=00:00:02 eta=00:00:01
+[2026-10-13 19:32:12] INFO  training: fold 1 train 18/21 (86%) elapsed=00:00:03 eta=00:00:00
+[2026-10-13 19:32:13] INFO  training: fold 1 train 20/21 (95%) elapsed=00:00:03 eta=00:00:00
+[2026-10-13 19:32:13] INFO  training: fold 1 train 21/21 (100%) elapsed=00:00:03 eta=00:00:00
+[2026-10-13 19:32:13] INFO  training: fold 1 epoch 14/20 loss=0.3576 lr=1.00e-03 grad_mean=2.194 grad_max=8.144 elapsed=00:00:03 eta=00:00:18
+[2026-10-13 19:32:13] INFO  training: fold 1 train 2/21 (10%) elapsed=00:00:00 eta=00:00:02
+[2026-10-13 19:32:13] INFO  training: fold 1 train 4/21 (19%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:32:14] INFO  training: fold 1 train 6/21 (29%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:32:14] INFO  training: fold 1 train 8/21 (38%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:32:14] INFO  training: fold 1 train 10/21 (48%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:32:14] INFO  training: fold 1 train 12/21 (57%) elapsed=00:00:02 eta=00:00:01
+[2026-10-13 19:32:15] INFO  training: fold 1 train 14/21 (67%) elapsed=00:00:02 eta=00:00:01
+[2026-10-13 19:32:15] INFO  training: fold 1 train 16/21 (76%) elapsed=00:00:02 eta=00:00:01
+[2026-10-13 19:32:15] INFO  training: fold 1 train 18/21 (86%) elapsed=00:00:03 eta=00:00:00
+[2026-10-13 19:32:16] INFO  training: fold 1 train 20/21 (95%) elapsed=00:00:03 eta=00:00:00
+[2026-10-13 19:32:16] INFO  training: fold 1 train 21/21 (100%) elapsed=00:00:03 eta=00:00:00
+[2026-10-13 19:32:16] INFO  training: fold 1 epoch 15/20 loss=0.2559 lr=1.00e-03 grad_mean=1.374 grad_max=4.344 elapsed=00:00:03 eta=00:00:15
+[2026-10-13 19:32:16] INFO  training: fold 1 train 2/21 (10%) elapsed=00:00:00 eta=00:00:02
+[2026-10-13 19:32:16] INFO  training: fold 1 train 4/21 (19%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:32:17] INFO  training: fold 1 train 6/21 (29%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:32:17] INFO  training: fold 1 train 8/21 (38%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:32:17] INFO  training: fold 1 train 10/21 (48%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:32:17] INFO  training: fold 1 train 12/21 (57%) elapsed=00:00:02 eta=00:00:01
+[2026-10-13 19:32:18] INFO  training: fold 1 train 14/21 (67%) elapsed=00:00:02 eta=00:00:01
+[2026-10-13 19:32:18] INFO  training: fold 1 train 16/21 (76%) elapsed=00:00:02 eta=00:00:01
+[2026-10-13 19:32:18] INFO  training: fold 1 train 18/21 (86%) elapsed=00:00:03 eta=00:00:00
+[2026-10-13 19:32:19] INFO  training: fold 1 train 20/21 (95%) elapsed=00:00:03 eta=00:00:00
+[2026-10-13 19:32:19] INFO  training: fold 1 train 21/21 (100%) elapsed=00:00:03 eta=00:00:00
+[2026-10-13 19:32:19] INFO  training: fold 1 epoch 16/20 loss=0.2186 lr=1.00e-03 grad_mean=1.030 grad_max=2.651 elapsed=00:00:03 eta=00:00:12
+[2026-10-13 19:32:19] INFO  training: fold 1 train 2/21 (10%) elapsed=00:00:00 eta=00:00:02
+[2026-10-13 19:32:19] INFO  training: fold 1 train 4/21 (19%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:32:20] INFO  training: fold 1 train 6/21 (29%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:32:20] INFO  training: fold 1 train 8/21 (38%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:32:20] INFO  training: fold 1 train 10/21 (48%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:32:21] INFO  training: fold 1 train 12/21 (57%) elapsed=00:00:02 eta=00:00:01
+[2026-10-13 19:32:21] INFO  training: fold 1 train 14/21 (67%) elapsed=00:00:02 eta=00:00:01
+[2026-10-13 19:32:21] INFO  training: fold 1 train 16/21 (76%) elapsed=00:00:02 eta=00:00:01
+[2026-10-13 19:32:21] INFO  training: fold 1 train 18/21 (86%) elapsed=00:00:03 eta=00:00:00
+[2026-10-13 19:32:22] INFO  training: fold 1 train 20/21 (95%) elapsed=00:00:03 eta=00:00:00
+[2026-10-13 19:32:22] INFO  training: fold 1 train 21/21 (100%) elapsed=00:00:03 eta=00:00:00
+[2026-10-13 19:32:22] INFO  training: fold 1 epoch 17/20 loss=0.1930 lr=1.00e-03 grad_mean=1.225 grad_max=3.585 elapsed=00:00:03 eta=00:00:09
+[2026-10-13 19:32:22] INFO  training: fold 1 train 2/21 (10%) elapsed=00:00:00 eta=00:00:02
+[2026-10-13 19:32:22] INFO  training: fold 1 train 4/21 (19%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:32:23] INFO  training: fold 1 train 6/21 (29%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:32:23] INFO  training: fold 1 train 8/21 (38%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:32:23] INFO  training: fold 1 train 10/21 (48%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:32:24] INFO  training: fold 1 train 12/21 (57%) elapsed=00:00:02 eta=00:00:01
+[2026-10-13 19:32:24] INFO  training: fold 1 train 14/21 (67%) elapsed=00:00:02 eta=00:00:01
+[2026-10-13 19:32:24] INFO  training: fold 1 train 16/21 (76%) elapsed=00:00:02 eta=00:00:01
+[2026-10-13 19:32:24] INFO  training: fold 1 train 18/21 (86%) elapsed=00:00:03 eta=00:00:00
+[2026-10-13 19:32:25] INFO  training: fold 1 train 20/21 (95%) elapsed=00:00:03 eta=00:00:00
+[2026-10-13 19:32:25] INFO  training: fold 1 train 21/21 (100%) elapsed=00:00:03 eta=00:00:00
+[2026-10-13 19:32:25] INFO  training: fold 1 epoch 18/20 loss=0.1522 lr=1.00e-03 grad_mean=0.927 grad_max=2.174 elapsed=00:00:03 eta=00:00:06
+[2026-10-13 19:32:25] INFO  training: fold 1 train 2/21 (10%) elapsed=00:00:00 eta=00:00:03
+[2026-10-13 19:32:25] INFO  training: fold 1 train 4/21 (19%) elapsed=00:00:01 eta=00:00:03
+[2026-10-13 19:32:26] INFO  training: fold 1 train 6/21 (29%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:32:26] INFO  training: fold 1 train 8/21 (38%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:32:26] INFO  training: fold 1 train 10/21 (48%) elapsed=00:00:02 eta=00:00:02
+[2026-10-13 19:32:27] INFO  training: fold 1 train 12/21 (57%) elapsed=00:00:02 eta=00:00:01
+[2026-10-13 19:32:27] INFO  training: fold 1 train 14/21 (67%) elapsed=00:00:02 eta=00:00:01
+[2026-10-13 19:32:27] INFO  training: fold 1 train 16/21 (76%) elapsed=00:00:02 eta=00:00:01
+[2026-10-13 19:32:27] INFO  training: fold 1 train 18/21 (86%) elapsed=00:00:03 eta=00:00:00
+[2026-10-13 19:32:28] INFO  training: fold 1 train 20/21 (95%) elapsed=00:00:03 eta=00:00:00
+[2026-10-13 19:32:28] INFO  training: fold 1 train 21/21 (100%) elapsed=00:00:03 eta=00:00:00
+[2026-10-13 19:32:28] INFO  training: fold 1 epoch 19/20 loss=0.1565 lr=1.00e-03 grad_mean=1.073 grad_max=2.517 elapsed=00:00:03 eta=00:00:03
+[2026-10-13 19:32:28] INFO  training: fold 1 train 2/21 (10%) elapsed=00:00:00 eta=00:00:02
+[2026-10-13 19:32:28] INFO  training: fold 1 train 4/21 (19%) elapsed=00:00:00 eta=00:00:02
+[2026-10-13 19:32:29] INFO  training: fold 1 train 6/21 (29%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:32:29] INFO  training: fold 1 train 8/21 (38%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:32:29] INFO  training: fold 1 train 10/21 (48%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:32:30] INFO  training: fold 1 train 12/21 (57%) elapsed=00:00:02 eta=00:00:01
+[2026-10-13 19:32:30] INFO  training: fold 1 train 14/21 (67%) elapsed=00:00:02 eta=00:00:01
+[2026-10-13 19:32:30] INFO  training: fold 1 train 16/21 (76%) elapsed=00:00:02 eta=00:00:01
+[2026-10-13 19:32:31] INFO  training: fold 1 train 18/21 (86%) elapsed=00:00:03 eta=00:00:00
+[2026-10-13 19:32:31] INFO  training: fold 1 train 20/21 (95%) elapsed=00:00:03 eta=00:00:00
+[2026-10-13 19:32:31] INFO  training: fold 1 train 21/21 (100%) elapsed=00:00:03 eta=00:00:00
+[2026-10-13 19:32:31] INFO  training: fold 1 epoch 20/20 loss=0.1406 lr=1.00e-03 grad_mean=1.133 grad_max=3.380 elapsed=00:00:03 eta=00:00:00
+[2026-10-13 19:32:31] INFO  training: fold 1 validation start batches=5
+[2026-10-13 19:32:31] INFO  training: fold 1 summary macro_f1=0.6799 macro_recall=0.7298 macro_pr_auc=0.7498 epochs_ran=20 best_epoch=20
+[2026-10-13 19:32:31] INFO  training: fold 2/5 start train=80 valid=21
+[2026-10-13 19:32:41] INFO  training: tf transform train 4/80 (5%) elapsed=00:00:08 eta=00:02:37
+[2026-10-13 19:32:50] INFO  training: tf transform train 8/80 (10%) elapsed=00:00:17 eta=00:02:34
+[2026-10-13 19:32:57] INFO  training: tf transform train 12/80 (15%) elapsed=00:00:24 eta=00:02:16
+[2026-10-13 19:33:03] INFO  training: tf transform train 16/80 (20%) elapsed=00:00:31 eta=00:02:02
+[2026-10-13 19:33:15] INFO  training: tf transform train 20/80 (25%) elapsed=00:00:42 eta=00:02:06
+[2026-10-13 19:33:24] INFO  training: tf transform train 24/80 (30%) elapsed=00:00:51 eta=00:01:59
+[2026-10-13 19:33:33] INFO  training: tf transform train 28/80 (35%) elapsed=00:01:00 eta=00:01:51
+[2026-10-13 19:33:45] INFO  training: tf transform train 32/80 (40%) elapsed=00:01:12 eta=00:01:49
+[2026-10-13 19:33:55] INFO  training: tf transform train 36/80 (45%) elapsed=00:01:22 eta=00:01:41
+[2026-10-13 19:34:04] INFO  training: tf transform train 40/80 (50%) elapsed=00:01:31 eta=00:01:31
+[2026-10-13 19:34:13] INFO  training: tf transform train 44/80 (55%) elapsed=00:01:40 eta=00:01:22
+[2026-10-13 19:34:25] INFO  training: tf transform train 48/80 (60%) elapsed=00:01:53 eta=00:01:15
+[2026-10-13 19:34:36] INFO  training: tf transform train 52/80 (65%) elapsed=00:02:04 eta=00:01:07
+[2026-10-13 19:34:47] INFO  training: tf transform train 56/80 (70%) elapsed=00:02:14 eta=00:00:57
+[2026-10-13 19:34:58] INFO  training: tf transform train 60/80 (75%) elapsed=00:02:25 eta=00:00:48
+[2026-10-13 19:35:08] INFO  training: tf transform train 64/80 (80%) elapsed=00:02:35 eta=00:00:39
+[2026-10-13 19:35:16] INFO  training: tf transform train 68/80 (85%) elapsed=00:02:43 eta=00:00:29
+[2026-10-13 19:35:24] INFO  training: tf transform train 72/80 (90%) elapsed=00:02:51 eta=00:00:19
+[2026-10-13 19:35:31] INFO  training: tf transform train 76/80 (95%) elapsed=00:02:58 eta=00:00:09
+[2026-10-13 19:35:35] INFO  training: tf transform train 80/80 (100%) elapsed=00:03:03 eta=00:00:00
+[2026-10-13 19:35:39] INFO  training: tf transform valid 1/21 (5%) elapsed=00:00:03 eta=00:01:08
+[2026-10-13 19:35:39] INFO  training: tf transform valid 2/21 (10%) elapsed=00:00:03 eta=00:00:33
+[2026-10-13 19:35:43] INFO  training: tf transform valid 3/21 (14%) elapsed=00:00:07 eta=00:00:41
+[2026-10-13 19:35:43] INFO  training: tf transform valid 4/21 (19%) elapsed=00:00:07 eta=00:00:29
+[2026-10-13 19:35:47] INFO  training: tf transform valid 5/21 (24%) elapsed=00:00:11 eta=00:00:35
+[2026-10-13 19:35:47] INFO  training: tf transform valid 6/21 (29%) elapsed=00:00:11 eta=00:00:27
+[2026-10-13 19:35:53] INFO  training: tf transform valid 7/21 (33%) elapsed=00:00:17 eta=00:00:33
+[2026-10-13 19:35:53] INFO  training: tf transform valid 8/21 (38%) elapsed=00:00:17 eta=00:00:27
+[2026-10-13 19:35:56] INFO  training: tf transform valid 9/21 (43%) elapsed=00:00:20 eta=00:00:26
+[2026-10-13 19:36:00] INFO  training: tf transform valid 10/21 (48%) elapsed=00:00:24 eta=00:00:26
+[2026-10-13 19:36:01] INFO  training: tf transform valid 11/21 (52%) elapsed=00:00:25 eta=00:00:23
+[2026-10-13 19:36:05] INFO  training: tf transform valid 12/21 (57%) elapsed=00:00:29 eta=00:00:22
+[2026-10-13 19:36:06] INFO  training: tf transform valid 13/21 (62%) elapsed=00:00:30 eta=00:00:19
+[2026-10-13 19:36:10] INFO  training: tf transform valid 14/21 (67%) elapsed=00:00:34 eta=00:00:17
+[2026-10-13 19:36:12] INFO  training: tf transform valid 15/21 (71%) elapsed=00:00:36 eta=00:00:14
+[2026-10-13 19:36:14] INFO  training: tf transform valid 16/21 (76%) elapsed=00:00:38 eta=00:00:12
+[2026-10-13 19:36:16] INFO  training: tf transform valid 17/21 (81%) elapsed=00:00:40 eta=00:00:09
+[2026-10-13 19:36:18] INFO  training: tf transform valid 18/21 (86%) elapsed=00:00:43 eta=00:00:07
+[2026-10-13 19:36:20] INFO  training: tf transform valid 19/21 (90%) elapsed=00:00:44 eta=00:00:05
+[2026-10-13 19:36:21] INFO  training: tf transform valid 20/21 (95%) elapsed=00:00:45 eta=00:00:02
+[2026-10-13 19:36:23] INFO  training: tf transform valid 21/21 (100%) elapsed=00:00:47 eta=00:00:00
+[2026-10-13 19:36:48] INFO  training: fold 2 train start epochs=20 steps/epoch=20
+[2026-10-13 19:36:49] INFO  training: fold 2 train 2/20 (10%) elapsed=00:00:00 eta=00:00:02
+[2026-10-13 19:36:49] INFO  training: fold 2 train 4/20 (20%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:36:49] INFO  training: fold 2 train 6/20 (30%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:36:50] INFO  training: fold 2 train 8/20 (40%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:36:50] INFO  training: fold 2 train 10/20 (50%) elapsed=00:00:01 eta=00:00:01
+[2026-10-13 19:36:50] INFO  training: fold 2 train 12/20 (60%) elapsed=00:00:02 eta=00:00:01
+[2026-10-13 19:36:50] INFO  training: fold 2 train 14/20 (70%) elapsed=00:00:02 eta=00:00:01
+[2026-10-13 19:36:51] INFO  training: fold 2 train 16/20 (80%) elapsed=00:00:02 eta=00:00:01
+[2026-10-13 19:36:51] INFO  training: fold 2 train 18/20 (90%) elapsed=00:00:02 eta=00:00:00
+[2026-10-13 19:36:51] INFO  training: fold 2 train 20/20 (100%) elapsed=00:00:03 eta=00:00:00
+[2026-10-13 19:36:51] INFO  training: fold 2 epoch 1/20 loss=0.6715 lr=1.00e-03 grad_mean=0.737 grad_max=1.215 elapsed=00:00:03 eta=00:00:54
+[2026-10-13 19:36:52] INFO  training: fold 2 train 2/20 (10%) elapsed=00:00:00 eta=00:00:02
+[2026-10-13 19:36:52] INFO  training: fold 2 train 4/20 (20%) elapsed=00:00:00 eta=00:00:02
+[2026-10-13 19:36:52] INFO  training: fold 2 train 6/20 (30%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:36:52] INFO  training: fold 2 train 8/20 (40%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:36:53] INFO  training: fold 2 train 10/20 (50%) elapsed=00:00:01 eta=00:00:01
+[2026-10-13 19:36:53] INFO  training: fold 2 train 12/20 (60%) elapsed=00:00:01 eta=00:00:01
+[2026-10-13 19:36:53] INFO  training: fold 2 train 14/20 (70%) elapsed=00:00:02 eta=00:00:01
+[2026-10-13 19:36:53] INFO  training: fold 2 train 16/20 (80%) elapsed=00:00:02 eta=00:00:00
+[2026-10-13 19:36:53] INFO  training: fold 2 train 18/20 (90%) elapsed=00:00:02 eta=00:00:00
+[2026-10-13 19:36:53] INFO  training: fold 2 train 20/20 (100%) elapsed=00:00:02 eta=00:00:00
+[2026-10-13 19:36:53] INFO  training: fold 2 epoch 2/20 loss=0.5637 lr=1.00e-03 grad_mean=0.784 grad_max=1.170 elapsed=00:00:02 eta=00:00:44
+[2026-10-13 19:36:54] INFO  training: fold 2 train 2/20 (10%) elapsed=00:00:00 eta=00:00:01
+[2026-10-13 19:36:54] INFO  training: fold 2 train 4/20 (20%) elapsed=00:00:00 eta=00:00:01
+[2026-10-13 19:36:54] INFO  training: fold 2 train 6/20 (30%) elapsed=00:00:00 eta=00:00:01
+[2026-10-13 19:36:54] INFO  training: fold 2 train 8/20 (40%) elapsed=00:00:01 eta=00:00:01
+[2026-10-13 19:36:54] INFO  training: fold 2 train 10/20 (50%) elapsed=00:00:01 eta=00:00:01
+[2026-10-13 19:36:54] INFO  training: fold 2 train 12/20 (60%) elapsed=00:00:01 eta=00:00:01
+[2026-10-13 19:36:54] INFO  training: fold 2 train 14/20 (70%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:36:54] INFO  training: fold 2 train 16/20 (80%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:36:55] INFO  training: fold 2 train 18/20 (90%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:36:55] INFO  training: fold 2 train 20/20 (100%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:36:55] INFO  training: fold 2 epoch 3/20 loss=0.5064 lr=1.00e-03 grad_mean=1.778 grad_max=9.087 elapsed=00:00:01 eta=00:00:35
+[2026-10-13 19:36:55] INFO  training: fold 2 train 2/20 (10%) elapsed=00:00:00 eta=00:00:01
+[2026-10-13 19:36:55] INFO  training: fold 2 train 4/20 (20%) elapsed=00:00:00 eta=00:00:01
+[2026-10-13 19:36:55] INFO  training: fold 2 train 6/20 (30%) elapsed=00:00:00 eta=00:00:01
+[2026-10-13 19:36:55] INFO  training: fold 2 train 8/20 (40%) elapsed=00:00:01 eta=00:00:01
+[2026-10-13 19:36:55] INFO  training: fold 2 train 10/20 (50%) elapsed=00:00:01 eta=00:00:01
+[2026-10-13 19:36:56] INFO  training: fold 2 train 12/20 (60%) elapsed=00:00:01 eta=00:00:01
+[2026-10-13 19:36:56] INFO  training: fold 2 train 14/20 (70%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:36:56] INFO  training: fold 2 train 16/20 (80%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:36:56] INFO  training: fold 2 train 18/20 (90%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:36:56] INFO  training: fold 2 train 20/20 (100%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:36:56] INFO  training: fold 2 epoch 4/20 loss=0.4197 lr=1.00e-03 grad_mean=1.443 grad_max=5.370 elapsed=00:00:01 eta=00:00:30
+[2026-10-13 19:36:56] INFO  training: fold 2 train 2/20 (10%) elapsed=00:00:00 eta=00:00:02
+[2026-10-13 19:36:57] INFO  training: fold 2 train 4/20 (20%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:36:57] INFO  training: fold 2 train 6/20 (30%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:36:57] INFO  training: fold 2 train 8/20 (40%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:36:58] INFO  training: fold 2 train 10/20 (50%) elapsed=00:00:01 eta=00:00:01
+[2026-10-13 19:36:58] INFO  training: fold 2 train 12/20 (60%) elapsed=00:00:02 eta=00:00:01
+[2026-10-13 19:36:58] INFO  training: fold 2 train 14/20 (70%) elapsed=00:00:02 eta=00:00:01
+[2026-10-13 19:36:58] INFO  training: fold 2 train 16/20 (80%) elapsed=00:00:02 eta=00:00:01
+[2026-10-13 19:36:59] INFO  training: fold 2 train 18/20 (90%) elapsed=00:00:03 eta=00:00:00
+[2026-10-13 19:36:59] INFO  training: fold 2 train 20/20 (100%) elapsed=00:00:03 eta=00:00:00
+[2026-10-13 19:36:59] INFO  training: fold 2 epoch 5/20 loss=0.3487 lr=1.00e-03 grad_mean=1.549 grad_max=4.490 elapsed=00:00:03 eta=00:00:32
+[2026-10-13 19:36:59] INFO  training: fold 2 train 2/20 (10%) elapsed=00:00:00 eta=00:00:02
+[2026-10-13 19:37:00] INFO  training: fold 2 train 4/20 (20%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:37:00] INFO  training: fold 2 train 6/20 (30%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:37:00] INFO  training: fold 2 train 8/20 (40%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:37:01] INFO  training: fold 2 train 10/20 (50%) elapsed=00:00:01 eta=00:00:01
+[2026-10-13 19:37:01] INFO  training: fold 2 train 12/20 (60%) elapsed=00:00:02 eta=00:00:01
+[2026-10-13 19:37:01] INFO  training: fold 2 train 14/20 (70%) elapsed=00:00:02 eta=00:00:01
+[2026-10-13 19:37:01] INFO  training: fold 2 train 16/20 (80%) elapsed=00:00:02 eta=00:00:01
+[2026-10-13 19:37:02] INFO  training: fold 2 train 18/20 (90%) elapsed=00:00:03 eta=00:00:00
+[2026-10-13 19:37:02] INFO  training: fold 2 train 20/20 (100%) elapsed=00:00:03 eta=00:00:00
+[2026-10-13 19:37:02] INFO  training: fold 2 epoch 6/20 loss=0.3355 lr=1.00e-03 grad_mean=2.147 grad_max=10.987 elapsed=00:00:03 eta=00:00:32
+[2026-10-13 19:37:02] INFO  training: fold 2 train 2/20 (10%) elapsed=00:00:00 eta=00:00:02
+[2026-10-13 19:37:03] INFO  training: fold 2 train 4/20 (20%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:37:03] INFO  training: fold 2 train 6/20 (30%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:37:03] INFO  training: fold 2 train 8/20 (40%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:37:04] INFO  training: fold 2 train 10/20 (50%) elapsed=00:00:01 eta=00:00:01
+[2026-10-13 19:37:04] INFO  training: fold 2 train 12/20 (60%) elapsed=00:00:02 eta=00:00:01
+[2026-10-13 19:37:04] INFO  training: fold 2 train 14/20 (70%) elapsed=00:00:02 eta=00:00:01
+[2026-10-13 19:37:04] INFO  training: fold 2 train 16/20 (80%) elapsed=00:00:02 eta=00:00:01
+[2026-10-13 19:37:05] INFO  training: fold 2 train 18/20 (90%) elapsed=00:00:03 eta=00:00:00
+[2026-10-13 19:37:05] INFO  training: fold 2 train 20/20 (100%) elapsed=00:00:03 eta=00:00:00
+[2026-10-13 19:37:05] INFO  training: fold 2 epoch 7/20 loss=0.3102 lr=1.00e-03 grad_mean=1.637 grad_max=5.313 elapsed=00:00:03 eta=00:00:31
+[2026-10-13 19:37:05] INFO  training: fold 2 train 2/20 (10%) elapsed=00:00:00 eta=00:00:02
+[2026-10-13 19:37:06] INFO  training: fold 2 train 4/20 (20%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:37:06] INFO  training: fold 2 train 6/20 (30%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:37:06] INFO  training: fold 2 train 8/20 (40%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:37:07] INFO  training: fold 2 train 10/20 (50%) elapsed=00:00:02 eta=00:00:02
+[2026-10-13 19:37:07] INFO  training: fold 2 train 12/20 (60%) elapsed=00:00:02 eta=00:00:01
+[2026-10-13 19:37:07] INFO  training: fold 2 train 14/20 (70%) elapsed=00:00:02 eta=00:00:01
+[2026-10-13 19:37:07] INFO  training: fold 2 train 16/20 (80%) elapsed=00:00:02 eta=00:00:01
+[2026-10-13 19:37:08] INFO  training: fold 2 train 18/20 (90%) elapsed=00:00:03 eta=00:00:00
+[2026-10-13 19:37:08] INFO  training: fold 2 train 20/20 (100%) elapsed=00:00:03 eta=00:00:00
+[2026-10-13 19:37:08] INFO  training: fold 2 epoch 8/20 loss=0.3617 lr=1.00e-03 grad_mean=2.937 grad_max=27.433 elapsed=00:00:03 eta=00:00:29
+[2026-10-13 19:37:08] INFO  training: fold 2 train 2/20 (10%) elapsed=00:00:00 eta=00:00:02
+[2026-10-13 19:37:09] INFO  training: fold 2 train 4/20 (20%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:37:09] INFO  training: fold 2 train 6/20 (30%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:37:09] INFO  training: fold 2 train 8/20 (40%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:37:09] INFO  training: fold 2 train 10/20 (50%) elapsed=00:00:01 eta=00:00:01
+[2026-10-13 19:37:10] INFO  training: fold 2 train 12/20 (60%) elapsed=00:00:02 eta=00:00:01
+[2026-10-13 19:37:10] INFO  training: fold 2 train 14/20 (70%) elapsed=00:00:02 eta=00:00:01
+[2026-10-13 19:37:10] INFO  training: fold 2 train 16/20 (80%) elapsed=00:00:02 eta=00:00:01
+[2026-10-13 19:37:11] INFO  training: fold 2 train 18/20 (90%) elapsed=00:00:03 eta=00:00:00
+[2026-10-13 19:37:11] INFO  training: fold 2 train 20/20 (100%) elapsed=00:00:03 eta=00:00:00
+[2026-10-13 19:37:11] INFO  training: fold 2 epoch 9/20 loss=0.3334 lr=1.00e-03 grad_mean=1.762 grad_max=6.567 elapsed=00:00:03 eta=00:00:28
+[2026-10-13 19:37:11] INFO  training: fold 2 train 2/20 (10%) elapsed=00:00:00 eta=00:00:02
+[2026-10-13 19:37:12] INFO  training: fold 2 train 4/20 (20%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:37:12] INFO  training: fold 2 train 6/20 (30%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:37:12] INFO  training: fold 2 train 8/20 (40%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:37:12] INFO  training: fold 2 train 10/20 (50%) elapsed=00:00:01 eta=00:00:01
+[2026-10-13 19:37:13] INFO  training: fold 2 train 12/20 (60%) elapsed=00:00:02 eta=00:00:01
+[2026-10-13 19:37:13] INFO  training: fold 2 train 14/20 (70%) elapsed=00:00:02 eta=00:00:01
+[2026-10-13 19:37:13] INFO  training: fold 2 train 16/20 (80%) elapsed=00:00:02 eta=00:00:01
+[2026-10-13 19:37:14] INFO  training: fold 2 train 18/20 (90%) elapsed=00:00:03 eta=00:00:00
+[2026-10-13 19:37:14] INFO  training: fold 2 train 20/20 (100%) elapsed=00:00:03 eta=00:00:00
+[2026-10-13 19:37:14] INFO  training: fold 2 epoch 10/20 loss=0.2818 lr=1.00e-03 grad_mean=1.555 grad_max=8.639 elapsed=00:00:03 eta=00:00:26
+[2026-10-13 19:37:14] INFO  training: fold 2 train 2/20 (10%) elapsed=00:00:00 eta=00:00:02
+[2026-10-13 19:37:15] INFO  training: fold 2 train 4/20 (20%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:37:15] INFO  training: fold 2 train 6/20 (30%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:37:15] INFO  training: fold 2 train 8/20 (40%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:37:15] INFO  training: fold 2 train 10/20 (50%) elapsed=00:00:01 eta=00:00:01
+[2026-10-13 19:37:16] INFO  training: fold 2 train 12/20 (60%) elapsed=00:00:02 eta=00:00:01
+[2026-10-13 19:37:16] INFO  training: fold 2 train 14/20 (70%) elapsed=00:00:02 eta=00:00:01
+[2026-10-13 19:37:16] INFO  training: fold 2 train 16/20 (80%) elapsed=00:00:02 eta=00:00:01
+[2026-10-13 19:37:17] INFO  training: fold 2 train 18/20 (90%) elapsed=00:00:03 eta=00:00:00
+[2026-10-13 19:37:17] INFO  training: fold 2 train 20/20 (100%) elapsed=00:00:03 eta=00:00:00
+[2026-10-13 19:37:17] INFO  training: fold 2 epoch 11/20 loss=0.2512 lr=1.00e-03 grad_mean=1.232 grad_max=3.749 elapsed=00:00:03 eta=00:00:23
+[2026-10-13 19:37:17] INFO  training: fold 2 train 2/20 (10%) elapsed=00:00:00 eta=00:00:02
+[2026-10-13 19:37:18] INFO  training: fold 2 train 4/20 (20%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:37:18] INFO  training: fold 2 train 6/20 (30%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:37:18] INFO  training: fold 2 train 8/20 (40%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:37:19] INFO  training: fold 2 train 10/20 (50%) elapsed=00:00:01 eta=00:00:01
+[2026-10-13 19:37:19] INFO  training: fold 2 train 12/20 (60%) elapsed=00:00:02 eta=00:00:01
+[2026-10-13 19:37:19] INFO  training: fold 2 train 14/20 (70%) elapsed=00:00:02 eta=00:00:01
+[2026-10-13 19:37:19] INFO  training: fold 2 train 16/20 (80%) elapsed=00:00:02 eta=00:00:01
+[2026-10-13 19:37:20] INFO  training: fold 2 train 18/20 (90%) elapsed=00:00:03 eta=00:00:00
+[2026-10-13 19:37:20] INFO  training: fold 2 train 20/20 (100%) elapsed=00:00:03 eta=00:00:00
+[2026-10-13 19:37:20] INFO  training: fold 2 epoch 12/20 loss=0.2177 lr=1.00e-03 grad_mean=1.597 grad_max=9.494 elapsed=00:00:03 eta=00:00:21
+[2026-10-13 19:37:20] INFO  training: fold 2 train 2/20 (10%) elapsed=00:00:00 eta=00:00:02
+[2026-10-13 19:37:21] INFO  training: fold 2 train 4/20 (20%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:37:21] INFO  training: fold 2 train 6/20 (30%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:37:21] INFO  training: fold 2 train 8/20 (40%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:37:21] INFO  training: fold 2 train 10/20 (50%) elapsed=00:00:01 eta=00:00:01
+[2026-10-13 19:37:22] INFO  training: fold 2 train 12/20 (60%) elapsed=00:00:02 eta=00:00:01
+[2026-10-13 19:37:22] INFO  training: fold 2 train 14/20 (70%) elapsed=00:00:02 eta=00:00:01
+[2026-10-13 19:37:22] INFO  training: fold 2 train 16/20 (80%) elapsed=00:00:02 eta=00:00:01
+[2026-10-13 19:37:23] INFO  training: fold 2 train 18/20 (90%) elapsed=00:00:03 eta=00:00:00
+[2026-10-13 19:37:23] INFO  training: fold 2 train 20/20 (100%) elapsed=00:00:03 eta=00:00:00
+[2026-10-13 19:37:23] INFO  training: fold 2 epoch 13/20 loss=0.1892 lr=1.00e-03 grad_mean=1.158 grad_max=2.526 elapsed=00:00:03 eta=00:00:19
+[2026-10-13 19:37:23] INFO  training: fold 2 train 2/20 (10%) elapsed=00:00:00 eta=00:00:02
+[2026-10-13 19:37:23] INFO  training: fold 2 train 4/20 (20%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:37:24] INFO  training: fold 2 train 6/20 (30%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:37:24] INFO  training: fold 2 train 8/20 (40%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:37:24] INFO  training: fold 2 train 10/20 (50%) elapsed=00:00:01 eta=00:00:01
+[2026-10-13 19:37:25] INFO  training: fold 2 train 12/20 (60%) elapsed=00:00:02 eta=00:00:01
+[2026-10-13 19:37:25] INFO  training: fold 2 train 14/20 (70%) elapsed=00:00:02 eta=00:00:01
+[2026-10-13 19:37:25] INFO  training: fold 2 train 16/20 (80%) elapsed=00:00:02 eta=00:00:01
+[2026-10-13 19:37:26] INFO  training: fold 2 train 18/20 (90%) elapsed=00:00:03 eta=00:00:00
+[2026-10-13 19:37:26] INFO  training: fold 2 train 20/20 (100%) elapsed=00:00:03 eta=00:00:00
+[2026-10-13 19:37:26] INFO  training: fold 2 epoch 14/20 loss=0.1656 lr=1.00e-03 grad_mean=1.420 grad_max=3.293 elapsed=00:00:03 eta=00:00:16
+[2026-10-13 19:37:26] INFO  training: fold 2 train 2/20 (10%) elapsed=00:00:00 eta=00:00:02
+[2026-10-13 19:37:27] INFO  training: fold 2 train 4/20 (20%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:37:27] INFO  training: fold 2 train 6/20 (30%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:37:27] INFO  training: fold 2 train 8/20 (40%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:37:27] INFO  training: fold 2 train 10/20 (50%) elapsed=00:00:01 eta=00:00:01
+[2026-10-13 19:37:28] INFO  training: fold 2 train 12/20 (60%) elapsed=00:00:02 eta=00:00:01
+[2026-10-13 19:37:28] INFO  training: fold 2 train 14/20 (70%) elapsed=00:00:02 eta=00:00:01
+[2026-10-13 19:37:28] INFO  training: fold 2 train 16/20 (80%) elapsed=00:00:02 eta=00:00:01
+[2026-10-13 19:37:29] INFO  training: fold 2 train 18/20 (90%) elapsed=00:00:03 eta=00:00:00
+[2026-10-13 19:37:29] INFO  training: fold 2 train 20/20 (100%) elapsed=00:00:03 eta=00:00:00
+[2026-10-13 19:37:29] INFO  training: fold 2 epoch 15/20 loss=0.1581 lr=1.00e-03 grad_mean=1.375 grad_max=4.874 elapsed=00:00:03 eta=00:00:13
+[2026-10-13 19:37:29] INFO  training: fold 2 train 2/20 (10%) elapsed=00:00:00 eta=00:00:02
+[2026-10-13 19:37:30] INFO  training: fold 2 train 4/20 (20%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:37:30] INFO  training: fold 2 train 6/20 (30%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:37:30] INFO  training: fold 2 train 8/20 (40%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:37:30] INFO  training: fold 2 train 10/20 (50%) elapsed=00:00:01 eta=00:00:01
+[2026-10-13 19:37:31] INFO  training: fold 2 train 12/20 (60%) elapsed=00:00:02 eta=00:00:01
+[2026-10-13 19:37:31] INFO  training: fold 2 train 14/20 (70%) elapsed=00:00:02 eta=00:00:01
+[2026-10-13 19:37:31] INFO  training: fold 2 train 16/20 (80%) elapsed=00:00:02 eta=00:00:01
+[2026-10-13 19:37:32] INFO  training: fold 2 train 18/20 (90%) elapsed=00:00:03 eta=00:00:00
+[2026-10-13 19:37:32] INFO  training: fold 2 train 20/20 (100%) elapsed=00:00:03 eta=00:00:00
+[2026-10-13 19:37:32] INFO  training: fold 2 epoch 16/20 loss=0.2718 lr=1.00e-03 grad_mean=3.043 grad_max=27.750 elapsed=00:00:03 eta=00:00:11
+[2026-10-13 19:37:32] INFO  training: fold 2 train 2/20 (10%) elapsed=00:00:00 eta=00:00:02
+[2026-10-13 19:37:32] INFO  training: fold 2 train 4/20 (20%) elapsed=00:00:00 eta=00:00:02
+[2026-10-13 19:37:33] INFO  training: fold 2 train 6/20 (30%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:37:33] INFO  training: fold 2 train 8/20 (40%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:37:33] INFO  training: fold 2 train 10/20 (50%) elapsed=00:00:01 eta=00:00:01
+[2026-10-13 19:37:34] INFO  training: fold 2 train 12/20 (60%) elapsed=00:00:02 eta=00:00:01
+[2026-10-13 19:37:34] INFO  training: fold 2 train 14/20 (70%) elapsed=00:00:02 eta=00:00:01
+[2026-10-13 19:37:34] INFO  training: fold 2 train 16/20 (80%) elapsed=00:00:02 eta=00:00:01
+[2026-10-13 19:37:35] INFO  training: fold 2 train 18/20 (90%) elapsed=00:00:03 eta=00:00:00
+[2026-10-13 19:37:35] INFO  training: fold 2 train 20/20 (100%) elapsed=00:00:03 eta=00:00:00
+[2026-10-13 19:37:35] INFO  training: fold 2 epoch 17/20 loss=0.3248 lr=1.00e-03 grad_mean=2.671 grad_max=14.902 elapsed=00:00:03 eta=00:00:08
+[2026-10-13 19:37:35] INFO  training: fold 2 train 2/20 (10%) elapsed=00:00:00 eta=00:00:02
+[2026-10-13 19:37:35] INFO  training: fold 2 train 4/20 (20%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:37:36] INFO  training: fold 2 train 6/20 (30%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:37:36] INFO  training: fold 2 train 8/20 (40%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:37:36] INFO  training: fold 2 train 10/20 (50%) elapsed=00:00:01 eta=00:00:01
+[2026-10-13 19:37:37] INFO  training: fold 2 train 12/20 (60%) elapsed=00:00:02 eta=00:00:01
+[2026-10-13 19:37:37] INFO  training: fold 2 train 14/20 (70%) elapsed=00:00:02 eta=00:00:01
+[2026-10-13 19:37:37] INFO  training: fold 2 train 16/20 (80%) elapsed=00:00:02 eta=00:00:01
+[2026-10-13 19:37:38] INFO  training: fold 2 train 18/20 (90%) elapsed=00:00:03 eta=00:00:00
+[2026-10-13 19:37:38] INFO  training: fold 2 train 20/20 (100%) elapsed=00:00:03 eta=00:00:00
+[2026-10-13 19:37:38] INFO  training: fold 2 epoch 18/20 loss=0.2160 lr=1.00e-03 grad_mean=1.010 grad_max=1.842 elapsed=00:00:03 eta=00:00:05
+[2026-10-13 19:37:38] INFO  training: fold 2 train 2/20 (10%) elapsed=00:00:00 eta=00:00:02
+[2026-10-13 19:37:38] INFO  training: fold 2 train 4/20 (20%) elapsed=00:00:00 eta=00:00:02
+[2026-10-13 19:37:39] INFO  training: fold 2 train 6/20 (30%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:37:39] INFO  training: fold 2 train 8/20 (40%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:37:39] INFO  training: fold 2 train 10/20 (50%) elapsed=00:00:01 eta=00:00:01
+[2026-10-13 19:37:40] INFO  training: fold 2 train 12/20 (60%) elapsed=00:00:02 eta=00:00:01
+[2026-10-13 19:37:40] INFO  training: fold 2 train 14/20 (70%) elapsed=00:00:02 eta=00:00:01
+[2026-10-13 19:37:40] INFO  training: fold 2 train 16/20 (80%) elapsed=00:00:02 eta=00:00:01
+[2026-10-13 19:37:41] INFO  training: fold 2 train 18/20 (90%) elapsed=00:00:03 eta=00:00:00
+[2026-10-13 19:37:41] INFO  training: fold 2 train 20/20 (100%) elapsed=00:00:03 eta=00:00:00
+[2026-10-13 19:37:41] INFO  training: fold 2 epoch 19/20 loss=0.1764 lr=1.00e-03 grad_mean=0.890 grad_max=2.453 elapsed=00:00:03 eta=00:00:03
+[2026-10-13 19:37:41] INFO  training: fold 2 train 2/20 (10%) elapsed=00:00:00 eta=00:00:02
+[2026-10-13 19:37:41] INFO  training: fold 2 train 4/20 (20%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:37:42] INFO  training: fold 2 train 6/20 (30%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:37:42] INFO  training: fold 2 train 8/20 (40%) elapsed=00:00:01 eta=00:00:02
+[2026-10-13 19:37:42] INFO  training: fold 2 train 10/20 (50%) elapsed=00:00:01 eta=00:00:01
+[2026-10-13 19:37:43] INFO  training: fold 2 train 12/20 (60%) elapsed=00:00:02 eta=00:00:01
+[2026-10-13 19:37:43] INFO  training: fold 2 train 14/20 (70%) elapsed=00:00:02 eta=00:00:01
+[2026-10-13 19:37:43] INFO  training: fold 2 train 16/20 (80%) elapsed=00:00:02 eta=00:00:01
+[2026-10-13 19:37:44] INFO  training: fold 2 train 18/20 (90%) elapsed=00:00:03 eta=00:00:00
+[2026-10-13 19:37:44] INFO  training: fold 2 train 20/20 (100%) elapsed=00:00:03 eta=00:00:00
+[2026-10-13 19:37:44] INFO  training: fold 2 epoch 20/20 loss=0.1632 lr=1.00e-03 grad_mean=1.188 grad_max=1.952 elapsed=00:00:03 eta=00:00:00
+[2026-10-13 19:37:44] INFO  training: fold 2 validation start batches=6
+[2026-10-13 19:37:44] INFO  training: fold 2 summary macro_f1=0.6889 macro_recall=0.6987 macro_pr_auc=0.7895 epochs_ran=20 best_epoch=20
+[2026-10-13 19:37:44] INFO  training: fold 3/5 start train=81 valid=20
+[2026-10-13 19:37:56] INFO  training: tf transform train 4/81 (5%) elapsed=00:00:10 eta=00:03:07
+[2026-10-13 19:38:03] INFO  training: tf transform train 8/81 (10%) elapsed=00:00:17 eta=00:02:33
+[2026-10-13 19:38:09] INFO  training: tf transform train 12/81 (15%) elapsed=00:00:23 eta=00:02:14
+[2026-10-13 19:38:18] INFO  training: tf transform train 16/81 (20%) elapsed=00:00:32 eta=00:02:10
+[2026-10-13 19:38:28] INFO  training: tf transform train 20/81 (25%) elapsed=00:00:42 eta=00:02:08
+[2026-10-13 19:38:35] INFO  training: tf transform train 24/81 (30%) elapsed=00:00:49 eta=00:01:57
+[2026-10-13 19:38:46] INFO  training: tf transform train 28/81 (35%) elapsed=00:01:00 eta=00:01:53
+[2026-10-13 19:38:56] INFO  training: tf transform train 32/81 (40%) elapsed=00:01:10 eta=00:01:48
+[2026-10-13 19:39:05] INFO  training: tf transform train 36/81 (44%) elapsed=00:01:20 eta=00:01:40
+[2026-10-13 19:39:14] INFO  training: tf transform train 40/81 (49%) elapsed=00:01:28 eta=00:01:30
+[2026-10-13 19:39:24] INFO  training: tf transform train 44/81 (54%) elapsed=00:01:38 eta=00:01:23
+[2026-10-13 19:39:35] INFO  training: tf transform train 48/81 (59%) elapsed=00:01:49 eta=00:01:15
+[2026-10-13 19:39:46] INFO  training: tf transform train 52/81 (64%) elapsed=00:02:00 eta=00:01:07
+[2026-10-13 19:39:56] INFO  training: tf transform train 56/81 (69%) elapsed=00:02:10 eta=00:00:58
+[2026-10-13 19:40:07] INFO  training: tf transform train 60/81 (74%) elapsed=00:02:22 eta=00:00:50
+[2026-10-13 19:40:18] INFO  training: tf transform train 64/81 (79%) elapsed=00:02:32 eta=00:00:40
+[2026-10-13 19:40:26] INFO  training: tf transform train 68/81 (84%) elapsed=00:02:40 eta=00:00:31
+[2026-10-13 19:40:33] INFO  training: tf transform train 72/81 (89%) elapsed=00:02:48 eta=00:00:21
+[2026-10-13 19:40:41] INFO  training: tf transform train 76/81 (94%) elapsed=00:02:55 eta=00:00:12
+[2026-10-13 19:40:47] INFO  training: tf transform train 80/81 (99%) elapsed=00:03:01 eta=00:00:02
+[2026-10-13 19:40:47] INFO  training: tf transform train 81/81 (100%) elapsed=00:03:01 eta=00:00:00
+[2026-10-13 19:40:51] INFO  training: tf transform valid 1/20 (5%) elapsed=00:00:03 eta=00:01:06
+[2026-10-13 19:40:53] INFO  training: tf transform valid 2/20 (10%) elapsed=00:00:05 eta=00:00:46
+[2026-10-13 19:40:54] INFO  training: tf transform valid 3/20 (15%) elapsed=00:00:07 eta=00:00:39
+[2026-10-13 19:40:56] INFO  training: tf transform valid 4/20 (20%) elapsed=00:00:09 eta=00:00:34
+[2026-10-13 19:40:58] INFO  training: tf transform valid 5/20 (25%) elapsed=00:00:10 eta=00:00:30
+[2026-10-13 19:41:02] INFO  training: tf transform valid 6/20 (30%) elapsed=00:00:14 eta=00:00:33
+[2026-10-13 19:41:03] INFO  training: tf transform valid 7/20 (35%) elapsed=00:00:15 eta=00:00:28
+[2026-10-13 19:41:06] INFO  training: tf transform valid 8/20 (40%) elapsed=00:00:18 eta=00:00:27
+[2026-10-13 19:41:09] INFO  training: tf transform valid 9/20 (45%) elapsed=00:00:21 eta=00:00:26
+[2026-10-13 19:41:11] INFO  training: tf transform valid 10/20 (50%) elapsed=00:00:23 eta=00:00:23
+[2026-10-13 19:41:13] INFO  training: tf transform valid 11/20 (55%) elapsed=00:00:25 eta=00:00:20
+[2026-10-13 19:41:17] INFO  training: tf transform valid 12/20 (60%) elapsed=00:00:30 eta=00:00:20
+[2026-10-13 19:41:17] INFO  training: tf transform valid 13/20 (65%) elapsed=00:00:30 eta=00:00:16
+[2026-10-13 19:41:23] INFO  training: tf transform valid 14/20 (70%) elapsed=00:00:35 eta=00:00:15
+[2026-10-13 19:41:23] INFO  training: tf transform valid 15/20 (75%) elapsed=00:00:35 eta=00:00:12
+[2026-10-13 19:41:25] INFO  training: tf transform valid 16/20 (80%) elapsed=00:00:38 eta=00:00:09
+[2026-10-13 19:41:27] INFO  training: tf transform valid 17/20 (85%) elapsed=00:00:40 eta=00:00:07
+[2026-10-13 19:41:30] INFO  training: tf transform valid 18/20 (90%) elapsed=00:00:42 eta=00:00:05
+[2026-10-13 19:41:30] INFO  training: tf transform valid 19/20 (95%) elapsed=00:00:43 eta=00:00:02
+[2026-10-13 19:41:32] INFO  training: tf transform valid 20/20 (100%) elapsed=00:00:45 eta=00:00:00
+[2026-10-13 19:41:42] INFO  training: fold 3 train start epochs=20 steps/epoch=21
+[2026-10-13 19:41:42] INFO  training: fold 3 train 2/21 (10%) elapsed=00:00:00 eta=00:00:02
+[2026-10-13 19:41:43] INFO  training: fold 3 train 4/21 (19%) elapsed=00:00:00 eta=00:00:01
+[2026-10-13 19:41:43] INFO  training: fold 3 train 6/21 (29%) elapsed=00:00:00 eta=00:00:01
+[2026-10-13 19:41:43] INFO  training: fold 3 train 8/21 (38%) elapsed=00:00:01 eta=00:00:01
+[2026-10-13 19:41:43] INFO  training: fold 3 train 10/21 (48%) elapsed=00:00:01 eta=00:00:01
+[2026-10-13 19:41:43] INFO  training: fold 3 train 12/21 (57%) elapsed=00:00:01 eta=00:00:01
+[2026-10-13 19:41:43] INFO  training: fold 3 train 14/21 (67%) elapsed=00:00:01 eta=00:00:01
+[2026-10-13 19:41:43] INFO  training: fold 3 train 16/21 (76%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:41:44] INFO  training: fold 3 train 18/21 (86%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:41:44] INFO  training: fold 3 train 20/21 (95%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:41:44] INFO  training: fold 3 train 21/21 (100%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:41:44] INFO  training: fold 3 epoch 1/20 loss=0.6392 lr=1.00e-03 grad_mean=0.817 grad_max=1.976 elapsed=00:00:01 eta=00:00:27
+[2026-10-13 19:41:44] INFO  training: fold 3 train 2/21 (10%) elapsed=00:00:00 eta=00:00:01
+[2026-10-13 19:41:44] INFO  training: fold 3 train 4/21 (19%) elapsed=00:00:00 eta=00:00:01
+[2026-10-13 19:41:44] INFO  training: fold 3 train 6/21 (29%) elapsed=00:00:00 eta=00:00:01
+[2026-10-13 19:41:44] INFO  training: fold 3 train 8/21 (38%) elapsed=00:00:01 eta=00:00:01
+[2026-10-13 19:41:44] INFO  training: fold 3 train 10/21 (48%) elapsed=00:00:01 eta=00:00:01
+[2026-10-13 19:41:45] INFO  training: fold 3 train 12/21 (57%) elapsed=00:00:01 eta=00:00:01
+[2026-10-13 19:41:45] INFO  training: fold 3 train 14/21 (67%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:41:45] INFO  training: fold 3 train 16/21 (76%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:41:45] INFO  training: fold 3 train 18/21 (86%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:41:45] INFO  training: fold 3 train 20/21 (95%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:41:45] INFO  training: fold 3 train 21/21 (100%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:41:45] INFO  training: fold 3 epoch 2/20 loss=0.5937 lr=1.00e-03 grad_mean=0.943 grad_max=4.085 elapsed=00:00:01 eta=00:00:25
+[2026-10-13 19:41:45] INFO  training: fold 3 train 2/21 (10%) elapsed=00:00:00 eta=00:00:01
+[2026-10-13 19:41:45] INFO  training: fold 3 train 4/21 (19%) elapsed=00:00:00 eta=00:00:01
+[2026-10-13 19:41:46] INFO  training: fold 3 train 6/21 (29%) elapsed=00:00:00 eta=00:00:01
+[2026-10-13 19:41:46] INFO  training: fold 3 train 8/21 (38%) elapsed=00:00:01 eta=00:00:01
+[2026-10-13 19:41:46] INFO  training: fold 3 train 10/21 (48%) elapsed=00:00:01 eta=00:00:01
+[2026-10-13 19:41:46] INFO  training: fold 3 train 12/21 (57%) elapsed=00:00:01 eta=00:00:01
+[2026-10-13 19:41:46] INFO  training: fold 3 train 14/21 (67%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:41:46] INFO  training: fold 3 train 16/21 (76%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:41:46] INFO  training: fold 3 train 18/21 (86%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:41:46] INFO  training: fold 3 train 20/21 (95%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:41:47] INFO  training: fold 3 train 21/21 (100%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:41:47] INFO  training: fold 3 epoch 3/20 loss=0.4808 lr=1.00e-03 grad_mean=1.237 grad_max=4.053 elapsed=00:00:01 eta=00:00:24
+[2026-10-13 19:41:47] INFO  training: fold 3 train 2/21 (10%) elapsed=00:00:00 eta=00:00:01
+[2026-10-13 19:41:47] INFO  training: fold 3 train 4/21 (19%) elapsed=00:00:00 eta=00:00:01
+[2026-10-13 19:41:47] INFO  training: fold 3 train 6/21 (29%) elapsed=00:00:00 eta=00:00:01
+[2026-10-13 19:41:47] INFO  training: fold 3 train 8/21 (38%) elapsed=00:00:01 eta=00:00:01
+[2026-10-13 19:41:47] INFO  training: fold 3 train 10/21 (48%) elapsed=00:00:01 eta=00:00:01
+[2026-10-13 19:41:47] INFO  training: fold 3 train 12/21 (57%) elapsed=00:00:01 eta=00:00:01
+[2026-10-13 19:41:47] INFO  training: fold 3 train 14/21 (67%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:41:48] INFO  training: fold 3 train 16/21 (76%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:41:48] INFO  training: fold 3 train 18/21 (86%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:41:48] INFO  training: fold 3 train 20/21 (95%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:41:48] INFO  training: fold 3 train 21/21 (100%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:41:48] INFO  training: fold 3 epoch 4/20 loss=0.4039 lr=1.00e-03 grad_mean=1.334 grad_max=3.896 elapsed=00:00:01 eta=00:00:23
+[2026-10-13 19:41:48] INFO  training: fold 3 train 2/21 (10%) elapsed=00:00:00 eta=00:00:01
+[2026-10-13 19:41:48] INFO  training: fold 3 train 4/21 (19%) elapsed=00:00:00 eta=00:00:01
+[2026-10-13 19:41:48] INFO  training: fold 3 train 6/21 (29%) elapsed=00:00:00 eta=00:00:01
+[2026-10-13 19:41:48] INFO  training: fold 3 train 8/21 (38%) elapsed=00:00:01 eta=00:00:01
+[2026-10-13 19:41:49] INFO  training: fold 3 train 10/21 (48%) elapsed=00:00:01 eta=00:00:01
+[2026-10-13 19:41:49] INFO  training: fold 3 train 12/21 (57%) elapsed=00:00:01 eta=00:00:01
+[2026-10-13 19:41:49] INFO  training: fold 3 train 14/21 (67%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:41:49] INFO  training: fold 3 train 16/21 (76%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:41:49] INFO  training: fold 3 train 18/21 (86%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:41:49] INFO  training: fold 3 train 20/21 (95%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:41:49] INFO  training: fold 3 train 21/21 (100%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:41:49] INFO  training: fold 3 epoch 5/20 loss=0.4187 lr=1.00e-03 grad_mean=1.661 grad_max=9.201 elapsed=00:00:01 eta=00:00:21
+[2026-10-13 19:41:49] INFO  training: fold 3 train 2/21 (10%) elapsed=00:00:00 eta=00:00:01
+[2026-10-13 19:41:50] INFO  training: fold 3 train 4/21 (19%) elapsed=00:00:00 eta=00:00:01
+[2026-10-13 19:41:50] INFO  training: fold 3 train 6/21 (29%) elapsed=00:00:00 eta=00:00:01
+[2026-10-13 19:41:50] INFO  training: fold 3 train 8/21 (38%) elapsed=00:00:01 eta=00:00:01
+[2026-10-13 19:41:50] INFO  training: fold 3 train 10/21 (48%) elapsed=00:00:01 eta=00:00:01
+[2026-10-13 19:41:50] INFO  training: fold 3 train 12/21 (57%) elapsed=00:00:01 eta=00:00:01
+[2026-10-13 19:41:50] INFO  training: fold 3 train 14/21 (67%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:41:50] INFO  training: fold 3 train 16/21 (76%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:41:51] INFO  training: fold 3 train 18/21 (86%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:41:51] INFO  training: fold 3 train 20/21 (95%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:41:51] INFO  training: fold 3 train 21/21 (100%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:41:51] INFO  training: fold 3 epoch 6/20 loss=0.4046 lr=1.00e-03 grad_mean=1.832 grad_max=10.655 elapsed=00:00:01 eta=00:00:20
+[2026-10-13 19:41:51] INFO  training: fold 3 train 2/21 (10%) elapsed=00:00:00 eta=00:00:01
+[2026-10-13 19:41:51] INFO  training: fold 3 train 4/21 (19%) elapsed=00:00:00 eta=00:00:01
+[2026-10-13 19:41:51] INFO  training: fold 3 train 6/21 (29%) elapsed=00:00:00 eta=00:00:01
+[2026-10-13 19:41:51] INFO  training: fold 3 train 8/21 (38%) elapsed=00:00:01 eta=00:00:01
+[2026-10-13 19:41:51] INFO  training: fold 3 train 10/21 (48%) elapsed=00:00:01 eta=00:00:01
+[2026-10-13 19:41:52] INFO  training: fold 3 train 12/21 (57%) elapsed=00:00:01 eta=00:00:01
+[2026-10-13 19:41:52] INFO  training: fold 3 train 14/21 (67%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:41:52] INFO  training: fold 3 train 16/21 (76%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:41:52] INFO  training: fold 3 train 18/21 (86%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:41:52] INFO  training: fold 3 train 20/21 (95%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:41:52] INFO  training: fold 3 train 21/21 (100%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:41:52] INFO  training: fold 3 epoch 7/20 loss=0.3073 lr=1.00e-03 grad_mean=1.704 grad_max=6.093 elapsed=00:00:01 eta=00:00:18
+[2026-10-13 19:41:52] INFO  training: fold 3 train 2/21 (10%) elapsed=00:00:00 eta=00:00:01
+[2026-10-13 19:41:52] INFO  training: fold 3 train 4/21 (19%) elapsed=00:00:00 eta=00:00:01
+[2026-10-13 19:41:53] INFO  training: fold 3 train 6/21 (29%) elapsed=00:00:00 eta=00:00:01
+[2026-10-13 19:41:53] INFO  training: fold 3 train 8/21 (38%) elapsed=00:00:01 eta=00:00:01
+[2026-10-13 19:41:53] INFO  training: fold 3 train 10/21 (48%) elapsed=00:00:01 eta=00:00:01
+[2026-10-13 19:41:53] INFO  training: fold 3 train 12/21 (57%) elapsed=00:00:01 eta=00:00:01
+[2026-10-13 19:41:53] INFO  training: fold 3 train 14/21 (67%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:41:53] INFO  training: fold 3 train 16/21 (76%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:41:53] INFO  training: fold 3 train 18/21 (86%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:41:54] INFO  training: fold 3 train 20/21 (95%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:41:54] INFO  training: fold 3 train 21/21 (100%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:41:54] INFO  training: fold 3 epoch 8/20 loss=0.3751 lr=1.00e-03 grad_mean=2.242 grad_max=9.780 elapsed=00:00:01 eta=00:00:17
+[2026-10-13 19:41:54] INFO  training: fold 3 train 2/21 (10%) elapsed=00:00:00 eta=00:00:01
+[2026-10-13 19:41:54] INFO  training: fold 3 train 4/21 (19%) elapsed=00:00:00 eta=00:00:01
+[2026-10-13 19:41:54] INFO  training: fold 3 train 6/21 (29%) elapsed=00:00:00 eta=00:00:01
+[2026-10-13 19:41:54] INFO  training: fold 3 train 8/21 (38%) elapsed=00:00:01 eta=00:00:01
+[2026-10-13 19:41:54] INFO  training: fold 3 train 10/21 (48%) elapsed=00:00:01 eta=00:00:01
+[2026-10-13 19:41:54] INFO  training: fold 3 train 12/21 (57%) elapsed=00:00:01 eta=00:00:01
+[2026-10-13 19:41:55] INFO  training: fold 3 train 14/21 (67%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:41:55] INFO  training: fold 3 train 16/21 (76%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:41:55] INFO  training: fold 3 train 18/21 (86%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:41:55] INFO  training: fold 3 train 20/21 (95%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:41:55] INFO  training: fold 3 train 21/21 (100%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:41:55] INFO  training: fold 3 epoch 9/20 loss=0.3574 lr=1.00e-03 grad_mean=1.358 grad_max=3.144 elapsed=00:00:01 eta=00:00:15
+[2026-10-13 19:41:55] INFO  training: fold 3 train 2/21 (10%) elapsed=00:00:00 eta=00:00:01
+[2026-10-13 19:41:55] INFO  training: fold 3 train 4/21 (19%) elapsed=00:00:00 eta=00:00:01
+[2026-10-13 19:41:55] INFO  training: fold 3 train 6/21 (29%) elapsed=00:00:00 eta=00:00:01
+[2026-10-13 19:41:55] INFO  training: fold 3 train 8/21 (38%) elapsed=00:00:01 eta=00:00:01
+[2026-10-13 19:41:56] INFO  training: fold 3 train 10/21 (48%) elapsed=00:00:01 eta=00:00:01
+[2026-10-13 19:41:56] INFO  training: fold 3 train 12/21 (57%) elapsed=00:00:01 eta=00:00:01
+[2026-10-13 19:41:56] INFO  training: fold 3 train 14/21 (67%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:41:56] INFO  training: fold 3 train 16/21 (76%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:41:56] INFO  training: fold 3 train 18/21 (86%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:41:56] INFO  training: fold 3 train 20/21 (95%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:41:56] INFO  training: fold 3 train 21/21 (100%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:41:56] INFO  training: fold 3 epoch 10/20 loss=0.3232 lr=1.00e-03 grad_mean=1.598 grad_max=4.461 elapsed=00:00:01 eta=00:00:14
+[2026-10-13 19:41:56] INFO  training: fold 3 train 2/21 (10%) elapsed=00:00:00 eta=00:00:01
+[2026-10-13 19:41:57] INFO  training: fold 3 train 4/21 (19%) elapsed=00:00:00 eta=00:00:01
+[2026-10-13 19:41:57] INFO  training: fold 3 train 6/21 (29%) elapsed=00:00:00 eta=00:00:01
+[2026-10-13 19:41:57] INFO  training: fold 3 train 8/21 (38%) elapsed=00:00:01 eta=00:00:01
+[2026-10-13 19:41:57] INFO  training: fold 3 train 10/21 (48%) elapsed=00:00:01 eta=00:00:01
+[2026-10-13 19:41:57] INFO  training: fold 3 train 12/21 (57%) elapsed=00:00:01 eta=00:00:01
+[2026-10-13 19:41:57] INFO  training: fold 3 train 14/21 (67%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:41:57] INFO  training: fold 3 train 16/21 (76%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:41:58] INFO  training: fold 3 train 18/21 (86%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:41:58] INFO  training: fold 3 train 20/21 (95%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:41:58] INFO  training: fold 3 train 21/21 (100%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:41:58] INFO  training: fold 3 epoch 11/20 loss=0.2398 lr=1.00e-03 grad_mean=1.035 grad_max=1.979 elapsed=00:00:01 eta=00:00:13
+[2026-10-13 19:41:58] INFO  training: fold 3 train 2/21 (10%) elapsed=00:00:00 eta=00:00:01
+[2026-10-13 19:41:58] INFO  training: fold 3 train 4/21 (19%) elapsed=00:00:00 eta=00:00:01
+[2026-10-13 19:41:58] INFO  training: fold 3 train 6/21 (29%) elapsed=00:00:00 eta=00:00:01
+[2026-10-13 19:41:58] INFO  training: fold 3 train 8/21 (38%) elapsed=00:00:01 eta=00:00:01
+[2026-10-13 19:41:58] INFO  training: fold 3 train 10/21 (48%) elapsed=00:00:01 eta=00:00:01
+[2026-10-13 19:41:59] INFO  training: fold 3 train 12/21 (57%) elapsed=00:00:01 eta=00:00:01
+[2026-10-13 19:41:59] INFO  training: fold 3 train 14/21 (67%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:41:59] INFO  training: fold 3 train 16/21 (76%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:41:59] INFO  training: fold 3 train 18/21 (86%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:41:59] INFO  training: fold 3 train 20/21 (95%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:41:59] INFO  training: fold 3 train 21/21 (100%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:41:59] INFO  training: fold 3 epoch 12/20 loss=0.3007 lr=1.00e-03 grad_mean=1.734 grad_max=10.093 elapsed=00:00:01 eta=00:00:11
+[2026-10-13 19:41:59] INFO  training: fold 3 train 2/21 (10%) elapsed=00:00:00 eta=00:00:01
+[2026-10-13 19:41:59] INFO  training: fold 3 train 4/21 (19%) elapsed=00:00:00 eta=00:00:01
+[2026-10-13 19:42:00] INFO  training: fold 3 train 6/21 (29%) elapsed=00:00:00 eta=00:00:01
+[2026-10-13 19:42:00] INFO  training: fold 3 train 8/21 (38%) elapsed=00:00:01 eta=00:00:01
+[2026-10-13 19:42:00] INFO  training: fold 3 train 10/21 (48%) elapsed=00:00:01 eta=00:00:01
+[2026-10-13 19:42:00] INFO  training: fold 3 train 12/21 (57%) elapsed=00:00:01 eta=00:00:01
+[2026-10-13 19:42:00] INFO  training: fold 3 train 14/21 (67%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:42:00] INFO  training: fold 3 train 16/21 (76%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:42:00] INFO  training: fold 3 train 18/21 (86%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:42:01] INFO  training: fold 3 train 20/21 (95%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:42:01] INFO  training: fold 3 train 21/21 (100%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:42:01] INFO  training: fold 3 epoch 13/20 loss=0.2859 lr=1.00e-03 grad_mean=1.787 grad_max=12.647 elapsed=00:00:01 eta=00:00:10
+[2026-10-13 19:42:01] INFO  training: fold 3 train 2/21 (10%) elapsed=00:00:00 eta=00:00:01
+[2026-10-13 19:42:01] INFO  training: fold 3 train 4/21 (19%) elapsed=00:00:00 eta=00:00:01
+[2026-10-13 19:42:01] INFO  training: fold 3 train 6/21 (29%) elapsed=00:00:00 eta=00:00:01
+[2026-10-13 19:42:01] INFO  training: fold 3 train 8/21 (38%) elapsed=00:00:01 eta=00:00:01
+[2026-10-13 19:42:01] INFO  training: fold 3 train 10/21 (48%) elapsed=00:00:01 eta=00:00:01
+[2026-10-13 19:42:01] INFO  training: fold 3 train 12/21 (57%) elapsed=00:00:01 eta=00:00:01
+[2026-10-13 19:42:02] INFO  training: fold 3 train 14/21 (67%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:42:02] INFO  training: fold 3 train 16/21 (76%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:42:02] INFO  training: fold 3 train 18/21 (86%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:42:02] INFO  training: fold 3 train 20/21 (95%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:42:02] INFO  training: fold 3 train 21/21 (100%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:42:02] INFO  training: fold 3 epoch 14/20 loss=0.2583 lr=1.00e-03 grad_mean=1.620 grad_max=4.660 elapsed=00:00:01 eta=00:00:08
+[2026-10-13 19:42:02] INFO  training: fold 3 train 2/21 (10%) elapsed=00:00:00 eta=00:00:01
+[2026-10-13 19:42:02] INFO  training: fold 3 train 4/21 (19%) elapsed=00:00:00 eta=00:00:01
+[2026-10-13 19:42:02] INFO  training: fold 3 train 6/21 (29%) elapsed=00:00:00 eta=00:00:01
+[2026-10-13 19:42:03] INFO  training: fold 3 train 8/21 (38%) elapsed=00:00:01 eta=00:00:01
+[2026-10-13 19:42:03] INFO  training: fold 3 train 10/21 (48%) elapsed=00:00:01 eta=00:00:01
+[2026-10-13 19:42:03] INFO  training: fold 3 train 12/21 (57%) elapsed=00:00:01 eta=00:00:01
+[2026-10-13 19:42:03] INFO  training: fold 3 train 14/21 (67%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:42:03] INFO  training: fold 3 train 16/21 (76%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:42:03] INFO  training: fold 3 train 18/21 (86%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:42:03] INFO  training: fold 3 train 20/21 (95%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:42:03] INFO  training: fold 3 train 21/21 (100%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:42:03] INFO  training: fold 3 epoch 15/20 loss=0.2151 lr=1.00e-03 grad_mean=1.217 grad_max=2.529 elapsed=00:00:01 eta=00:00:07
+[2026-10-13 19:42:04] INFO  training: fold 3 train 2/21 (10%) elapsed=00:00:00 eta=00:00:01
+[2026-10-13 19:42:04] INFO  training: fold 3 train 4/21 (19%) elapsed=00:00:00 eta=00:00:01
+[2026-10-13 19:42:04] INFO  training: fold 3 train 6/21 (29%) elapsed=00:00:00 eta=00:00:01
+[2026-10-13 19:42:04] INFO  training: fold 3 train 8/21 (38%) elapsed=00:00:01 eta=00:00:01
+[2026-10-13 19:42:04] INFO  training: fold 3 train 10/21 (48%) elapsed=00:00:01 eta=00:00:01
+[2026-10-13 19:42:04] INFO  training: fold 3 train 12/21 (57%) elapsed=00:00:01 eta=00:00:01
+[2026-10-13 19:42:04] INFO  training: fold 3 train 14/21 (67%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:42:04] INFO  training: fold 3 train 16/21 (76%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:42:05] INFO  training: fold 3 train 18/21 (86%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:42:05] INFO  training: fold 3 train 20/21 (95%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:42:05] INFO  training: fold 3 train 21/21 (100%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:42:05] INFO  training: fold 3 epoch 16/20 loss=0.2470 lr=1.00e-03 grad_mean=1.778 grad_max=9.370 elapsed=00:00:01 eta=00:00:06
+[2026-10-13 19:42:05] INFO  training: fold 3 train 2/21 (10%) elapsed=00:00:00 eta=00:00:01
+[2026-10-13 19:42:05] INFO  training: fold 3 train 4/21 (19%) elapsed=00:00:00 eta=00:00:01
+[2026-10-13 19:42:05] INFO  training: fold 3 train 6/21 (29%) elapsed=00:00:00 eta=00:00:01
+[2026-10-13 19:42:05] INFO  training: fold 3 train 8/21 (38%) elapsed=00:00:01 eta=00:00:01
+[2026-10-13 19:42:05] INFO  training: fold 3 train 10/21 (48%) elapsed=00:00:01 eta=00:00:01
+[2026-10-13 19:42:06] INFO  training: fold 3 train 12/21 (57%) elapsed=00:00:01 eta=00:00:01
+[2026-10-13 19:42:06] INFO  training: fold 3 train 14/21 (67%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:42:06] INFO  training: fold 3 train 16/21 (76%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:42:06] INFO  training: fold 3 train 18/21 (86%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:42:06] INFO  training: fold 3 train 20/21 (95%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:42:06] INFO  training: fold 3 train 21/21 (100%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:42:06] INFO  training: fold 3 epoch 17/20 loss=0.2244 lr=1.00e-03 grad_mean=1.545 grad_max=5.977 elapsed=00:00:01 eta=00:00:04
+[2026-10-13 19:42:06] INFO  training: fold 3 train 2/21 (10%) elapsed=00:00:00 eta=00:00:01
+[2026-10-13 19:42:06] INFO  training: fold 3 train 4/21 (19%) elapsed=00:00:00 eta=00:00:01
+[2026-10-13 19:42:07] INFO  training: fold 3 train 6/21 (29%) elapsed=00:00:00 eta=00:00:01
+[2026-10-13 19:42:07] INFO  training: fold 3 train 8/21 (38%) elapsed=00:00:01 eta=00:00:01
+[2026-10-13 19:42:07] INFO  training: fold 3 train 10/21 (48%) elapsed=00:00:01 eta=00:00:01
+[2026-10-13 19:42:07] INFO  training: fold 3 train 12/21 (57%) elapsed=00:00:01 eta=00:00:01
+[2026-10-13 19:42:07] INFO  training: fold 3 train 14/21 (67%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:42:07] INFO  training: fold 3 train 16/21 (76%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:42:07] INFO  training: fold 3 train 18/21 (86%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:42:08] INFO  training: fold 3 train 20/21 (95%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:42:08] INFO  training: fold 3 train 21/21 (100%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:42:08] INFO  training: fold 3 epoch 18/20 loss=0.1730 lr=1.00e-03 grad_mean=1.170 grad_max=2.555 elapsed=00:00:01 eta=00:00:03
+[2026-10-13 19:42:08] INFO  training: fold 3 train 2/21 (10%) elapsed=00:00:00 eta=00:00:01
+[2026-10-13 19:42:08] INFO  training: fold 3 train 4/21 (19%) elapsed=00:00:00 eta=00:00:01
+[2026-10-13 19:42:08] INFO  training: fold 3 train 6/21 (29%) elapsed=00:00:00 eta=00:00:01
+[2026-10-13 19:42:08] INFO  training: fold 3 train 8/21 (38%) elapsed=00:00:01 eta=00:00:01
+[2026-10-13 19:42:08] INFO  training: fold 3 train 10/21 (48%) elapsed=00:00:01 eta=00:00:01
+[2026-10-13 19:42:08] INFO  training: fold 3 train 12/21 (57%) elapsed=00:00:01 eta=00:00:01
+[2026-10-13 19:42:09] INFO  training: fold 3 train 14/21 (67%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:42:09] INFO  training: fold 3 train 16/21 (76%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:42:09] INFO  training: fold 3 train 18/21 (86%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:42:09] INFO  training: fold 3 train 20/21 (95%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:42:09] INFO  training: fold 3 train 21/21 (100%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:42:09] INFO  training: fold 3 epoch 19/20 loss=0.2420 lr=1.00e-03 grad_mean=1.786 grad_max=12.357 elapsed=00:00:01 eta=00:00:01
+[2026-10-13 19:42:09] INFO  training: fold 3 train 2/21 (10%) elapsed=00:00:00 eta=00:00:01
+[2026-10-13 19:42:09] INFO  training: fold 3 train 4/21 (19%) elapsed=00:00:00 eta=00:00:01
+[2026-10-13 19:42:09] INFO  training: fold 3 train 6/21 (29%) elapsed=00:00:00 eta=00:00:01
+[2026-10-13 19:42:10] INFO  training: fold 3 train 8/21 (38%) elapsed=00:00:01 eta=00:00:01
+[2026-10-13 19:42:10] INFO  training: fold 3 train 10/21 (48%) elapsed=00:00:01 eta=00:00:01
+[2026-10-13 19:42:10] INFO  training: fold 3 train 12/21 (57%) elapsed=00:00:01 eta=00:00:01
+[2026-10-13 19:42:10] INFO  training: fold 3 train 14/21 (67%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:42:10] INFO  training: fold 3 train 16/21 (76%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:42:10] INFO  training: fold 3 train 18/21 (86%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:42:10] INFO  training: fold 3 train 20/21 (95%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:42:10] INFO  training: fold 3 train 21/21 (100%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:42:10] INFO  training: fold 3 epoch 20/20 loss=0.1973 lr=1.00e-03 grad_mean=1.129 grad_max=3.529 elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:42:10] INFO  training: fold 3 validation start batches=5
+[2026-10-13 19:42:11] INFO  training: fold 3 summary macro_f1=0.5121 macro_recall=0.4370 macro_pr_auc=0.8590 epochs_ran=20 best_epoch=20
+[2026-10-13 19:42:11] INFO  training: fold 4/5 start train=81 valid=20
+[2026-10-13 19:42:20] INFO  training: tf transform train 4/81 (5%) elapsed=00:00:08 eta=00:02:36
+[2026-10-13 19:42:29] INFO  training: tf transform train 8/81 (10%) elapsed=00:00:17 eta=00:02:32
+[2026-10-13 19:42:36] INFO  training: tf transform train 12/81 (15%) elapsed=00:00:23 eta=00:02:15
+[2026-10-13 19:42:42] INFO  training: tf transform train 16/81 (20%) elapsed=00:00:30 eta=00:02:01
+[2026-10-13 19:42:53] INFO  training: tf transform train 20/81 (25%) elapsed=00:00:41 eta=00:02:05
+[2026-10-13 19:43:02] INFO  training: tf transform train 24/81 (30%) elapsed=00:00:50 eta=00:01:59
+[2026-10-13 19:43:11] INFO  training: tf transform train 28/81 (35%) elapsed=00:00:59 eta=00:01:52
+[2026-10-13 19:43:24] INFO  training: tf transform train 32/81 (40%) elapsed=00:01:12 eta=00:01:50
+[2026-10-13 19:43:33] INFO  training: tf transform train 36/81 (44%) elapsed=00:01:21 eta=00:01:41
+[2026-10-13 19:43:42] INFO  training: tf transform train 40/81 (49%) elapsed=00:01:30 eta=00:01:32
+[2026-10-13 19:43:53] INFO  training: tf transform train 44/81 (54%) elapsed=00:01:41 eta=00:01:25
+[2026-10-13 19:44:05] INFO  training: tf transform train 48/81 (59%) elapsed=00:01:52 eta=00:01:17
+[2026-10-13 19:44:15] INFO  training: tf transform train 52/81 (64%) elapsed=00:02:03 eta=00:01:08
+[2026-10-13 19:44:25] INFO  training: tf transform train 56/81 (69%) elapsed=00:02:12 eta=00:00:59
+[2026-10-13 19:44:36] INFO  training: tf transform train 60/81 (74%) elapsed=00:02:23 eta=00:00:50
+[2026-10-13 19:44:44] INFO  training: tf transform train 64/81 (79%) elapsed=00:02:31 eta=00:00:40
+[2026-10-13 19:44:51] INFO  training: tf transform train 68/81 (84%) elapsed=00:02:39 eta=00:00:30
+[2026-10-13 19:45:00] INFO  training: tf transform train 72/81 (89%) elapsed=00:02:48 eta=00:00:21
+[2026-10-13 19:45:08] INFO  training: tf transform train 76/81 (94%) elapsed=00:02:56 eta=00:00:12
+[2026-10-13 19:45:14] INFO  training: tf transform train 80/81 (99%) elapsed=00:03:02 eta=00:00:02
+[2026-10-13 19:45:15] INFO  training: tf transform train 81/81 (100%) elapsed=00:03:03 eta=00:00:00
+[2026-10-13 19:45:20] INFO  training: tf transform valid 1/20 (5%) elapsed=00:00:05 eta=00:01:31
+[2026-10-13 19:45:20] INFO  training: tf transform valid 2/20 (10%) elapsed=00:00:05 eta=00:00:43
+[2026-10-13 19:45:22] INFO  training: tf transform valid 3/20 (15%) elapsed=00:00:06 eta=00:00:37
+[2026-10-13 19:45:26] INFO  training: tf transform valid 4/20 (20%) elapsed=00:00:11 eta=00:00:42
+[2026-10-13 19:45:26] INFO  training: tf transform valid 5/20 (25%) elapsed=00:00:11 eta=00:00:32
+[2026-10-13 19:45:30] INFO  training: tf transform valid 6/20 (30%) elapsed=00:00:15 eta=00:00:34
+[2026-10-13 19:45:32] INFO  training: tf transform valid 7/20 (35%) elapsed=00:00:17 eta=00:00:31
+[2026-10-13 19:45:34] INFO  training: tf transform valid 8/20 (40%) elapsed=00:00:19 eta=00:00:29
+[2026-10-13 19:45:36] INFO  training: tf transform valid 9/20 (45%) elapsed=00:00:21 eta=00:00:26
+[2026-10-13 19:45:39] INFO  training: tf transform valid 10/20 (50%) elapsed=00:00:24 eta=00:00:24
+[2026-10-13 19:45:43] INFO  training: tf transform valid 11/20 (55%) elapsed=00:00:28 eta=00:00:23
+[2026-10-13 19:45:44] INFO  training: tf transform valid 12/20 (60%) elapsed=00:00:29 eta=00:00:19
+[2026-10-13 19:45:48] INFO  training: tf transform valid 13/20 (65%) elapsed=00:00:33 eta=00:00:18
+[2026-10-13 19:45:50] INFO  training: tf transform valid 14/20 (70%) elapsed=00:00:34 eta=00:00:15
+[2026-10-13 19:45:53] INFO  training: tf transform valid 15/20 (75%) elapsed=00:00:38 eta=00:00:13
+[2026-10-13 19:45:55] INFO  training: tf transform valid 16/20 (80%) elapsed=00:00:40 eta=00:00:10
+[2026-10-13 19:45:58] INFO  training: tf transform valid 17/20 (85%) elapsed=00:00:43 eta=00:00:08
+[2026-10-13 19:45:58] INFO  training: tf transform valid 18/20 (90%) elapsed=00:00:43 eta=00:00:05
+[2026-10-13 19:46:00] INFO  training: tf transform valid 19/20 (95%) elapsed=00:00:45 eta=00:00:02
+[2026-10-13 19:46:00] INFO  training: tf transform valid 20/20 (100%) elapsed=00:00:45 eta=00:00:00
+[2026-10-13 19:46:25] INFO  training: fold 4 train start epochs=20 steps/epoch=21
+[2026-10-13 19:46:25] INFO  training: fold 4 train 2/21 (10%) elapsed=00:00:00 eta=00:00:02
+[2026-10-13 19:46:25] INFO  training: fold 4 train 4/21 (19%) elapsed=00:00:00 eta=00:00:02
+[2026-10-13 19:46:25] INFO  training: fold 4 train 6/21 (29%) elapsed=00:00:00 eta=00:00:01
+[2026-10-13 19:46:25] INFO  training: fold 4 train 8/21 (38%) elapsed=00:00:01 eta=00:00:01
+[2026-10-13 19:46:25] INFO  training: fold 4 train 10/21 (48%) elapsed=00:00:01 eta=00:00:01
+[2026-10-13 19:46:26] INFO  training: fold 4 train 12/21 (57%) elapsed=00:00:01 eta=00:00:01
+[2026-10-13 19:46:26] INFO  training: fold 4 train 14/21 (67%) elapsed=00:00:01 eta=00:00:01
+[2026-10-13 19:46:26] INFO  training: fold 4 train 16/21 (76%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:46:26] INFO  training: fold 4 train 18/21 (86%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:46:26] INFO  training: fold 4 train 20/21 (95%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:46:26] INFO  training: fold 4 train 21/21 (100%) elapsed=00:00:02 eta=00:00:00
+[2026-10-13 19:46:26] INFO  training: fold 4 epoch 1/20 loss=0.6944 lr=1.00e-03 grad_mean=0.747 grad_max=2.251 elapsed=00:00:02 eta=00:00:29
+[2026-10-13 19:46:26] INFO  training: fold 4 train 2/21 (10%) elapsed=00:00:00 eta=00:00:01
+[2026-10-13 19:46:26] INFO  training: fold 4 train 4/21 (19%) elapsed=00:00:00 eta=00:00:01
+[2026-10-13 19:46:27] INFO  training: fold 4 train 6/21 (29%) elapsed=00:00:00 eta=00:00:01
+[2026-10-13 19:46:27] INFO  training: fold 4 train 8/21 (38%) elapsed=00:00:01 eta=00:00:01
+[2026-10-13 19:46:27] INFO  training: fold 4 train 10/21 (48%) elapsed=00:00:01 eta=00:00:01
+[2026-10-13 19:46:27] INFO  training: fold 4 train 12/21 (57%) elapsed=00:00:01 eta=00:00:01
+[2026-10-13 19:46:27] INFO  training: fold 4 train 14/21 (67%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:46:27] INFO  training: fold 4 train 16/21 (76%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:46:27] INFO  training: fold 4 train 18/21 (86%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:46:27] INFO  training: fold 4 train 20/21 (95%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:46:28] INFO  training: fold 4 train 21/21 (100%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:46:28] INFO  training: fold 4 epoch 2/20 loss=0.6207 lr=1.00e-03 grad_mean=0.742 grad_max=2.340 elapsed=00:00:01 eta=00:00:26
+[2026-10-13 19:46:28] INFO  training: fold 4 train 2/21 (10%) elapsed=00:00:00 eta=00:00:01
+[2026-10-13 19:46:28] INFO  training: fold 4 train 4/21 (19%) elapsed=00:00:00 eta=00:00:01
+[2026-10-13 19:46:28] INFO  training: fold 4 train 6/21 (29%) elapsed=00:00:00 eta=00:00:01
+[2026-10-13 19:46:28] INFO  training: fold 4 train 8/21 (38%) elapsed=00:00:01 eta=00:00:01
+[2026-10-13 19:46:28] INFO  training: fold 4 train 10/21 (48%) elapsed=00:00:01 eta=00:00:01
+[2026-10-13 19:46:28] INFO  training: fold 4 train 12/21 (57%) elapsed=00:00:01 eta=00:00:01
+[2026-10-13 19:46:28] INFO  training: fold 4 train 14/21 (67%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:46:29] INFO  training: fold 4 train 16/21 (76%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:46:29] INFO  training: fold 4 train 18/21 (86%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:46:29] INFO  training: fold 4 train 20/21 (95%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:46:29] INFO  training: fold 4 train 21/21 (100%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:46:29] INFO  training: fold 4 epoch 3/20 loss=0.5359 lr=1.00e-03 grad_mean=1.008 grad_max=2.427 elapsed=00:00:01 eta=00:00:24
+[2026-10-13 19:46:29] INFO  training: fold 4 train 2/21 (10%) elapsed=00:00:00 eta=00:00:01
+[2026-10-13 19:46:29] INFO  training: fold 4 train 4/21 (19%) elapsed=00:00:00 eta=00:00:01
+[2026-10-13 19:46:29] INFO  training: fold 4 train 6/21 (29%) elapsed=00:00:00 eta=00:00:01
+[2026-10-13 19:46:29] INFO  training: fold 4 train 8/21 (38%) elapsed=00:00:00 eta=00:00:01
+[2026-10-13 19:46:30] INFO  training: fold 4 train 10/21 (48%) elapsed=00:00:01 eta=00:00:01
+[2026-10-13 19:46:30] INFO  training: fold 4 train 12/21 (57%) elapsed=00:00:01 eta=00:00:01
+[2026-10-13 19:46:30] INFO  training: fold 4 train 14/21 (67%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:46:30] INFO  training: fold 4 train 16/21 (76%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:46:30] INFO  training: fold 4 train 18/21 (86%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:46:30] INFO  training: fold 4 train 20/21 (95%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:46:30] INFO  training: fold 4 train 21/21 (100%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:46:30] INFO  training: fold 4 epoch 4/20 loss=0.4751 lr=1.00e-03 grad_mean=1.438 grad_max=5.112 elapsed=00:00:01 eta=00:00:23
+[2026-10-13 19:46:30] INFO  training: fold 4 train 2/21 (10%) elapsed=00:00:00 eta=00:00:01
+[2026-10-13 19:46:31] INFO  training: fold 4 train 4/21 (19%) elapsed=00:00:00 eta=00:00:01
+[2026-10-13 19:46:31] INFO  training: fold 4 train 6/21 (29%) elapsed=00:00:00 eta=00:00:01
+[2026-10-13 19:46:31] INFO  training: fold 4 train 8/21 (38%) elapsed=00:00:01 eta=00:00:01
+[2026-10-13 19:46:31] INFO  training: fold 4 train 10/21 (48%) elapsed=00:00:01 eta=00:00:01
+[2026-10-13 19:46:31] INFO  training: fold 4 train 12/21 (57%) elapsed=00:00:01 eta=00:00:01
+[2026-10-13 19:46:31] INFO  training: fold 4 train 14/21 (67%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:46:31] INFO  training: fold 4 train 16/21 (76%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:46:32] INFO  training: fold 4 train 18/21 (86%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:46:32] INFO  training: fold 4 train 20/21 (95%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:46:32] INFO  training: fold 4 train 21/21 (100%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:46:32] INFO  training: fold 4 epoch 5/20 loss=0.4397 lr=1.00e-03 grad_mean=1.422 grad_max=5.017 elapsed=00:00:01 eta=00:00:21
+[2026-10-13 19:46:32] INFO  training: fold 4 train 2/21 (10%) elapsed=00:00:00 eta=00:00:01
+[2026-10-13 19:46:32] INFO  training: fold 4 train 4/21 (19%) elapsed=00:00:00 eta=00:00:01
+[2026-10-13 19:46:32] INFO  training: fold 4 train 6/21 (29%) elapsed=00:00:00 eta=00:00:01
+[2026-10-13 19:46:32] INFO  training: fold 4 train 8/21 (38%) elapsed=00:00:01 eta=00:00:01
+[2026-10-13 19:46:32] INFO  training: fold 4 train 10/21 (48%) elapsed=00:00:01 eta=00:00:01
+[2026-10-13 19:46:32] INFO  training: fold 4 train 12/21 (57%) elapsed=00:00:01 eta=00:00:01
+[2026-10-13 19:46:33] INFO  training: fold 4 train 14/21 (67%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:46:33] INFO  training: fold 4 train 16/21 (76%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:46:33] INFO  training: fold 4 train 18/21 (86%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:46:33] INFO  training: fold 4 train 20/21 (95%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:46:33] INFO  training: fold 4 train 21/21 (100%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:46:33] INFO  training: fold 4 epoch 6/20 loss=0.3707 lr=1.00e-03 grad_mean=1.583 grad_max=3.770 elapsed=00:00:01 eta=00:00:20
+[2026-10-13 19:46:33] INFO  training: fold 4 train 2/21 (10%) elapsed=00:00:00 eta=00:00:01
+[2026-10-13 19:46:33] INFO  training: fold 4 train 4/21 (19%) elapsed=00:00:00 eta=00:00:01
+[2026-10-13 19:46:33] INFO  training: fold 4 train 6/21 (29%) elapsed=00:00:00 eta=00:00:01
+[2026-10-13 19:46:34] INFO  training: fold 4 train 8/21 (38%) elapsed=00:00:01 eta=00:00:01
+[2026-10-13 19:46:34] INFO  training: fold 4 train 10/21 (48%) elapsed=00:00:01 eta=00:00:01
+[2026-10-13 19:46:34] INFO  training: fold 4 train 12/21 (57%) elapsed=00:00:01 eta=00:00:01
+[2026-10-13 19:46:34] INFO  training: fold 4 train 14/21 (67%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:46:34] INFO  training: fold 4 train 16/21 (76%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:46:34] INFO  training: fold 4 train 18/21 (86%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:46:34] INFO  training: fold 4 train 20/21 (95%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:46:34] INFO  training: fold 4 train 21/21 (100%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:46:34] INFO  training: fold 4 epoch 7/20 loss=0.3723 lr=1.00e-03 grad_mean=1.663 grad_max=6.258 elapsed=00:00:01 eta=00:00:18
+[2026-10-13 19:46:35] INFO  training: fold 4 train 2/21 (10%) elapsed=00:00:00 eta=00:00:01
+[2026-10-13 19:46:35] INFO  training: fold 4 train 4/21 (19%) elapsed=00:00:00 eta=00:00:01
+[2026-10-13 19:46:35] INFO  training: fold 4 train 6/21 (29%) elapsed=00:00:00 eta=00:00:01
+[2026-10-13 19:46:35] INFO  training: fold 4 train 8/21 (38%) elapsed=00:00:01 eta=00:00:01
+[2026-10-13 19:46:35] INFO  training: fold 4 train 10/21 (48%) elapsed=00:00:01 eta=00:00:01
+[2026-10-13 19:46:35] INFO  training: fold 4 train 12/21 (57%) elapsed=00:00:01 eta=00:00:01
+[2026-10-13 19:46:35] INFO  training: fold 4 train 14/21 (67%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:46:36] INFO  training: fold 4 train 16/21 (76%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:46:36] INFO  training: fold 4 train 18/21 (86%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:46:36] INFO  training: fold 4 train 20/21 (95%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:46:36] INFO  training: fold 4 train 21/21 (100%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:46:36] INFO  training: fold 4 epoch 8/20 loss=0.3365 lr=1.00e-03 grad_mean=1.825 grad_max=6.833 elapsed=00:00:01 eta=00:00:17
+[2026-10-13 19:46:36] INFO  training: fold 4 train 2/21 (10%) elapsed=00:00:00 eta=00:00:01
+[2026-10-13 19:46:36] INFO  training: fold 4 train 4/21 (19%) elapsed=00:00:00 eta=00:00:01
+[2026-10-13 19:46:36] INFO  training: fold 4 train 6/21 (29%) elapsed=00:00:00 eta=00:00:01
+[2026-10-13 19:46:36] INFO  training: fold 4 train 8/21 (38%) elapsed=00:00:01 eta=00:00:01
+[2026-10-13 19:46:37] INFO  training: fold 4 train 10/21 (48%) elapsed=00:00:01 eta=00:00:01
+[2026-10-13 19:46:37] INFO  training: fold 4 train 12/21 (57%) elapsed=00:00:01 eta=00:00:01
+[2026-10-13 19:46:37] INFO  training: fold 4 train 14/21 (67%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:46:37] INFO  training: fold 4 train 16/21 (76%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:46:37] INFO  training: fold 4 train 18/21 (86%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:46:37] INFO  training: fold 4 train 20/21 (95%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:46:37] INFO  training: fold 4 train 21/21 (100%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:46:37] INFO  training: fold 4 epoch 9/20 loss=0.3389 lr=1.00e-03 grad_mean=1.648 grad_max=4.525 elapsed=00:00:01 eta=00:00:15
+[2026-10-13 19:46:37] INFO  training: fold 4 train 2/21 (10%) elapsed=00:00:00 eta=00:00:01
+[2026-10-13 19:46:37] INFO  training: fold 4 train 4/21 (19%) elapsed=00:00:00 eta=00:00:01
+[2026-10-13 19:46:38] INFO  training: fold 4 train 6/21 (29%) elapsed=00:00:00 eta=00:00:01
+[2026-10-13 19:46:38] INFO  training: fold 4 train 8/21 (38%) elapsed=00:00:01 eta=00:00:01
+[2026-10-13 19:46:38] INFO  training: fold 4 train 10/21 (48%) elapsed=00:00:01 eta=00:00:01
+[2026-10-13 19:46:38] INFO  training: fold 4 train 12/21 (57%) elapsed=00:00:01 eta=00:00:01
+[2026-10-13 19:46:38] INFO  training: fold 4 train 14/21 (67%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:46:38] INFO  training: fold 4 train 16/21 (76%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:46:38] INFO  training: fold 4 train 18/21 (86%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:46:39] INFO  training: fold 4 train 20/21 (95%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:46:39] INFO  training: fold 4 train 21/21 (100%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:46:39] INFO  training: fold 4 epoch 10/20 loss=0.2919 lr=1.00e-03 grad_mean=1.865 grad_max=7.631 elapsed=00:00:01 eta=00:00:14
+[2026-10-13 19:46:39] INFO  training: fold 4 train 2/21 (10%) elapsed=00:00:00 eta=00:00:01
+[2026-10-13 19:46:39] INFO  training: fold 4 train 4/21 (19%) elapsed=00:00:00 eta=00:00:01
+[2026-10-13 19:46:39] INFO  training: fold 4 train 6/21 (29%) elapsed=00:00:00 eta=00:00:01
+[2026-10-13 19:46:39] INFO  training: fold 4 train 8/21 (38%) elapsed=00:00:01 eta=00:00:01
+[2026-10-13 19:46:39] INFO  training: fold 4 train 10/21 (48%) elapsed=00:00:01 eta=00:00:01
+[2026-10-13 19:46:39] INFO  training: fold 4 train 12/21 (57%) elapsed=00:00:01 eta=00:00:01
+[2026-10-13 19:46:40] INFO  training: fold 4 train 14/21 (67%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:46:40] INFO  training: fold 4 train 16/21 (76%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:46:40] INFO  training: fold 4 train 18/21 (86%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:46:40] INFO  training: fold 4 train 20/21 (95%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:46:40] INFO  training: fold 4 train 21/21 (100%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:46:40] INFO  training: fold 4 epoch 11/20 loss=0.3317 lr=1.00e-03 grad_mean=2.003 grad_max=7.512 elapsed=00:00:01 eta=00:00:13
+[2026-10-13 19:46:40] INFO  training: fold 4 train 2/21 (10%) elapsed=00:00:00 eta=00:00:01
+[2026-10-13 19:46:40] INFO  training: fold 4 train 4/21 (19%) elapsed=00:00:00 eta=00:00:01
+[2026-10-13 19:46:40] INFO  training: fold 4 train 6/21 (29%) elapsed=00:00:00 eta=00:00:01
+[2026-10-13 19:46:41] INFO  training: fold 4 train 8/21 (38%) elapsed=00:00:01 eta=00:00:01
+[2026-10-13 19:46:41] INFO  training: fold 4 train 10/21 (48%) elapsed=00:00:01 eta=00:00:01
+[2026-10-13 19:46:41] INFO  training: fold 4 train 12/21 (57%) elapsed=00:00:01 eta=00:00:01
+[2026-10-13 19:46:41] INFO  training: fold 4 train 14/21 (67%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:46:41] INFO  training: fold 4 train 16/21 (76%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:46:41] INFO  training: fold 4 train 18/21 (86%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:46:41] INFO  training: fold 4 train 20/21 (95%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:46:41] INFO  training: fold 4 train 21/21 (100%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:46:41] INFO  training: fold 4 epoch 12/20 loss=0.2680 lr=1.00e-03 grad_mean=2.023 grad_max=8.041 elapsed=00:00:01 eta=00:00:11
+[2026-10-13 19:46:42] INFO  training: fold 4 train 2/21 (10%) elapsed=00:00:00 eta=00:00:01
+[2026-10-13 19:46:42] INFO  training: fold 4 train 4/21 (19%) elapsed=00:00:00 eta=00:00:01
+[2026-10-13 19:46:42] INFO  training: fold 4 train 6/21 (29%) elapsed=00:00:00 eta=00:00:01
+[2026-10-13 19:46:42] INFO  training: fold 4 train 8/21 (38%) elapsed=00:00:01 eta=00:00:01
+[2026-10-13 19:46:42] INFO  training: fold 4 train 10/21 (48%) elapsed=00:00:01 eta=00:00:01
+[2026-10-13 19:46:42] INFO  training: fold 4 train 12/21 (57%) elapsed=00:00:01 eta=00:00:01
+[2026-10-13 19:46:42] INFO  training: fold 4 train 14/21 (67%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:46:42] INFO  training: fold 4 train 16/21 (76%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:46:43] INFO  training: fold 4 train 18/21 (86%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:46:43] INFO  training: fold 4 train 20/21 (95%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:46:43] INFO  training: fold 4 train 21/21 (100%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:46:43] INFO  training: fold 4 epoch 13/20 loss=0.3139 lr=1.00e-03 grad_mean=2.259 grad_max=15.553 elapsed=00:00:01 eta=00:00:10
+[2026-10-13 19:46:43] INFO  training: fold 4 train 2/21 (10%) elapsed=00:00:00 eta=00:00:01
+[2026-10-13 19:46:43] INFO  training: fold 4 train 4/21 (19%) elapsed=00:00:00 eta=00:00:01
+[2026-10-13 19:46:43] INFO  training: fold 4 train 6/21 (29%) elapsed=00:00:00 eta=00:00:01
+[2026-10-13 19:46:43] INFO  training: fold 4 train 8/21 (38%) elapsed=00:00:01 eta=00:00:01
+[2026-10-13 19:46:43] INFO  training: fold 4 train 10/21 (48%) elapsed=00:00:01 eta=00:00:01
+[2026-10-13 19:46:44] INFO  training: fold 4 train 12/21 (57%) elapsed=00:00:01 eta=00:00:01
+[2026-10-13 19:46:44] INFO  training: fold 4 train 14/21 (67%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:46:44] INFO  training: fold 4 train 16/21 (76%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:46:44] INFO  training: fold 4 train 18/21 (86%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:46:44] INFO  training: fold 4 train 20/21 (95%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:46:44] INFO  training: fold 4 train 21/21 (100%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:46:44] INFO  training: fold 4 epoch 14/20 loss=0.2503 lr=1.00e-03 grad_mean=1.734 grad_max=7.729 elapsed=00:00:01 eta=00:00:08
+[2026-10-13 19:46:44] INFO  training: fold 4 train 2/21 (10%) elapsed=00:00:00 eta=00:00:01
+[2026-10-13 19:46:44] INFO  training: fold 4 train 4/21 (19%) elapsed=00:00:00 eta=00:00:01
+[2026-10-13 19:46:45] INFO  training: fold 4 train 6/21 (29%) elapsed=00:00:00 eta=00:00:01
+[2026-10-13 19:46:45] INFO  training: fold 4 train 8/21 (38%) elapsed=00:00:01 eta=00:00:01
+[2026-10-13 19:46:45] INFO  training: fold 4 train 10/21 (48%) elapsed=00:00:01 eta=00:00:01
+[2026-10-13 19:46:45] INFO  training: fold 4 train 12/21 (57%) elapsed=00:00:01 eta=00:00:01
+[2026-10-13 19:46:45] INFO  training: fold 4 train 14/21 (67%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:46:45] INFO  training: fold 4 train 16/21 (76%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:46:45] INFO  training: fold 4 train 18/21 (86%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:46:46] INFO  training: fold 4 train 20/21 (95%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:46:46] INFO  training: fold 4 train 21/21 (100%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:46:46] INFO  training: fold 4 epoch 15/20 loss=0.2241 lr=1.00e-03 grad_mean=1.704 grad_max=6.449 elapsed=00:00:01 eta=00:00:07
+[2026-10-13 19:46:46] INFO  training: fold 4 train 2/21 (10%) elapsed=00:00:00 eta=00:00:01
+[2026-10-13 19:46:46] INFO  training: fold 4 train 4/21 (19%) elapsed=00:00:00 eta=00:00:01
+[2026-10-13 19:46:46] INFO  training: fold 4 train 6/21 (29%) elapsed=00:00:00 eta=00:00:01
+[2026-10-13 19:46:46] INFO  training: fold 4 train 8/21 (38%) elapsed=00:00:01 eta=00:00:01
+[2026-10-13 19:46:46] INFO  training: fold 4 train 10/21 (48%) elapsed=00:00:01 eta=00:00:01
+[2026-10-13 19:46:46] INFO  training: fold 4 train 12/21 (57%) elapsed=00:00:01 eta=00:00:01
+[2026-10-13 19:46:47] INFO  training: fold 4 train 14/21 (67%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:46:47] INFO  training: fold 4 train 16/21 (76%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:46:47] INFO  training: fold 4 train 18/21 (86%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:46:47] INFO  training: fold 4 train 20/21 (95%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:46:47] INFO  training: fold 4 train 21/21 (100%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:46:47] INFO  training: fold 4 epoch 16/20 loss=0.2024 lr=1.00e-03 grad_mean=1.973 grad_max=9.520 elapsed=00:00:01 eta=00:00:06
+[2026-10-13 19:46:47] INFO  training: fold 4 train 2/21 (10%) elapsed=00:00:00 eta=00:00:01
+[2026-10-13 19:46:47] INFO  training: fold 4 train 4/21 (19%) elapsed=00:00:00 eta=00:00:01
+[2026-10-13 19:46:47] INFO  training: fold 4 train 6/21 (29%) elapsed=00:00:00 eta=00:00:01
+[2026-10-13 19:46:47] INFO  training: fold 4 train 8/21 (38%) elapsed=00:00:01 eta=00:00:01
+[2026-10-13 19:46:48] INFO  training: fold 4 train 10/21 (48%) elapsed=00:00:01 eta=00:00:01
+[2026-10-13 19:46:48] INFO  training: fold 4 train 12/21 (57%) elapsed=00:00:01 eta=00:00:01
+[2026-10-13 19:46:48] INFO  training: fold 4 train 14/21 (67%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:46:48] INFO  training: fold 4 train 16/21 (76%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:46:48] INFO  training: fold 4 train 18/21 (86%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:46:48] INFO  training: fold 4 train 20/21 (95%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:46:48] INFO  training: fold 4 train 21/21 (100%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:46:48] INFO  training: fold 4 epoch 17/20 loss=0.1853 lr=1.00e-03 grad_mean=1.415 grad_max=3.265 elapsed=00:00:01 eta=00:00:04
+[2026-10-13 19:46:48] INFO  training: fold 4 train 2/21 (10%) elapsed=00:00:00 eta=00:00:01
+[2026-10-13 19:46:49] INFO  training: fold 4 train 4/21 (19%) elapsed=00:00:00 eta=00:00:01
+[2026-10-13 19:46:49] INFO  training: fold 4 train 6/21 (29%) elapsed=00:00:00 eta=00:00:01
+[2026-10-13 19:46:49] INFO  training: fold 4 train 8/21 (38%) elapsed=00:00:01 eta=00:00:01
+[2026-10-13 19:46:49] INFO  training: fold 4 train 10/21 (48%) elapsed=00:00:01 eta=00:00:01
+[2026-10-13 19:46:49] INFO  training: fold 4 train 12/21 (57%) elapsed=00:00:01 eta=00:00:01
+[2026-10-13 19:46:49] INFO  training: fold 4 train 14/21 (67%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:46:49] INFO  training: fold 4 train 16/21 (76%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:46:50] INFO  training: fold 4 train 18/21 (86%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:46:50] INFO  training: fold 4 train 20/21 (95%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:46:50] INFO  training: fold 4 train 21/21 (100%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:46:50] INFO  training: fold 4 epoch 18/20 loss=0.2506 lr=1.00e-03 grad_mean=2.714 grad_max=27.694 elapsed=00:00:01 eta=00:00:03
+[2026-10-13 19:46:50] INFO  training: fold 4 train 2/21 (10%) elapsed=00:00:00 eta=00:00:01
+[2026-10-13 19:46:50] INFO  training: fold 4 train 4/21 (19%) elapsed=00:00:00 eta=00:00:01
+[2026-10-13 19:46:50] INFO  training: fold 4 train 6/21 (29%) elapsed=00:00:00 eta=00:00:01
+[2026-10-13 19:46:50] INFO  training: fold 4 train 8/21 (38%) elapsed=00:00:01 eta=00:00:01
+[2026-10-13 19:46:50] INFO  training: fold 4 train 10/21 (48%) elapsed=00:00:01 eta=00:00:01
+[2026-10-13 19:46:51] INFO  training: fold 4 train 12/21 (57%) elapsed=00:00:01 eta=00:00:01
+[2026-10-13 19:46:51] INFO  training: fold 4 train 14/21 (67%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:46:51] INFO  training: fold 4 train 16/21 (76%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:46:51] INFO  training: fold 4 train 18/21 (86%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:46:51] INFO  training: fold 4 train 20/21 (95%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:46:51] INFO  training: fold 4 train 21/21 (100%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:46:51] INFO  training: fold 4 epoch 19/20 loss=0.2026 lr=1.00e-03 grad_mean=1.952 grad_max=6.097 elapsed=00:00:01 eta=00:00:01
+[2026-10-13 19:46:51] INFO  training: fold 4 train 2/21 (10%) elapsed=00:00:00 eta=00:00:01
+[2026-10-13 19:46:51] INFO  training: fold 4 train 4/21 (19%) elapsed=00:00:00 eta=00:00:01
+[2026-10-13 19:46:52] INFO  training: fold 4 train 6/21 (29%) elapsed=00:00:00 eta=00:00:01
+[2026-10-13 19:46:52] INFO  training: fold 4 train 8/21 (38%) elapsed=00:00:01 eta=00:00:01
+[2026-10-13 19:46:52] INFO  training: fold 4 train 10/21 (48%) elapsed=00:00:01 eta=00:00:01
+[2026-10-13 19:46:52] INFO  training: fold 4 train 12/21 (57%) elapsed=00:00:01 eta=00:00:01
+[2026-10-13 19:46:52] INFO  training: fold 4 train 14/21 (67%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:46:52] INFO  training: fold 4 train 16/21 (76%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:46:52] INFO  training: fold 4 train 18/21 (86%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:46:52] INFO  training: fold 4 train 20/21 (95%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:46:53] INFO  training: fold 4 train 21/21 (100%) elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:46:53] INFO  training: fold 4 epoch 20/20 loss=0.2861 lr=1.00e-03 grad_mean=2.559 grad_max=13.138 elapsed=00:00:01 eta=00:00:00
+[2026-10-13 19:46:53] INFO  training: fold 4 validation start batches=5
+[2026-10-13 19:46:53] INFO  training: fold 4 summary macro_f1=0.7908 macro_recall=0.8820 macro_pr_auc=0.9049 epochs_ran=20 best_epoch=20
+[2026-10-13 19:46:53] INFO  training: results
+[2026-10-13 19:46:53] INFO  training:   fold  macro_f1  macro_recall  macro_pr_auc  epochs_ran
+[2026-10-13 19:46:53] INFO  training:   0     0.6081    0.6481        0.7109        20        
+[2026-10-13 19:46:53] INFO  training:   1     0.6799    0.7298        0.7498        20        
+[2026-10-13 19:46:53] INFO  training:   2     0.6889    0.6987        0.7895        20        
+[2026-10-13 19:46:53] INFO  training:   3     0.5121    0.4370        0.8590        20        
+[2026-10-13 19:46:53] INFO  training:   4     0.7908    0.8820        0.9049        20        
+{
+  "aggregator": "gated_attention",
+  "completed_fold_count": 5,
+  "fold_count": 5,
+  "fold_metrics": [
+    {
+      "amp_enabled": false,
+      "augmentation_enabled": false,
+      "best_epoch": 20,
+      "early_stopping_monitor": null,
+      "epochs_ran": 20,
+      "fold": 0,
+      "macro_f1": 0.6081481481481482,
+      "macro_pr_auc": 0.7108935677117496,
+      "macro_recall": 0.6481481481481481,
+      "per_code": {
+        "blur": {
+          "f1": 0.88,
+          "pr_auc": 0.8953791158336613,
+          "recall": 1.0,
+          "valid_positive_count": 11
+        },
+        "flash": {
+          "f1": 0.9444444444444444,
+          "pr_auc": 0.9944444444444446,
+          "recall": 0.9444444444444444,
+          "valid_positive_count": 18
+        },
+        "tunnel": {
+          "f1": 0.0,
+          "pr_auc": 0.24285714285714285,
+          "recall": 0.0,
+          "valid_positive_count": 2
+        }
+      },
+      "scheduler": "none",
+      "threshold": 0.5,
+      "training_history": [
+        {
+          "gradient_norm_max": 1.4451366662979126,
+          "gradient_norm_mean": 0.62523353099823,
+          "learning_rate": 0.001
+        },
+        {
+          "gradient_norm_max": 0.9495587348937988,
+          "gradient_norm_mean": 0.6239067316055298,
+          "learning_rate": 0.001
+        },
+        {
+          "gradient_norm_max": 3.21286678314209,
+          "gradient_norm_mean": 1.0745435953140259,
+          "learning_rate": 0.001
+        },
+        {
+          "gradient_norm_max": 3.544501543045044,
+          "gradient_norm_mean": 1.4350249767303467,
+          "learning_rate": 0.001
+        },
+        {
+          "gradient_norm_max": 7.784516334533691,
+          "gradient_norm_mean": 1.4971946477890015,
+          "learning_rate": 0.001
+        },
+        {
+          "gradient_norm_max": 11.163037300109863,
+          "gradient_norm_mean": 2.2182486057281494,
+          "learning_rate": 0.001
+        },
+        {
+          "gradient_norm_max": 3.5424206256866455,
+          "gradient_norm_mean": 1.3632739782333374,
+          "learning_rate": 0.001
+        },
+        {
+          "gradient_norm_max": 4.827568531036377,
+          "gradient_norm_mean": 1.3479129076004028,
+          "learning_rate": 0.001
+        },
+        {
+          "gradient_norm_max": 4.235099792480469,
+          "gradient_norm_mean": 1.3261669874191284,
+          "learning_rate": 0.001
+        },
+        {
+          "gradient_norm_max": 11.110684394836426,
+          "gradient_norm_mean": 1.850800633430481,
+          "learning_rate": 0.001
+        },
+        {
+          "gradient_norm_max": 11.183363914489746,
+          "gradient_norm_mean": 1.8080259561538696,
+          "learning_rate": 0.001
+        },
+        {
+          "gradient_norm_max": 2.9581127166748047,
+          "gradient_norm_mean": 1.0980887413024902,
+          "learning_rate": 0.001
+        },
+        {
+          "gradient_norm_max": 6.667754173278809,
+          "gradient_norm_mean": 1.8495240211486816,
+          "learning_rate": 0.001
+        },
+        {
+          "gradient_norm_max": 10.907137870788574,
+          "gradient_norm_mean": 1.6844980716705322,
+          "learning_rate": 0.001
+        },
+        {
+          "gradient_norm_max": 5.494842052459717,
+          "gradient_norm_mean": 1.5730589628219604,
+          "learning_rate": 0.001
+        },
+        {
+          "gradient_norm_max": 4.698113918304443,
+          "gradient_norm_mean": 1.5195484161376953,
+          "learning_rate": 0.001
+        },
+        {
+          "gradient_norm_max": 2.781283378601074,
+          "gradient_norm_mean": 0.9922389388084412,
+          "learning_rate": 0.001
+        },
+        {
+          "gradient_norm_max": 11.735994338989258,
+          "gradient_norm_mean": 2.188831090927124,
+          "learning_rate": 0.001
+        },
+        {
+          "gradient_norm_max": 7.994959831237793,
+          "gradient_norm_mean": 1.7885706424713135,
+          "learning_rate": 0.001
+        },
+        {
+          "gradient_norm_max": 2.52211332321167,
+          "gradient_norm_mean": 1.3295109272003174,
+          "learning_rate": 0.001
+        }
+      ],
+      "valid_code_count": 3
+    },
+    {
+      "amp_enabled": false,
+      "augmentation_enabled": false,
+      "best_epoch": 20,
+      "early_stopping_monitor": null,
+      "epochs_ran": 20,
+      "fold": 1,
+      "macro_f1": 0.6799171842650104,
+      "macro_pr_auc": 0.7497814238037472,
+      "macro_recall": 0.7298245614035088,
+      "per_code": {
+        "blur": {
+          "f1": 0.782608695652174,
+          "pr_auc": 0.9625,
+          "recall": 0.9,
+          "valid_positive_count": 10
+        },
+        "flash": {
+          "f1": 0.8571428571428571,
+          "pr_auc": 0.9780207419994773,
+          "recall": 0.7894736842105263,
+          "valid_positive_count": 19
+        },
+        "tunnel": {
+          "f1": 0.4,
+          "pr_auc": 0.3088235294117647,
+          "recall": 0.5,
+          "valid_positive_count": 2
+        }
+      },
+      "scheduler": "none",
+      "threshold": 0.5,
+      "training_history": [
+        {
+          "gradient_norm_max": 3.3266966342926025,
+          "gradient_norm_mean": 0.7518206238746643,
+          "learning_rate": 0.001
+        },
+        {
+          "gradient_norm_max": 1.4494240283966064,
+          "gradient_norm_mean": 0.6870989799499512,
+          "learning_rate": 0.001
+        },
+        {
+          "gradient_norm_max": 2.776869773864746,
+          "gradient_norm_mean": 0.9799721240997314,
+          "learning_rate": 0.001
+        },
+        {
+          "gradient_norm_max": 7.347510814666748,
+          "gradient_norm_mean": 1.845353603363037,
+          "learning_rate": 0.001
+        },
+        {
+          "gradient_norm_max": 1.9273349046707153,
+          "gradient_norm_mean": 0.9068613052368164,
+          "learning_rate": 0.001
+        },
+        {
+          "gradient_norm_max": 3.0328166484832764,
+          "gradient_norm_mean": 1.1296507120132446,
+          "learning_rate": 0.001
+        },
+        {
+          "gradient_norm_max": 7.482624053955078,
+          "gradient_norm_mean": 1.6816291809082031,
+          "learning_rate": 0.001
+        },
+        {
+          "gradient_norm_max": 4.24974250793457,
+          "gradient_norm_mean": 1.4845939874649048,
+          "learning_rate": 0.001
+        },
+        {
+          "gradient_norm_max": 5.088130950927734,
+          "gradient_norm_mean": 1.5069231986999512,
+          "learning_rate": 0.001
+        },
+        {
+          "gradient_norm_max": 4.184807300567627,
+          "gradient_norm_mean": 1.4876960515975952,
+          "learning_rate": 0.001
+        },
+        {
+          "gradient_norm_max": 9.151798248291016,
+          "gradient_norm_mean": 1.8925544023513794,
+          "learning_rate": 0.001
+        },
+        {
+          "gradient_norm_max": 5.65260124206543,
+          "gradient_norm_mean": 1.7063422203063965,
+          "learning_rate": 0.001
+        },
+        {
+          "gradient_norm_max": 2.521620988845825,
+          "gradient_norm_mean": 1.1462453603744507,
+          "learning_rate": 0.001
+        },
+        {
+          "gradient_norm_max": 8.14392375946045,
+          "gradient_norm_mean": 2.1938109397888184,
+          "learning_rate": 0.001
+        },
+        {
+          "gradient_norm_max": 4.343508243560791,
+          "gradient_norm_mean": 1.3737045526504517,
+          "learning_rate": 0.001
+        },
+        {
+          "gradient_norm_max": 2.6512863636016846,
+          "gradient_norm_mean": 1.0303480625152588,
+          "learning_rate": 0.001
+        },
+        {
+          "gradient_norm_max": 3.5846481323242188,
+          "gradient_norm_mean": 1.2249447107315063,
+          "learning_rate": 0.001
+        },
+        {
+          "gradient_norm_max": 2.17417311668396,
+          "gradient_norm_mean": 0.9265100359916687,
+          "learning_rate": 0.001
+        },
+        {
+          "gradient_norm_max": 2.5171070098876953,
+          "gradient_norm_mean": 1.0725277662277222,
+          "learning_rate": 0.001
+        },
+        {
+          "gradient_norm_max": 3.380147933959961,
+          "gradient_norm_mean": 1.133447527885437,
+          "learning_rate": 0.001
+        }
+      ],
+      "valid_code_count": 3
+    },
+    {
+      "amp_enabled": false,
+      "augmentation_enabled": false,
+      "best_epoch": 20,
+      "early_stopping_monitor": null,
+      "epochs_ran": 20,
+      "fold": 2,
+      "macro_f1": 0.688888888888889,
+      "macro_pr_auc": 0.7894500908509025,
+      "macro_recall": 0.6986531986531986,
+      "per_code": {
+        "blur": {
+          "f1": 0.8181818181818182,
+          "pr_auc": 0.779086569995661,
+          "recall": 0.8181818181818182,
+          "valid_positive_count": 11
+        },
+        "flash": {
+          "f1": 0.8484848484848485,
+          "pr_auc": 0.9781525914459352,
+          "recall": 0.7777777777777778,
+          "valid_positive_count": 18
+        },
+        "tunnel": {
+          "f1": 0.4,
+          "pr_auc": 0.6111111111111112,
+          "recall": 0.5,
+          "valid_positive_count": 2
+        }
+      },
+      "scheduler": "none",
+      "threshold": 0.5,
+      "training_history": [
+        {
+          "gradient_norm_max": 1.2147583961486816,
+          "gradient_norm_mean": 0.7372806668281555,
+          "learning_rate": 0.001
+        },
+        {
+          "gradient_norm_max": 1.1704102754592896,
+          "gradient_norm_mean": 0.7838916182518005,
+          "learning_rate": 0.001
+        },
+        {
+          "gradient_norm_max": 9.087458610534668,
+          "gradient_norm_mean": 1.7778635025024414,
+          "learning_rate": 0.001
+        },
+        {
+          "gradient_norm_max": 5.369883060455322,
+          "gradient_norm_mean": 1.4426711797714233,
+          "learning_rate": 0.001
+        },
+        {
+          "gradient_norm_max": 4.489503383636475,
+          "gradient_norm_mean": 1.5488516092300415,
+          "learning_rate": 0.001
+        },
+        {
+          "gradient_norm_max": 10.986740112304688,
+          "gradient_norm_mean": 2.1472737789154053,
+          "learning_rate": 0.001
+        },
+        {
+          "gradient_norm_max": 5.312556743621826,
+          "gradient_norm_mean": 1.6365082263946533,
+          "learning_rate": 0.001
+        },
+        {
+          "gradient_norm_max": 27.432918548583984,
+          "gradient_norm_mean": 2.9368062019348145,
+          "learning_rate": 0.001
+        },
+        {
+          "gradient_norm_max": 6.566676139831543,
+          "gradient_norm_mean": 1.7621840238571167,
+          "learning_rate": 0.001
+        },
+        {
+          "gradient_norm_max": 8.638506889343262,
+          "gradient_norm_mean": 1.5545978546142578,
+          "learning_rate": 0.001
+        },
+        {
+          "gradient_norm_max": 3.7485949993133545,
+          "gradient_norm_mean": 1.2317501306533813,
+          "learning_rate": 0.001
+        },
+        {
+          "gradient_norm_max": 9.493842124938965,
+          "gradient_norm_mean": 1.5968860387802124,
+          "learning_rate": 0.001
+        },
+        {
+          "gradient_norm_max": 2.5263092517852783,
+          "gradient_norm_mean": 1.1576683521270752,
+          "learning_rate": 0.001
+        },
+        {
+          "gradient_norm_max": 3.2925007343292236,
+          "gradient_norm_mean": 1.4196089506149292,
+          "learning_rate": 0.001
+        },
+        {
+          "gradient_norm_max": 4.87367057800293,
+          "gradient_norm_mean": 1.3751477003097534,
+          "learning_rate": 0.001
+        },
+        {
+          "gradient_norm_max": 27.75003433227539,
+          "gradient_norm_mean": 3.0432984828948975,
+          "learning_rate": 0.001
+        },
+        {
+          "gradient_norm_max": 14.902091026306152,
+          "gradient_norm_mean": 2.670917272567749,
+          "learning_rate": 0.001
+        },
+        {
+          "gradient_norm_max": 1.8417400121688843,
+          "gradient_norm_mean": 1.0099025964736938,
+          "learning_rate": 0.001
+        },
+        {
+          "gradient_norm_max": 2.4528629779815674,
+          "gradient_norm_mean": 0.8901967406272888,
+          "learning_rate": 0.001
+        },
+        {
+          "gradient_norm_max": 1.9521104097366333,
+          "gradient_norm_mean": 1.1880097389221191,
+          "learning_rate": 0.001
+        }
+      ],
+      "valid_code_count": 3
+    },
+    {
+      "amp_enabled": false,
+      "augmentation_enabled": false,
+      "best_epoch": 20,
+      "early_stopping_monitor": null,
+      "epochs_ran": 20,
+      "fold": 3,
+      "macro_f1": 0.5121328224776501,
+      "macro_pr_auc": 0.8590028490028491,
+      "macro_recall": 0.43703703703703706,
+      "per_code": {
+        "blur": {
+          "f1": 0.7777777777777778,
+          "pr_auc": 0.9158974358974358,
+          "recall": 0.7,
+          "valid_positive_count": 10
+        },
+        "flash": {
+          "f1": 0.7586206896551724,
+          "pr_auc": 0.9944444444444446,
+          "recall": 0.6111111111111112,
+          "valid_positive_count": 18
+        },
+        "tunnel": {
+          "f1": 0.0,
+          "pr_auc": 0.6666666666666666,
+          "recall": 0.0,
+          "valid_positive_count": 2
+        }
+      },
+      "scheduler": "none",
+      "threshold": 0.5,
+      "training_history": [
+        {
+          "gradient_norm_max": 1.976252555847168,
+          "gradient_norm_mean": 0.8170289397239685,
+          "learning_rate": 0.001
+        },
+        {
+          "gradient_norm_max": 4.084740161895752,
+          "gradient_norm_mean": 0.9430968761444092,
+          "learning_rate": 0.001
+        },
+        {
+          "gradient_norm_max": 4.052907943725586,
+          "gradient_norm_mean": 1.237341046333313,
+          "learning_rate": 0.001
+        },
+        {
+          "gradient_norm_max": 3.896420955657959,
+          "gradient_norm_mean": 1.3343963623046875,
+          "learning_rate": 0.001
+        },
+        {
+          "gradient_norm_max": 9.20120906829834,
+          "gradient_norm_mean": 1.660980224609375,
+          "learning_rate": 0.001
+        },
+        {
+          "gradient_norm_max": 10.655030250549316,
+          "gradient_norm_mean": 1.8316011428833008,
+          "learning_rate": 0.001
+        },
+        {
+          "gradient_norm_max": 6.093347549438477,
+          "gradient_norm_mean": 1.703874945640564,
+          "learning_rate": 0.001
+        },
+        {
+          "gradient_norm_max": 9.780157089233398,
+          "gradient_norm_mean": 2.2424705028533936,
+          "learning_rate": 0.001
+        },
+        {
+          "gradient_norm_max": 3.1441214084625244,
+          "gradient_norm_mean": 1.357742428779602,
+          "learning_rate": 0.001
+        },
+        {
+          "gradient_norm_max": 4.460546970367432,
+          "gradient_norm_mean": 1.5984641313552856,
+          "learning_rate": 0.001
+        },
+        {
+          "gradient_norm_max": 1.9791440963745117,
+          "gradient_norm_mean": 1.0350695848464966,
+          "learning_rate": 0.001
+        },
+        {
+          "gradient_norm_max": 10.09280014038086,
+          "gradient_norm_mean": 1.7343170642852783,
+          "learning_rate": 0.001
+        },
+        {
+          "gradient_norm_max": 12.6467866897583,
+          "gradient_norm_mean": 1.7874571084976196,
+          "learning_rate": 0.001
+        },
+        {
+          "gradient_norm_max": 4.660110950469971,
+          "gradient_norm_mean": 1.6198524236679077,
+          "learning_rate": 0.001
+        },
+        {
+          "gradient_norm_max": 2.5291645526885986,
+          "gradient_norm_mean": 1.2171533107757568,
+          "learning_rate": 0.001
+        },
+        {
+          "gradient_norm_max": 9.369948387145996,
+          "gradient_norm_mean": 1.777872085571289,
+          "learning_rate": 0.001
+        },
+        {
+          "gradient_norm_max": 5.97701358795166,
+          "gradient_norm_mean": 1.5446499586105347,
+          "learning_rate": 0.001
+        },
+        {
+          "gradient_norm_max": 2.554872751235962,
+          "gradient_norm_mean": 1.1701630353927612,
+          "learning_rate": 0.001
+        },
+        {
+          "gradient_norm_max": 12.356588363647461,
+          "gradient_norm_mean": 1.785528302192688,
+          "learning_rate": 0.001
+        },
+        {
+          "gradient_norm_max": 3.52921986579895,
+          "gradient_norm_mean": 1.1285885572433472,
+          "learning_rate": 0.001
+        }
+      ],
+      "valid_code_count": 3
+    },
+    {
+      "amp_enabled": false,
+      "augmentation_enabled": false,
+      "best_epoch": 20,
+      "early_stopping_monitor": null,
+      "epochs_ran": 20,
+      "fold": 4,
+      "macro_f1": 0.7907647907647908,
+      "macro_pr_auc": 0.9048821548821548,
+      "macro_recall": 0.8819776714513555,
+      "per_code": {
+        "blur": {
+          "f1": 0.9523809523809523,
+          "pr_auc": 0.9646464646464648,
+          "recall": 0.9090909090909091,
+          "valid_positive_count": 11
+        },
+        "flash": {
+          "f1": 0.8484848484848485,
+          "pr_auc": 0.9999999999999998,
+          "recall": 0.7368421052631579,
+          "valid_positive_count": 19
+        },
+        "tunnel": {
+          "f1": 0.5714285714285714,
+          "pr_auc": 0.75,
+          "recall": 1.0,
+          "valid_positive_count": 2
+        }
+      },
+      "scheduler": "none",
+      "threshold": 0.5,
+      "training_history": [
+        {
+          "gradient_norm_max": 2.250570058822632,
+          "gradient_norm_mean": 0.7472970485687256,
+          "learning_rate": 0.001
+        },
+        {
+          "gradient_norm_max": 2.3395297527313232,
+          "gradient_norm_mean": 0.7415677309036255,
+          "learning_rate": 0.001
+        },
+        {
+          "gradient_norm_max": 2.4266507625579834,
+          "gradient_norm_mean": 1.0082716941833496,
+          "learning_rate": 0.001
+        },
+        {
+          "gradient_norm_max": 5.111630916595459,
+          "gradient_norm_mean": 1.4375593662261963,
+          "learning_rate": 0.001
+        },
+        {
+          "gradient_norm_max": 5.0173211097717285,
+          "gradient_norm_mean": 1.422202467918396,
+          "learning_rate": 0.001
+        },
+        {
+          "gradient_norm_max": 3.7700998783111572,
+          "gradient_norm_mean": 1.583350419998169,
+          "learning_rate": 0.001
+        },
+        {
+          "gradient_norm_max": 6.257646560668945,
+          "gradient_norm_mean": 1.663188099861145,
+          "learning_rate": 0.001
+        },
+        {
+          "gradient_norm_max": 6.832569599151611,
+          "gradient_norm_mean": 1.8248778581619263,
+          "learning_rate": 0.001
+        },
+        {
+          "gradient_norm_max": 4.525343418121338,
+          "gradient_norm_mean": 1.6476328372955322,
+          "learning_rate": 0.001
+        },
+        {
+          "gradient_norm_max": 7.630910873413086,
+          "gradient_norm_mean": 1.8651230335235596,
+          "learning_rate": 0.001
+        },
+        {
+          "gradient_norm_max": 7.512474060058594,
+          "gradient_norm_mean": 2.003180503845215,
+          "learning_rate": 0.001
+        },
+        {
+          "gradient_norm_max": 8.04110050201416,
+          "gradient_norm_mean": 2.0231454372406006,
+          "learning_rate": 0.001
+        },
+        {
+          "gradient_norm_max": 15.552924156188965,
+          "gradient_norm_mean": 2.2593791484832764,
+          "learning_rate": 0.001
+        },
+        {
+          "gradient_norm_max": 7.728898525238037,
+          "gradient_norm_mean": 1.734294056892395,
+          "learning_rate": 0.001
+        },
+        {
+          "gradient_norm_max": 6.449313163757324,
+          "gradient_norm_mean": 1.7036389112472534,
+          "learning_rate": 0.001
+        },
+        {
+          "gradient_norm_max": 9.520001411437988,
+          "gradient_norm_mean": 1.9726482629776,
+          "learning_rate": 0.001
+        },
+        {
+          "gradient_norm_max": 3.264570951461792,
+          "gradient_norm_mean": 1.4146933555603027,
+          "learning_rate": 0.001
+        },
+        {
+          "gradient_norm_max": 27.693735122680664,
+          "gradient_norm_mean": 2.7143118381500244,
+          "learning_rate": 0.001
+        },
+        {
+          "gradient_norm_max": 6.096622467041016,
+          "gradient_norm_mean": 1.952244758605957,
+          "learning_rate": 0.001
+        },
+        {
+          "gradient_norm_max": 13.138007164001465,
+          "gradient_norm_mean": 2.5593903064727783,
+          "learning_rate": 0.001
+        }
+      ],
+      "valid_code_count": 3
+    }
+  ],
+  "fold_scheme": "weld_independent",
+  "mode": "window_mil",
+  "run_folds": [
+    0,
+    1,
+    2,
+    3,
+    4
+  ],
+  "sample_count": 101
+}
