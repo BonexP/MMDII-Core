@@ -97,6 +97,29 @@ class _ResidualBlock(nn.Module):
         return self.activation(self.main(values) + self.skip(values))
 
 
+class _SeparableResidualBlock(nn.Module):
+    """Residual block whose main path uses depthwise-separable convolutions."""
+
+    def __init__(self, input_channels: int, output_channels: int, *, stride: int = 2) -> None:
+        super().__init__()
+        self.main = nn.Sequential(
+            _DepthwiseSeparableBlock(input_channels, output_channels, stride=stride),
+            _DepthwiseSeparableBlock(output_channels, output_channels, stride=1),
+        )
+        self.skip = (
+            nn.Identity()
+            if input_channels == output_channels and stride == 1
+            else nn.Sequential(
+                nn.Conv2d(input_channels, output_channels, 1, stride=stride, bias=False),
+                nn.BatchNorm2d(output_channels),
+            )
+        )
+        self.activation = nn.ReLU(inplace=True)
+
+    def forward(self, values: torch.Tensor) -> torch.Tensor:
+        return self.activation(self.main(values) + self.skip(values))
+
+
 class _ConvNeXtBlock(nn.Module):
     def __init__(self, channels: int, expansion: int = 4) -> None:
         super().__init__()
@@ -278,6 +301,40 @@ class ResNet2DSmallEncoder(_ImageEncoder):
         )
 
 
+class ResNet2DWideEncoder(_ImageEncoder):
+    """ResNet encoder with wider stages and the same downsampling schedule."""
+
+    def __init__(self, *, input_channels: int, embedding_dim: int = 64) -> None:
+        if input_channels < 1:
+            raise ValueError("input_channels must be positive.")
+        super().__init__(
+            nn.Sequential(
+                _ResidualBlock(input_channels, 48),
+                _ResidualBlock(48, 96),
+                _ResidualBlock(96, 192),
+            ),
+            192,
+            embedding_dim,
+        )
+
+
+class ResNet2DSeparableEncoder(_ImageEncoder):
+    """ResNet encoder with depthwise-separable residual main paths."""
+
+    def __init__(self, *, input_channels: int, embedding_dim: int = 64) -> None:
+        if input_channels < 1:
+            raise ValueError("input_channels must be positive.")
+        super().__init__(
+            nn.Sequential(
+                _SeparableResidualBlock(input_channels, 32),
+                _SeparableResidualBlock(32, 64),
+                _SeparableResidualBlock(64, 128),
+            ),
+            128,
+            embedding_dim,
+        )
+
+
 class ConvNeXt2DLiteEncoder(_ImageEncoder):
     """Lightweight ConvNeXt-style encoder for spectrogram-like images."""
 
@@ -298,11 +355,37 @@ class ConvNeXt2DLiteEncoder(_ImageEncoder):
         )
 
 
+class ConvNeXt2DDeepEncoder(_ImageEncoder):
+    """ConvNeXt encoder with two blocks per stage at the anchor widths."""
+
+    def __init__(self, *, input_channels: int, embedding_dim: int = 64) -> None:
+        if input_channels < 1:
+            raise ValueError("input_channels must be positive.")
+        super().__init__(
+            nn.Sequential(
+                _ConvBlock(input_channels, 32),
+                _ConvNeXtBlock(32),
+                _ConvNeXtBlock(32),
+                _ConvBlock(32, 64),
+                _ConvNeXtBlock(64),
+                _ConvNeXtBlock(64),
+                _ConvBlock(64, 128),
+                _ConvNeXtBlock(128),
+                _ConvNeXtBlock(128),
+            ),
+            128,
+            embedding_dim,
+        )
+
+
 _ENCODERS = {
     "cnn2d": CNN2DEncoder,
     "separable_cnn2d": SeparableCNN2DEncoder,
     "resnet2d_small": ResNet2DSmallEncoder,
+    "resnet2d_wide": ResNet2DWideEncoder,
+    "resnet2d_separable": ResNet2DSeparableEncoder,
     "convnext2d_lite": ConvNeXt2DLiteEncoder,
+    "convnext2d_deep": ConvNeXt2DDeepEncoder,
     "resnet2d_multiscale": ResTFMultiScaleEncoder,
 }
 
@@ -376,7 +459,10 @@ __all__ = [
     "CNN2DEncoder",
     "SeparableCNN2DEncoder",
     "ResNet2DSmallEncoder",
+    "ResNet2DWideEncoder",
+    "ResNet2DSeparableEncoder",
     "ConvNeXt2DLiteEncoder",
+    "ConvNeXt2DDeepEncoder",
     "ResTFMultiScaleEncoder",
     "RawTimeFrequencyFusion",
     "build_2d_encoder",

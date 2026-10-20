@@ -17,6 +17,7 @@ from mmdii.training.second_stage import (  # noqa: E402
     assemble_features,
     harvest_out_of_sample_representations,
     inner_partitions,
+    project_embedding_features,
     run_second_stage_fold,
     statistical_feature_matrix,
 )
@@ -344,6 +345,36 @@ class SecondStageFoldTests(unittest.TestCase):
 
     def test_feature_sources_are_the_documented_three(self) -> None:
         self.assertEqual(FEATURE_SOURCES, ("stats", "embedding", "both"))
+
+    def test_embedding_projection_none_preserves_dimensions(self) -> None:
+        train = np.arange(20, dtype=np.float64).reshape(5, 4)
+        valid = np.arange(8, dtype=np.float64).reshape(2, 4)
+        projected_train, projected_valid, info = project_embedding_features(
+            train,
+            valid,
+            projection="none",
+            components=8,
+            representation_shared=True,
+        )
+        np.testing.assert_array_equal(projected_train, train)
+        np.testing.assert_array_equal(projected_valid, valid)
+        self.assertEqual(info["output_dimension"], 4)
+
+    @unittest.skipUnless(SKLEARN_AVAILABLE, "requires scikit-learn")
+    def test_pca_projection_fits_on_training_matrix_only(self) -> None:
+        train = np.arange(40, dtype=np.float64).reshape(10, 4)
+        valid = np.full((2, 4), 100.0)
+        projected_train, projected_valid, info = project_embedding_features(
+            train,
+            valid,
+            projection="pca",
+            components=2,
+            representation_shared=True,
+        )
+        self.assertEqual(projected_train.shape, (10, 2))
+        self.assertEqual(projected_valid.shape, (2, 2))
+        self.assertEqual(info["input_dimension"], 4)
+        self.assertEqual(info["output_dimension"], 2)
 
 
 if __name__ == "__main__":

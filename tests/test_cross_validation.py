@@ -41,6 +41,44 @@ from mmdii.data.training_dataset import (
 
 
 class CrossValidationTests(unittest.TestCase):
+    def test_v031_encoder_variants_pass_experiment_config_validation(self) -> None:
+        for encoder in (
+            "resnet2d_small",
+            "resnet2d_wide",
+            "resnet2d_separable",
+            "convnext2d_lite",
+            "convnext2d_deep",
+        ):
+            with self.subTest(encoder=encoder):
+                config = replace(
+                    ExperimentConfig.for_test(),
+                    mode="window_mil",
+                    representation=RepresentationConfig(
+                        name="dwt_swt_db4",
+                        encoder=encoder,
+                        fusion="raw_plus_dwt",
+                    ),
+                )
+                _validate_config(config)
+
+    @unittest.skipUnless(importlib.util.find_spec("torch"), "requires torch")
+    def test_model_casts_float64_signal_to_encoder_parameter_dtype(self) -> None:
+        import torch
+
+        config = replace(
+            ExperimentConfig.for_test(),
+            mode="window_mil",
+            representation=RepresentationConfig(name="raw"),
+        )
+        model = cross_validation._build_deep_model(config, "mean", torch)
+        windows = torch.ones((1, 1, 3, 32), dtype=torch.float64)
+        window_mask = torch.ones((1, 1), dtype=torch.bool)
+        sample_mask = torch.ones((1, 1, 32), dtype=torch.bool)
+
+        logits, _ = model(windows, window_mask, sample_mask)
+
+        self.assertEqual(logits.dtype, torch.float32)
+
     def test_torch_batch_contract_uses_model_dtypes(self) -> None:
         import torch
 
@@ -282,6 +320,43 @@ encoder_chunk_size = 16
                             if isinstance(array, np.memmap):
                                 array._mmap.close()
 
+    @unittest.skipUnless(importlib.util.find_spec("torch"), "requires torch")
+    def test_gpu_stft_cufft_error_falls_back_to_cpu(self) -> None:
+        import torch
+
+        config = replace(
+            ExperimentConfig.for_test(),
+            device="auto",
+            pipeline_backend="cuda",
+            target_fs=32.0,
+            representation=RepresentationConfig(
+                name="stft_256", encoder="cnn2d", output_time_bins=16
+            ),
+        )
+        dataset = [
+            {
+                "windows": np.ones((1, 3, 256), dtype=np.float64),
+                "sample_mask": np.ones((1, 256), dtype=bool),
+            }
+        ]
+
+        with (
+            patch.dict(os.environ, {"MMDII_GPU_STFT": "auto", "MMDII_TRANSFORM_WORKERS": "1"}),
+            patch.object(cross_validation, "_device", return_value=torch.device("cuda")),
+            patch(
+                "mmdii.data.time_frequency.stft_representation_torch",
+                side_effect=RuntimeError("cuFFT error: CUFFT_INTERNAL_ERROR"),
+            ) as gpu_stft,
+        ):
+            train_tf, valid_tf = _time_frequency_datasets(dataset, dataset, config)
+            representations = train_tf[0]["representations"]
+            valid_representations = valid_tf[0]["representations"]
+
+        self.assertEqual(gpu_stft.call_count, 1)
+        self.assertEqual(representations.dtype, np.float32)
+        self.assertEqual(valid_representations.dtype, np.float32)
+        self.assertTrue(np.isfinite(representations).all())
+
     def test_loads_training_and_augmentation_sections(self) -> None:
         with tempfile.TemporaryDirectory() as temporary_directory:
             path = Path(temporary_directory) / "experiment.toml"
@@ -433,7 +508,19 @@ class DefaultBehaviourRegressionTests(unittest.TestCase):
         config = _deep_config(Path("."), Path("out"))
         payload = _json_config(config)
 
-        self.assertEqual(payload["tree"], {"learner": "random_forest", "n_estimators": 300, "min_samples_leaf": 1})
+        self.assertEqual(
+            payload["tree"],
+            {
+                "learner": "random_forest",
+                "n_estimators": 300,
+                "min_samples_leaf": 1,
+                "max_features": "sqrt",
+                "max_depth": None,
+                "criterion": "gini",
+                "class_weight": "balanced",
+                "tune": False,
+            },
+        )
         self.assertEqual(
             payload["second_stage"],
             {
@@ -442,6 +529,8 @@ class DefaultBehaviourRegressionTests(unittest.TestCase):
                 "representation_mode": "window_mil",
                 "inner_folds": 4,
                 "encoder_epochs": 0,
+                "embedding_projection": "none",
+                "embedding_components": 8,
             },
         )
         self.assertEqual(payload["mode"], "full_signal")

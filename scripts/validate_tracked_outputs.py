@@ -13,6 +13,7 @@ def validate_run(
     path: Path,
     *,
     allow_partial: bool = False,
+    allow_unmarked: bool = False,
     expected_weld_count: int | None = None,
     expected_fold_count: int | None = None,
     expected_fold_scheme: str | None = None,
@@ -25,7 +26,7 @@ def validate_run(
             payloads[name] = json.loads(file_path.read_text(encoding="utf-8"))
         except (OSError, json.JSONDecodeError) as error:
             errors.append(f"invalid {name}.json: {error}")
-    if not (path / ".complete").exists():
+    if not allow_unmarked and not (path / ".complete").exists():
         errors.append("missing .complete marker")
 
     rows: list[dict[str, str]] = []
@@ -126,6 +127,11 @@ def main() -> int:
     parser.add_argument("--root", required=True, type=Path)
     parser.add_argument("--json", action="store_true")
     parser.add_argument("--allow-partial", action="store_true")
+    parser.add_argument(
+        "--allow-unmarked",
+        action="store_true",
+        help="Validate artifacts before a runner writes the .complete marker.",
+    )
     parser.add_argument("--expected-weld-count", type=int)
     parser.add_argument("--expected-fold-count", type=int)
     parser.add_argument("--expected-run-count", type=int)
@@ -139,6 +145,7 @@ def main() -> int:
         validate_run(
             path,
             allow_partial=args.allow_partial,
+            allow_unmarked=args.allow_unmarked,
             expected_weld_count=args.expected_weld_count,
             expected_fold_count=args.expected_fold_count,
             expected_fold_scheme=args.expected_fold_scheme,

@@ -58,6 +58,7 @@ class TimeFrequencyTests(unittest.TestCase):
             self.signal[None], n_fft=256, hop_length=64,
             sample_mask=sample_mask[None], output_time_bins=37, device="cpu",
         )
+        self.assertEqual(actual.dtype, torch.float32)
         np.testing.assert_allclose(actual.detach().numpy()[0], expected, rtol=1e-4, atol=1e-6)
         np.testing.assert_array_equal(actual_mask.detach().numpy()[0], expected_mask)
 

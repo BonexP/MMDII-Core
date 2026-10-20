@@ -120,6 +120,11 @@ class TreeConfig:
     learner: str = "random_forest"
     n_estimators: int = 300
     min_samples_leaf: int = 1
+    max_features: str = "sqrt"
+    max_depth: int | None = None
+    criterion: str = "gini"
+    class_weight: str = "balanced"
+    tune: bool = False
 
 
 @dataclass(frozen=True)
@@ -135,6 +140,8 @@ class SecondStageConfig:
     representation_mode: str = "window_mil"
     inner_folds: int = 4
     encoder_epochs: int = 0
+    embedding_projection: str = "none"
+    embedding_components: int = 8
 
 
 @dataclass(frozen=True)
@@ -280,6 +287,19 @@ def load_experiment_config(path: str | Path) -> ExperimentConfig:
                 min_samples_leaf=int(
                     tree_payload.get("min_samples_leaf", TreeConfig().min_samples_leaf)
                 ),
+                max_features=str(
+                    tree_payload.get("max_features", TreeConfig().max_features)
+                ),
+                max_depth=(
+                    None
+                    if tree_payload.get("max_depth", TreeConfig().max_depth) in (None, 0)
+                    else int(tree_payload["max_depth"])
+                ),
+                criterion=str(tree_payload.get("criterion", TreeConfig().criterion)),
+                class_weight=str(
+                    tree_payload.get("class_weight", TreeConfig().class_weight)
+                ),
+                tune=bool(tree_payload.get("tune", TreeConfig().tune)),
             ),
             second_stage=SecondStageConfig(
                 enabled=bool(second_stage_payload.get("enabled", False)),
@@ -299,6 +319,18 @@ def load_experiment_config(path: str | Path) -> ExperimentConfig:
                 encoder_epochs=int(
                     second_stage_payload.get(
                         "encoder_epochs", SecondStageConfig().encoder_epochs
+                    )
+                ),
+                embedding_projection=str(
+                    second_stage_payload.get(
+                        "embedding_projection",
+                        SecondStageConfig().embedding_projection,
+                    )
+                ),
+                embedding_components=int(
+                    second_stage_payload.get(
+                        "embedding_components",
+                        SecondStageConfig().embedding_components,
                     )
                 ),
             ),
@@ -361,19 +393,33 @@ def run_cross_validation(
         class_weights = compute_positive_class_weights(train_targets)
         training_info: dict[str, object] = {}
         if config.mode in {"statistical", "random_forest"}:
+            tree_diagnostics: dict[str, object] = {}
             probabilities = _run_statistical_fold(
-                index, train_records, valid_records, config, fold=fold
+                index,
+                train_records,
+                valid_records,
+                config,
+                fold=fold,
+                diagnostics=tree_diagnostics,
             )
+            training_info.update(tree_diagnostics)
         elif config.mode == "second_stage":
             if config.second_stage.feature_source == "stats":
+                tree_diagnostics = {}
                 probabilities = _run_statistical_fold(
-                    index, train_records, valid_records, config, fold=fold
+                    index,
+                    train_records,
+                    valid_records,
+                    config,
+                    fold=fold,
+                    diagnostics=tree_diagnostics,
                 )
                 training_info["second_stage"] = {
                     "feature_source": "stats",
                     "feature_count": len(STATISTIC_NAMES) * 3,
                     "inner_folds": 0,
                 }
+                training_info.update(tree_diagnostics)
             else:
                 probabilities, training_info = _run_second_stage(
                     index,
@@ -459,7 +505,15 @@ def run_cross_validation(
     return summary
 
 
-def _run_statistical_fold(index: DatasetIndex, train_records: tuple[Any, ...], valid_records: tuple[Any, ...], config: ExperimentConfig, *, fold: int | None = None) -> np.ndarray:
+def _run_statistical_fold(
+    index: DatasetIndex,
+    train_records: tuple[Any, ...],
+    valid_records: tuple[Any, ...],
+    config: ExperimentConfig,
+    *,
+    fold: int | None = None,
+    diagnostics: dict[str, object] | None = None,
+) -> np.ndarray:
     total = len(train_records) + len(valid_records)
     progress = ProgressReporter(
         _LOGGER,
@@ -491,15 +545,35 @@ def _run_statistical_fold(index: DatasetIndex, train_records: tuple[Any, ...], v
             target_codes=config.target_codes,
             random_state=config.seed,
         )
+    train_targets = np.asarray([record.target for record in train_records], dtype=np.float64)
+    if config.tree.tune:
+        from mmdii.training.tree_tuning import tune_and_predict_forest_ovr
+
+        probabilities, tuning_info = tune_and_predict_forest_ovr(
+            train_features,
+            train_targets,
+            valid_features,
+            train_fold_ids=[record.fold for record in train_records],
+            target_codes=config.target_codes,
+            random_state=config.seed,
+            learner=config.tree.learner,
+        )
+        if diagnostics is not None:
+            diagnostics["tree_tuning"] = tuning_info
+        return probabilities
     return fit_predict_forest_ovr(
         train_features,
-        np.asarray([record.target for record in train_records], dtype=np.float64),
+        train_targets,
         valid_features,
         target_codes=config.target_codes,
         random_state=config.seed,
         learner=config.tree.learner,
         n_estimators=config.tree.n_estimators,
         min_samples_leaf=config.tree.min_samples_leaf,
+        max_features=config.tree.max_features,
+        max_depth=config.tree.max_depth,
+        criterion=config.tree.criterion,
+        class_weight=None if config.tree.class_weight == "none" else config.tree.class_weight,
     )
 
 
@@ -558,17 +632,20 @@ def _build_deep_model(config: ExperimentConfig, aggregator: str, torch: Any) -> 
             sample_mask: Any,
             representations: Any | None = None,
         ) -> Any:
+            encoder_dtype = next(self.encoder.parameters()).dtype
+            windows = windows.to(dtype=encoder_dtype)
             batch_size, window_count, channels, sample_count = windows.shape
             flat_windows = windows.reshape(batch_size * window_count, channels, sample_count)
             flat_sample_mask = sample_mask.reshape(batch_size * window_count, sample_count)
             valid_windows = window_mask.reshape(batch_size * window_count)
             selected_windows = flat_windows[valid_windows]
             selected_sample_mask = flat_sample_mask[valid_windows]
+            selected_windows = selected_windows.to(dtype=encoder_dtype)
             selected_representations = None
             if representations is not None:
                 selected_representations = representations.reshape(
                     batch_size * window_count, *representations.shape[2:]
-                )[valid_windows]
+                )[valid_windows].to(dtype=encoder_dtype)
             chunks = []
             for start in range(0, int(valid_windows.sum()), config.model.encoder_chunk_size):
                 stop = start + config.model.encoder_chunk_size
@@ -953,6 +1030,10 @@ def _run_second_stage(
             learner=config.tree.learner,
             n_estimators=config.tree.n_estimators,
             min_samples_leaf=config.tree.min_samples_leaf,
+            max_features=config.tree.max_features,
+            max_depth=config.tree.max_depth,
+            criterion=config.tree.criterion,
+            class_weight=None if config.tree.class_weight == "none" else config.tree.class_weight,
         )
 
     return run_second_stage_fold(
@@ -1307,6 +1388,20 @@ def _validate_config(config: ExperimentConfig) -> None:
         raise ValueError("tree.learner must be random_forest or extra_trees.")
     if config.tree.n_estimators < 1 or config.tree.min_samples_leaf < 1:
         raise ValueError("tree.n_estimators and tree.min_samples_leaf must be positive.")
+    if config.tree.max_features not in {"sqrt", "all"}:
+        raise ValueError("tree.max_features must be sqrt or all.")
+    if config.tree.max_depth is not None and config.tree.max_depth < 1:
+        raise ValueError("tree.max_depth must be positive or None.")
+    if config.tree.criterion not in {"gini", "log_loss"}:
+        raise ValueError("tree.criterion must be gini or log_loss.")
+    if config.tree.class_weight not in {"balanced", "none"}:
+        raise ValueError("tree.class_weight must be balanced or none.")
+    if config.tree.tune and config.mode == "statistical":
+        raise ValueError("tree.tune applies only to random_forest or second_stage stats mode.")
+    if config.tree.tune and config.mode == "second_stage" and config.second_stage.feature_source != "stats":
+        raise ValueError("tree.tune is supported only for stats features, not tree-on-deep.")
+    if config.tree.tune and config.mode not in {"random_forest", "second_stage"}:
+        raise ValueError("tree.tune applies only to tree controls.")
     if config.second_stage.feature_source not in FEATURE_SOURCES:
         raise ValueError("second_stage.feature_source must be stats, embedding or both.")
     if config.second_stage.representation_mode not in {"window_mil", "full_signal"}:
@@ -1315,6 +1410,10 @@ def _validate_config(config: ExperimentConfig) -> None:
         raise ValueError("second_stage.inner_folds must be between 2 and fold_count - 1.")
     if config.second_stage.encoder_epochs < 0:
         raise ValueError("second_stage.encoder_epochs must be non-negative.")
+    if config.second_stage.embedding_projection not in {"none", "pca"}:
+        raise ValueError("second_stage.embedding_projection must be none or pca.")
+    if config.second_stage.embedding_components < 1:
+        raise ValueError("second_stage.embedding_components must be positive.")
     if config.mode == "second_stage" and config.second_stage.feature_source != "stats":
         if config.aggregator not in {"mean", "gated_attention"}:
             raise ValueError(
@@ -1337,7 +1436,14 @@ def _validate_config(config: ExperimentConfig) -> None:
     if representation.name == "raw" and representation.encoder != "modern_tcn":
         raise ValueError("raw representation requires encoder=modern_tcn.")
     if representation.name != "raw" and representation.encoder not in {
-        "cnn2d", "separable_cnn2d", "resnet2d_small", "resnet2d_multiscale", "convnext2d_lite"
+        "cnn2d",
+        "separable_cnn2d",
+        "resnet2d_small",
+        "resnet2d_wide",
+        "resnet2d_separable",
+        "resnet2d_multiscale",
+        "convnext2d_lite",
+        "convnext2d_deep",
     }:
         raise ValueError("Invalid time-frequency encoder.")
     if representation.fusion not in {
@@ -1389,6 +1495,33 @@ def _json_config(config: ExperimentConfig) -> dict[str, object]:
         None if config.preprocess_cache_directory is None else config.preprocess_cache_directory.as_posix()
     )
     result["representation_parameters"] = _representation_parameters(config)
+    if config.mode in {"full_signal", "window_mil"} or (
+        config.mode == "second_stage" and config.second_stage.feature_source != "stats"
+    ):
+        model_metadata: dict[str, object] = {
+            "encoder": config.representation.encoder,
+            "embedding_dim": config.model.embedding_dim,
+            "parameter_count": None,
+        }
+        try:
+            import torch
+
+            aggregator = (
+                "mean"
+                if config.mode == "full_signal"
+                or (
+                    config.mode == "second_stage"
+                    and config.second_stage.representation_mode == "full_signal"
+                )
+                else config.aggregator
+            )
+            model = _build_deep_model(config, aggregator, torch)
+            model_metadata["parameter_count"] = sum(
+                parameter.numel() for parameter in model.parameters()
+            )
+        except ImportError:
+            pass
+        result["model_metadata"] = model_metadata
     return result
 
 

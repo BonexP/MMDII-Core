@@ -103,6 +103,10 @@ def fit_predict_forest_ovr(
     learner: str = "random_forest",
     n_estimators: int = 300,
     min_samples_leaf: int = 1,
+    max_features: str | None = "sqrt",
+    max_depth: int | None = None,
+    criterion: str = "gini",
+    class_weight: str | None = "balanced",
 ) -> np.ndarray:
     """Fit one balanced tree ensemble per target and return probabilities.
 
@@ -128,6 +132,10 @@ def fit_predict_forest_ovr(
         or learner not in LEARNERS
         or n_estimators < 1
         or min_samples_leaf < 1
+        or max_features not in {"sqrt", "all", None}
+        or (max_depth is not None and max_depth < 1)
+        or criterion not in {"gini", "log_loss"}
+        or class_weight not in {"balanced", None}
     ):
         raise ValueError("Feature, target and tree-ensemble settings are invalid.")
     try:
@@ -149,7 +157,10 @@ def fit_predict_forest_ovr(
         model = estimator_class(
             n_estimators=n_estimators,
             min_samples_leaf=min_samples_leaf,
-            class_weight="balanced",
+            max_features=None if max_features == "all" else max_features,
+            max_depth=max_depth,
+            criterion=criterion,
+            class_weight=class_weight,
             random_state=random_state,
             n_jobs=-1,
         )
@@ -167,6 +178,10 @@ def fit_predict_random_forest_ovr(
     random_state: int,
     n_estimators: int = 300,
     min_samples_leaf: int = 1,
+    max_features: str | None = "sqrt",
+    max_depth: int | None = None,
+    criterion: str = "gini",
+    class_weight: str | None = "balanced",
 ) -> np.ndarray:
     """Fit one balanced random-forest model per target.
 
@@ -183,6 +198,10 @@ def fit_predict_random_forest_ovr(
         learner="random_forest",
         n_estimators=n_estimators,
         min_samples_leaf=min_samples_leaf,
+        max_features=max_features,
+        max_depth=max_depth,
+        criterion=criterion,
+        class_weight=class_weight,
     )
 
 
@@ -195,6 +214,10 @@ def fit_predict_extra_trees_ovr(
     random_state: int,
     n_estimators: int = 300,
     min_samples_leaf: int = 1,
+    max_features: str | None = "sqrt",
+    max_depth: int | None = None,
+    criterion: str = "gini",
+    class_weight: str | None = "balanced",
 ) -> np.ndarray:
     """Fit one balanced extremely-randomized-trees model per target.
 
@@ -211,4 +234,8 @@ def fit_predict_extra_trees_ovr(
         learner="extra_trees",
         n_estimators=n_estimators,
         min_samples_leaf=min_samples_leaf,
+        max_features=max_features,
+        max_depth=max_depth,
+        criterion=criterion,
+        class_weight=class_weight,
     )

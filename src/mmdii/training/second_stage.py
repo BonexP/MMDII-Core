@@ -147,6 +147,65 @@ def assemble_features(
     return np.concatenate(blocks, axis=1) if len(blocks) > 1 else blocks[0]
 
 
+def project_embedding_features(
+    train_representations: np.ndarray,
+    valid_representations: np.ndarray,
+    *,
+    projection: str,
+    components: int,
+    representation_shared: bool,
+) -> tuple[np.ndarray, np.ndarray, dict[str, object]]:
+    """Fit optional PCA on outer-training OOS embeddings and transform both sides."""
+
+    train_values = np.asarray(train_representations, dtype=np.float64)
+    valid_values = np.asarray(valid_representations, dtype=np.float64)
+    if train_values.ndim == 3:
+        train_values = (
+            train_values[:, 0, :]
+            if representation_shared
+            else train_values.reshape(train_values.shape[0], -1)
+        )
+    if valid_values.ndim == 3:
+        valid_values = (
+            valid_values[:, 0, :]
+            if representation_shared
+            else valid_values.reshape(valid_values.shape[0], -1)
+        )
+    if (
+        train_values.ndim != 2
+        or valid_values.ndim != 2
+        or train_values.shape[1] != valid_values.shape[1]
+        or not np.isfinite(train_values).all()
+        or not np.isfinite(valid_values).all()
+    ):
+        raise ValueError("Embedding matrices must be finite, two-dimensional and aligned.")
+    if projection == "none":
+        return train_values, valid_values, {
+            "projection": projection,
+            "input_dimension": int(train_values.shape[1]),
+            "output_dimension": int(train_values.shape[1]),
+        }
+    if projection != "pca":
+        raise ValueError("embedding_projection must be none or pca.")
+    if components < 1 or components > min(train_values.shape):
+        raise ValueError(
+            "embedding_components must be between 1 and the smaller training matrix dimension."
+        )
+    try:
+        from sklearn.decomposition import PCA
+    except ImportError as error:
+        raise RuntimeError("PCA requires the MMDII-Core train extra.") from error
+    model = PCA(n_components=components, svd_solver="full")
+    train_projected = model.fit_transform(train_values)
+    valid_projected = model.transform(valid_values)
+    return train_projected, valid_projected, {
+        "projection": projection,
+        "input_dimension": int(train_values.shape[1]),
+        "output_dimension": int(train_projected.shape[1]),
+        "explained_variance_ratio": model.explained_variance_ratio_.tolist(),
+    }
+
+
 def run_second_stage_fold(
     *,
     index: Any,
@@ -170,6 +229,13 @@ def run_second_stage_fold(
                 "feature_source": source,
                 "feature_count": int(train_features.shape[1]),
                 "inner_folds": 0,
+                "embedding_projection": {
+                    "projection": "none",
+                    "input_dimension": 0,
+                    "output_dimension": 0,
+                },
+                "representation_dim": 0,
+                "representation_shared": False,
             }
         }
 
@@ -194,6 +260,13 @@ def run_second_stage_fold(
     )
     statistics_valid = (
         statistical_feature_matrix(index, valid_records) if source == "both" else None
+    )
+    train_representations, valid_representations, projection_info = project_embedding_features(
+        train_representations,
+        valid_representations,
+        projection=str(getattr(config.second_stage, "embedding_projection", "none")),
+        components=int(getattr(config.second_stage, "embedding_components", 8)),
+        representation_shared=representation_shared,
     )
     train_features = assemble_features(
         statistics_train,
@@ -222,6 +295,7 @@ def run_second_stage_fold(
         "feature_count": int(train_features.shape[1]),
         "representation_dim": int(train_representations.shape[-1]),
         "representation_shared": bool(representation_shared),
+        "embedding_projection": projection_info,
         "inner_folds": int(config.second_stage.inner_folds),
         "inner_partitions": [list(group) for group in partitions],
         "deep_macro_pr_auc": deep_metrics["macro_pr_auc"],

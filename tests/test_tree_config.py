@@ -51,6 +51,11 @@ class TreeConfigTests(unittest.TestCase):
         self.assertEqual(config.learner, "random_forest")
         self.assertEqual(config.n_estimators, 300)
         self.assertEqual(config.min_samples_leaf, 1)
+        self.assertEqual(config.max_features, "sqrt")
+        self.assertIsNone(config.max_depth)
+        self.assertEqual(config.criterion, "gini")
+        self.assertEqual(config.class_weight, "balanced")
+        self.assertFalse(config.tune)
 
     def test_absent_tree_table_keeps_defaults(self) -> None:
         with tempfile.TemporaryDirectory() as temporary_directory:
@@ -67,6 +72,11 @@ class TreeConfigTests(unittest.TestCase):
 learner = "extra_trees"
 n_estimators = 1000
 min_samples_leaf = 3
+max_features = "all"
+max_depth = 8
+criterion = "log_loss"
+class_weight = "none"
+tune = true
 """,
             )
             config = load_experiment_config(path)
@@ -74,6 +84,11 @@ min_samples_leaf = 3
         self.assertEqual(config.tree.learner, "extra_trees")
         self.assertEqual(config.tree.n_estimators, 1000)
         self.assertEqual(config.tree.min_samples_leaf, 3)
+        self.assertEqual(config.tree.max_features, "all")
+        self.assertEqual(config.tree.max_depth, 8)
+        self.assertEqual(config.tree.criterion, "log_loss")
+        self.assertEqual(config.tree.class_weight, "none")
+        self.assertTrue(config.tree.tune)
 
     def test_partial_tree_table_falls_back_per_field(self) -> None:
         with tempfile.TemporaryDirectory() as temporary_directory:
@@ -108,6 +123,11 @@ min_samples_leaf = 3
         self.assertEqual(payload["tree"]["learner"], "extra_trees")
         self.assertEqual(payload["tree"]["n_estimators"], 600)
         self.assertEqual(payload["tree"]["min_samples_leaf"], 1)
+        self.assertEqual(payload["tree"]["max_features"], "sqrt")
+        self.assertIsNone(payload["tree"]["max_depth"])
+        self.assertEqual(payload["tree"]["criterion"], "gini")
+        self.assertEqual(payload["tree"]["class_weight"], "balanced")
+        self.assertFalse(payload["tree"]["tune"])
 
 
 if __name__ == "__main__":

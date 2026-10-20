@@ -53,7 +53,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     )
     parser.add_argument(
         "--encoder",
-        choices=("modern_tcn", "cnn2d", "separable_cnn2d", "resnet2d_small", "resnet2d_multiscale", "convnext2d_lite"),
+        choices=("modern_tcn", "cnn2d", "separable_cnn2d", "resnet2d_small", "resnet2d_multiscale", "convnext2d_lite", "resnet2d_wide", "resnet2d_separable", "convnext2d_deep"),
     )
     parser.add_argument(
         "--fusion",
@@ -76,6 +76,11 @@ def main(argv: Sequence[str] | None = None) -> int:
     )
     parser.add_argument("--tree-n-estimators", type=int)
     parser.add_argument("--tree-min-samples-leaf", type=int)
+    parser.add_argument("--tree-max-features", choices=("sqrt", "all"))
+    parser.add_argument("--tree-max-depth", type=int)
+    parser.add_argument("--tree-criterion", choices=("gini", "log_loss"))
+    parser.add_argument("--tree-class-weight", choices=("balanced", "none"))
+    parser.add_argument("--tree-tune", action="store_true")
     parser.add_argument(
         "--second-stage-source",
         choices=("stats", "embedding", "both"),
@@ -88,6 +93,8 @@ def main(argv: Sequence[str] | None = None) -> int:
     )
     parser.add_argument("--second-stage-inner-folds", type=int)
     parser.add_argument("--second-stage-encoder-epochs", type=int)
+    parser.add_argument("--second-stage-projection", choices=("none", "pca"))
+    parser.add_argument("--second-stage-components", type=int)
     parser.add_argument("--fold", type=int, action="append", dest="run_folds")
     args = parser.parse_args(argv)
     configure_logging()
@@ -143,8 +150,16 @@ def main(argv: Sequence[str] | None = None) -> int:
         "learner": args.tree_learner,
         "n_estimators": args.tree_n_estimators,
         "min_samples_leaf": args.tree_min_samples_leaf,
+        "max_features": args.tree_max_features,
+        "max_depth": args.tree_max_depth,
+        "criterion": args.tree_criterion,
+        "class_weight": args.tree_class_weight,
     }
     tree_overrides = {key: value for key, value in tree_overrides.items() if value is not None}
+    if tree_overrides.get("max_depth") == 0:
+        tree_overrides["max_depth"] = None
+    if args.tree_tune:
+        tree_overrides["tune"] = True
     if tree_overrides:
         overrides["tree"] = TreeConfig(
             **{
@@ -159,6 +174,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         "representation_mode": args.second_stage_mode,
         "inner_folds": args.second_stage_inner_folds,
         "encoder_epochs": args.second_stage_encoder_epochs,
+        "embedding_projection": args.second_stage_projection,
+        "embedding_components": args.second_stage_components,
     }
     second_stage_overrides = {
         key: value for key, value in second_stage_overrides.items() if value is not None
