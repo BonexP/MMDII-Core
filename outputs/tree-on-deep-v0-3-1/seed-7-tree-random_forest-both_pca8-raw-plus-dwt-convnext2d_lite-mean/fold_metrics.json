@@ -1,0 +1,892 @@
+[
+  {
+    "amp_enabled": false,
+    "augmentation_enabled": false,
+    "best_epoch": 20,
+    "early_stopping_monitor": null,
+    "epochs_ran": 20,
+    "fold": 0,
+    "macro_f1": 0.835886818495514,
+    "macro_pr_auc": 0.9885782125016576,
+    "macro_recall": 0.7845117845117845,
+    "per_code": {
+      "blur": {
+        "f1": 0.8695652173913043,
+        "pr_auc": 0.9686586141131597,
+        "recall": 0.9090909090909091,
+        "valid_positive_count": 11
+      },
+      "flash": {
+        "f1": 0.9714285714285714,
+        "pr_auc": 0.9970760233918129,
+        "recall": 0.9444444444444444,
+        "valid_positive_count": 18
+      },
+      "tunnel": {
+        "f1": 0.6666666666666666,
+        "pr_auc": 1.0,
+        "recall": 0.5,
+        "valid_positive_count": 2
+      }
+    },
+    "scheduler": "none",
+    "second_stage": {
+      "deep_macro_pr_auc": 0.7256381236484123,
+      "deep_per_code_pr_auc": {
+        "blur": 0.7880637039727947,
+        "flash": 0.9721840003057753,
+        "tunnel": 0.41666666666666663
+      },
+      "embedding_projection": {
+        "explained_variance_ratio": [
+          0.3293092834268711,
+          0.15772746163590493,
+          0.12262574361674652,
+          0.09283650634043805,
+          0.05822149615437273,
+          0.05180613319439755,
+          0.038763576836796605,
+          0.03067302353766906
+        ],
+        "input_dimension": 64,
+        "output_dimension": 8,
+        "projection": "pca"
+      },
+      "feature_count": 26,
+      "feature_source": "both",
+      "inner_folds": 4,
+      "inner_partitions": [
+        [
+          1
+        ],
+        [
+          2
+        ],
+        [
+          3
+        ],
+        [
+          4
+        ]
+      ],
+      "representation_dim": 8,
+      "representation_shared": true
+    },
+    "threshold": 0.5,
+    "training_history": [
+      {
+        "gradient_norm_max": 2.6637215614318848,
+        "gradient_norm_mean": 0.740871250629425,
+        "learning_rate": 0.001
+      },
+      {
+        "gradient_norm_max": 2.0247724056243896,
+        "gradient_norm_mean": 0.7565985321998596,
+        "learning_rate": 0.001
+      },
+      {
+        "gradient_norm_max": 5.636661529541016,
+        "gradient_norm_mean": 1.3630290031433105,
+        "learning_rate": 0.001
+      },
+      {
+        "gradient_norm_max": 3.487192153930664,
+        "gradient_norm_mean": 1.3169512748718262,
+        "learning_rate": 0.001
+      },
+      {
+        "gradient_norm_max": 4.919399738311768,
+        "gradient_norm_mean": 1.6670329570770264,
+        "learning_rate": 0.001
+      },
+      {
+        "gradient_norm_max": 7.726468086242676,
+        "gradient_norm_mean": 1.6292880773544312,
+        "learning_rate": 0.001
+      },
+      {
+        "gradient_norm_max": 2.5831220149993896,
+        "gradient_norm_mean": 1.2407892942428589,
+        "learning_rate": 0.001
+      },
+      {
+        "gradient_norm_max": 5.339476585388184,
+        "gradient_norm_mean": 1.8356661796569824,
+        "learning_rate": 0.001
+      },
+      {
+        "gradient_norm_max": 8.111379623413086,
+        "gradient_norm_mean": 1.8691893815994263,
+        "learning_rate": 0.001
+      },
+      {
+        "gradient_norm_max": 13.003687858581543,
+        "gradient_norm_mean": 2.2731926441192627,
+        "learning_rate": 0.001
+      },
+      {
+        "gradient_norm_max": 5.036170959472656,
+        "gradient_norm_mean": 1.58015775680542,
+        "learning_rate": 0.001
+      },
+      {
+        "gradient_norm_max": 3.0367372035980225,
+        "gradient_norm_mean": 1.4754242897033691,
+        "learning_rate": 0.001
+      },
+      {
+        "gradient_norm_max": 3.3852481842041016,
+        "gradient_norm_mean": 1.4945943355560303,
+        "learning_rate": 0.001
+      },
+      {
+        "gradient_norm_max": 4.285409927368164,
+        "gradient_norm_mean": 1.5876628160476685,
+        "learning_rate": 0.001
+      },
+      {
+        "gradient_norm_max": 7.0581254959106445,
+        "gradient_norm_mean": 1.8106462955474854,
+        "learning_rate": 0.001
+      },
+      {
+        "gradient_norm_max": 12.228382110595703,
+        "gradient_norm_mean": 1.9480431079864502,
+        "learning_rate": 0.001
+      },
+      {
+        "gradient_norm_max": 10.806339263916016,
+        "gradient_norm_mean": 2.059792995452881,
+        "learning_rate": 0.001
+      },
+      {
+        "gradient_norm_max": 6.229559898376465,
+        "gradient_norm_mean": 1.7144161462783813,
+        "learning_rate": 0.001
+      },
+      {
+        "gradient_norm_max": 3.349660873413086,
+        "gradient_norm_mean": 1.428786039352417,
+        "learning_rate": 0.001
+      },
+      {
+        "gradient_norm_max": 4.968766689300537,
+        "gradient_norm_mean": 1.6922849416732788,
+        "learning_rate": 0.001
+      }
+    ],
+    "valid_code_count": 3
+  },
+  {
+    "amp_enabled": false,
+    "augmentation_enabled": false,
+    "best_epoch": 20,
+    "early_stopping_monitor": null,
+    "epochs_ran": 20,
+    "fold": 1,
+    "macro_f1": 0.6322751322751322,
+    "macro_pr_auc": 0.7833333333333332,
+    "macro_recall": 0.6315789473684211,
+    "per_code": {
+      "blur": {
+        "f1": 0.9523809523809523,
+        "pr_auc": 0.9999999999999999,
+        "recall": 1.0,
+        "valid_positive_count": 10
+      },
+      "flash": {
+        "f1": 0.9444444444444444,
+        "pr_auc": 0.9999999999999999,
+        "recall": 0.8947368421052632,
+        "valid_positive_count": 19
+      },
+      "tunnel": {
+        "f1": 0.0,
+        "pr_auc": 0.35,
+        "recall": 0.0,
+        "valid_positive_count": 2
+      }
+    },
+    "scheduler": "none",
+    "second_stage": {
+      "deep_macro_pr_auc": 0.8936363636363636,
+      "deep_per_code_pr_auc": {
+        "blur": 0.9809090909090908,
+        "flash": 0.9999999999999998,
+        "tunnel": 0.7
+      },
+      "embedding_projection": {
+        "explained_variance_ratio": [
+          0.2642499228727069,
+          0.17767066900223494,
+          0.14102325167016724,
+          0.09745407382423348,
+          0.059115527228996476,
+          0.05078688554820853,
+          0.0402960491283372,
+          0.03138523416202572
+        ],
+        "input_dimension": 64,
+        "output_dimension": 8,
+        "projection": "pca"
+      },
+      "feature_count": 26,
+      "feature_source": "both",
+      "inner_folds": 4,
+      "inner_partitions": [
+        [
+          0
+        ],
+        [
+          2
+        ],
+        [
+          3
+        ],
+        [
+          4
+        ]
+      ],
+      "representation_dim": 8,
+      "representation_shared": true
+    },
+    "threshold": 0.5,
+    "training_history": [
+      {
+        "gradient_norm_max": 2.2575876712799072,
+        "gradient_norm_mean": 0.7381446361541748,
+        "learning_rate": 0.001
+      },
+      {
+        "gradient_norm_max": 0.8888188004493713,
+        "gradient_norm_mean": 0.5555487871170044,
+        "learning_rate": 0.001
+      },
+      {
+        "gradient_norm_max": 2.2034757137298584,
+        "gradient_norm_mean": 0.9380841255187988,
+        "learning_rate": 0.001
+      },
+      {
+        "gradient_norm_max": 5.8351640701293945,
+        "gradient_norm_mean": 1.2080104351043701,
+        "learning_rate": 0.001
+      },
+      {
+        "gradient_norm_max": 4.086153030395508,
+        "gradient_norm_mean": 1.376267910003662,
+        "learning_rate": 0.001
+      },
+      {
+        "gradient_norm_max": 4.669001579284668,
+        "gradient_norm_mean": 1.5983026027679443,
+        "learning_rate": 0.001
+      },
+      {
+        "gradient_norm_max": 11.56573486328125,
+        "gradient_norm_mean": 1.996559739112854,
+        "learning_rate": 0.001
+      },
+      {
+        "gradient_norm_max": 16.57172393798828,
+        "gradient_norm_mean": 2.131258726119995,
+        "learning_rate": 0.001
+      },
+      {
+        "gradient_norm_max": 5.411825656890869,
+        "gradient_norm_mean": 1.9408460855484009,
+        "learning_rate": 0.001
+      },
+      {
+        "gradient_norm_max": 5.757713794708252,
+        "gradient_norm_mean": 1.5237151384353638,
+        "learning_rate": 0.001
+      },
+      {
+        "gradient_norm_max": 4.302334785461426,
+        "gradient_norm_mean": 1.2302578687667847,
+        "learning_rate": 0.001
+      },
+      {
+        "gradient_norm_max": 4.8229475021362305,
+        "gradient_norm_mean": 1.3278656005859375,
+        "learning_rate": 0.001
+      },
+      {
+        "gradient_norm_max": 8.310431480407715,
+        "gradient_norm_mean": 1.784909725189209,
+        "learning_rate": 0.001
+      },
+      {
+        "gradient_norm_max": 5.56575345993042,
+        "gradient_norm_mean": 1.6108225584030151,
+        "learning_rate": 0.001
+      },
+      {
+        "gradient_norm_max": 2.994785785675049,
+        "gradient_norm_mean": 1.578580379486084,
+        "learning_rate": 0.001
+      },
+      {
+        "gradient_norm_max": 8.650288581848145,
+        "gradient_norm_mean": 2.051227569580078,
+        "learning_rate": 0.001
+      },
+      {
+        "gradient_norm_max": 12.24992847442627,
+        "gradient_norm_mean": 2.2402729988098145,
+        "learning_rate": 0.001
+      },
+      {
+        "gradient_norm_max": 4.015174388885498,
+        "gradient_norm_mean": 1.7049753665924072,
+        "learning_rate": 0.001
+      },
+      {
+        "gradient_norm_max": 17.062490463256836,
+        "gradient_norm_mean": 3.0225512981414795,
+        "learning_rate": 0.001
+      },
+      {
+        "gradient_norm_max": 13.628363609313965,
+        "gradient_norm_mean": 1.8203027248382568,
+        "learning_rate": 0.001
+      }
+    ],
+    "valid_code_count": 3
+  },
+  {
+    "amp_enabled": false,
+    "augmentation_enabled": false,
+    "best_epoch": 20,
+    "early_stopping_monitor": null,
+    "epochs_ran": 20,
+    "fold": 2,
+    "macro_f1": 0.7586872586872587,
+    "macro_pr_auc": 0.8371205119125499,
+    "macro_recall": 0.7542087542087542,
+    "per_code": {
+      "blur": {
+        "f1": 0.8571428571428571,
+        "pr_auc": 0.9290944201372009,
+        "recall": 0.8181818181818182,
+        "valid_positive_count": 11
+      },
+      "flash": {
+        "f1": 0.918918918918919,
+        "pr_auc": 0.991358024691358,
+        "recall": 0.9444444444444444,
+        "valid_positive_count": 18
+      },
+      "tunnel": {
+        "f1": 0.5,
+        "pr_auc": 0.5909090909090909,
+        "recall": 0.5,
+        "valid_positive_count": 2
+      }
+    },
+    "scheduler": "none",
+    "second_stage": {
+      "deep_macro_pr_auc": 0.851466786965153,
+      "deep_per_code_pr_auc": {
+        "blur": 0.9150613275613275,
+        "flash": 0.9726723666674648,
+        "tunnel": 0.6666666666666666
+      },
+      "embedding_projection": {
+        "explained_variance_ratio": [
+          0.2169374312385121,
+          0.1790007018906786,
+          0.14270548210732054,
+          0.1029171941520931,
+          0.0783116287122094,
+          0.06290609700455367,
+          0.0397982553161859,
+          0.03283384774901113
+        ],
+        "input_dimension": 64,
+        "output_dimension": 8,
+        "projection": "pca"
+      },
+      "feature_count": 26,
+      "feature_source": "both",
+      "inner_folds": 4,
+      "inner_partitions": [
+        [
+          0
+        ],
+        [
+          1
+        ],
+        [
+          3
+        ],
+        [
+          4
+        ]
+      ],
+      "representation_dim": 8,
+      "representation_shared": true
+    },
+    "threshold": 0.5,
+    "training_history": [
+      {
+        "gradient_norm_max": 2.2346856594085693,
+        "gradient_norm_mean": 0.7238704562187195,
+        "learning_rate": 0.001
+      },
+      {
+        "gradient_norm_max": 1.5122404098510742,
+        "gradient_norm_mean": 0.5922910571098328,
+        "learning_rate": 0.001
+      },
+      {
+        "gradient_norm_max": 1.9409849643707275,
+        "gradient_norm_mean": 0.9423314929008484,
+        "learning_rate": 0.001
+      },
+      {
+        "gradient_norm_max": 5.541234493255615,
+        "gradient_norm_mean": 1.227929949760437,
+        "learning_rate": 0.001
+      },
+      {
+        "gradient_norm_max": 2.202268123626709,
+        "gradient_norm_mean": 1.0285714864730835,
+        "learning_rate": 0.001
+      },
+      {
+        "gradient_norm_max": 4.469101905822754,
+        "gradient_norm_mean": 1.440348505973816,
+        "learning_rate": 0.001
+      },
+      {
+        "gradient_norm_max": 4.140969753265381,
+        "gradient_norm_mean": 1.285164475440979,
+        "learning_rate": 0.001
+      },
+      {
+        "gradient_norm_max": 6.784875392913818,
+        "gradient_norm_mean": 1.596640706062317,
+        "learning_rate": 0.001
+      },
+      {
+        "gradient_norm_max": 4.220490455627441,
+        "gradient_norm_mean": 1.3470261096954346,
+        "learning_rate": 0.001
+      },
+      {
+        "gradient_norm_max": 2.475517511367798,
+        "gradient_norm_mean": 1.2238388061523438,
+        "learning_rate": 0.001
+      },
+      {
+        "gradient_norm_max": 6.011537075042725,
+        "gradient_norm_mean": 1.519846796989441,
+        "learning_rate": 0.001
+      },
+      {
+        "gradient_norm_max": 7.7258453369140625,
+        "gradient_norm_mean": 1.6410526037216187,
+        "learning_rate": 0.001
+      },
+      {
+        "gradient_norm_max": 3.6397387981414795,
+        "gradient_norm_mean": 1.2880290746688843,
+        "learning_rate": 0.001
+      },
+      {
+        "gradient_norm_max": 5.345055103302002,
+        "gradient_norm_mean": 1.7491486072540283,
+        "learning_rate": 0.001
+      },
+      {
+        "gradient_norm_max": 10.171245574951172,
+        "gradient_norm_mean": 1.9458363056182861,
+        "learning_rate": 0.001
+      },
+      {
+        "gradient_norm_max": 20.084115982055664,
+        "gradient_norm_mean": 2.160048484802246,
+        "learning_rate": 0.001
+      },
+      {
+        "gradient_norm_max": 9.97217082977295,
+        "gradient_norm_mean": 1.9886234998703003,
+        "learning_rate": 0.001
+      },
+      {
+        "gradient_norm_max": 2.7063863277435303,
+        "gradient_norm_mean": 1.433909296989441,
+        "learning_rate": 0.001
+      },
+      {
+        "gradient_norm_max": 8.752778053283691,
+        "gradient_norm_mean": 1.6678171157836914,
+        "learning_rate": 0.001
+      },
+      {
+        "gradient_norm_max": 3.447496175765991,
+        "gradient_norm_mean": 1.3967300653457642,
+        "learning_rate": 0.001
+      }
+    ],
+    "valid_code_count": 3
+  },
+  {
+    "amp_enabled": false,
+    "augmentation_enabled": false,
+    "best_epoch": 20,
+    "early_stopping_monitor": null,
+    "epochs_ran": 20,
+    "fold": 3,
+    "macro_f1": 0.8300653594771242,
+    "macro_pr_auc": 0.8948148148148148,
+    "macro_recall": 0.7333333333333334,
+    "per_code": {
+      "blur": {
+        "f1": 0.8235294117647058,
+        "pr_auc": 0.9344444444444443,
+        "recall": 0.7,
+        "valid_positive_count": 10
+      },
+      "flash": {
+        "f1": 1.0,
+        "pr_auc": 1.0,
+        "recall": 1.0,
+        "valid_positive_count": 18
+      },
+      "tunnel": {
+        "f1": 0.6666666666666666,
+        "pr_auc": 0.75,
+        "recall": 0.5,
+        "valid_positive_count": 2
+      }
+    },
+    "scheduler": "none",
+    "second_stage": {
+      "deep_macro_pr_auc": 0.8390390600684717,
+      "deep_per_code_pr_auc": {
+        "blur": 0.8742600373482726,
+        "flash": 1.0,
+        "tunnel": 0.6428571428571428
+      },
+      "embedding_projection": {
+        "explained_variance_ratio": [
+          0.37287259060799693,
+          0.2171696855090519,
+          0.08908733206549231,
+          0.06731515471876426,
+          0.04095891371322892,
+          0.039096631903646685,
+          0.03687651538637181,
+          0.03182971878869426
+        ],
+        "input_dimension": 64,
+        "output_dimension": 8,
+        "projection": "pca"
+      },
+      "feature_count": 26,
+      "feature_source": "both",
+      "inner_folds": 4,
+      "inner_partitions": [
+        [
+          0
+        ],
+        [
+          1
+        ],
+        [
+          2
+        ],
+        [
+          4
+        ]
+      ],
+      "representation_dim": 8,
+      "representation_shared": true
+    },
+    "threshold": 0.5,
+    "training_history": [
+      {
+        "gradient_norm_max": 2.660776138305664,
+        "gradient_norm_mean": 0.7346128821372986,
+        "learning_rate": 0.001
+      },
+      {
+        "gradient_norm_max": 3.096619129180908,
+        "gradient_norm_mean": 0.9835757613182068,
+        "learning_rate": 0.001
+      },
+      {
+        "gradient_norm_max": 3.5270674228668213,
+        "gradient_norm_mean": 1.3406498432159424,
+        "learning_rate": 0.001
+      },
+      {
+        "gradient_norm_max": 3.347395181655884,
+        "gradient_norm_mean": 1.101387619972229,
+        "learning_rate": 0.001
+      },
+      {
+        "gradient_norm_max": 5.461751461029053,
+        "gradient_norm_mean": 1.3068430423736572,
+        "learning_rate": 0.001
+      },
+      {
+        "gradient_norm_max": 6.53417444229126,
+        "gradient_norm_mean": 1.433129072189331,
+        "learning_rate": 0.001
+      },
+      {
+        "gradient_norm_max": 3.794407606124878,
+        "gradient_norm_mean": 1.126193881034851,
+        "learning_rate": 0.001
+      },
+      {
+        "gradient_norm_max": 3.319550037384033,
+        "gradient_norm_mean": 1.2602630853652954,
+        "learning_rate": 0.001
+      },
+      {
+        "gradient_norm_max": 8.570160865783691,
+        "gradient_norm_mean": 1.4926692247390747,
+        "learning_rate": 0.001
+      },
+      {
+        "gradient_norm_max": 3.367600202560425,
+        "gradient_norm_mean": 0.9910798072814941,
+        "learning_rate": 0.001
+      },
+      {
+        "gradient_norm_max": 4.576963424682617,
+        "gradient_norm_mean": 1.27180814743042,
+        "learning_rate": 0.001
+      },
+      {
+        "gradient_norm_max": 7.432705879211426,
+        "gradient_norm_mean": 1.3314281702041626,
+        "learning_rate": 0.001
+      },
+      {
+        "gradient_norm_max": 3.9009649753570557,
+        "gradient_norm_mean": 1.0757734775543213,
+        "learning_rate": 0.001
+      },
+      {
+        "gradient_norm_max": 3.3936550617218018,
+        "gradient_norm_mean": 1.2309606075286865,
+        "learning_rate": 0.001
+      },
+      {
+        "gradient_norm_max": 6.769025802612305,
+        "gradient_norm_mean": 1.4879745244979858,
+        "learning_rate": 0.001
+      },
+      {
+        "gradient_norm_max": 5.288044452667236,
+        "gradient_norm_mean": 1.542932391166687,
+        "learning_rate": 0.001
+      },
+      {
+        "gradient_norm_max": 12.148489952087402,
+        "gradient_norm_mean": 1.7949144840240479,
+        "learning_rate": 0.001
+      },
+      {
+        "gradient_norm_max": 3.890735626220703,
+        "gradient_norm_mean": 1.3033053874969482,
+        "learning_rate": 0.001
+      },
+      {
+        "gradient_norm_max": 4.961724758148193,
+        "gradient_norm_mean": 1.3951791524887085,
+        "learning_rate": 0.001
+      },
+      {
+        "gradient_norm_max": 4.116294860839844,
+        "gradient_norm_mean": 1.3247730731964111,
+        "learning_rate": 0.001
+      }
+    ],
+    "valid_code_count": 3
+  },
+  {
+    "amp_enabled": false,
+    "augmentation_enabled": false,
+    "best_epoch": 20,
+    "early_stopping_monitor": null,
+    "epochs_ran": 20,
+    "fold": 4,
+    "macro_f1": 0.8808460634547591,
+    "macro_pr_auc": 0.9208092511568448,
+    "macro_recall": 0.9521531100478469,
+    "per_code": {
+      "blur": {
+        "f1": 0.8695652173913043,
+        "pr_auc": 0.9290944201372009,
+        "recall": 0.9090909090909091,
+        "valid_positive_count": 11
+      },
+      "flash": {
+        "f1": 0.972972972972973,
+        "pr_auc": 1.0,
+        "recall": 0.9473684210526315,
+        "valid_positive_count": 19
+      },
+      "tunnel": {
+        "f1": 0.8,
+        "pr_auc": 0.8333333333333333,
+        "recall": 1.0,
+        "valid_positive_count": 2
+      }
+    },
+    "scheduler": "none",
+    "second_stage": {
+      "deep_macro_pr_auc": 0.8777775234083469,
+      "deep_per_code_pr_auc": {
+        "blur": 0.8916582088830893,
+        "flash": 0.9916743613419512,
+        "tunnel": 0.75
+      },
+      "embedding_projection": {
+        "explained_variance_ratio": [
+          0.23785297848737771,
+          0.19575382846632478,
+          0.10771168629304308,
+          0.10323819561553083,
+          0.08058922257825618,
+          0.055251168537251816,
+          0.04861262041832418,
+          0.042434032086528684
+        ],
+        "input_dimension": 64,
+        "output_dimension": 8,
+        "projection": "pca"
+      },
+      "feature_count": 26,
+      "feature_source": "both",
+      "inner_folds": 4,
+      "inner_partitions": [
+        [
+          0
+        ],
+        [
+          1
+        ],
+        [
+          2
+        ],
+        [
+          3
+        ]
+      ],
+      "representation_dim": 8,
+      "representation_shared": true
+    },
+    "threshold": 0.5,
+    "training_history": [
+      {
+        "gradient_norm_max": 3.6329121589660645,
+        "gradient_norm_mean": 1.0618295669555664,
+        "learning_rate": 0.001
+      },
+      {
+        "gradient_norm_max": 4.160079002380371,
+        "gradient_norm_mean": 0.898438036441803,
+        "learning_rate": 0.001
+      },
+      {
+        "gradient_norm_max": 1.0795609951019287,
+        "gradient_norm_mean": 0.8100188374519348,
+        "learning_rate": 0.001
+      },
+      {
+        "gradient_norm_max": 5.176384449005127,
+        "gradient_norm_mean": 1.3402769565582275,
+        "learning_rate": 0.001
+      },
+      {
+        "gradient_norm_max": 1.3702040910720825,
+        "gradient_norm_mean": 0.910210132598877,
+        "learning_rate": 0.001
+      },
+      {
+        "gradient_norm_max": 3.994163751602173,
+        "gradient_norm_mean": 1.3133641481399536,
+        "learning_rate": 0.001
+      },
+      {
+        "gradient_norm_max": 2.1797585487365723,
+        "gradient_norm_mean": 1.1808383464813232,
+        "learning_rate": 0.001
+      },
+      {
+        "gradient_norm_max": 5.639225006103516,
+        "gradient_norm_mean": 1.620237112045288,
+        "learning_rate": 0.001
+      },
+      {
+        "gradient_norm_max": 4.122708797454834,
+        "gradient_norm_mean": 1.257938027381897,
+        "learning_rate": 0.001
+      },
+      {
+        "gradient_norm_max": 6.538951873779297,
+        "gradient_norm_mean": 1.5518642663955688,
+        "learning_rate": 0.001
+      },
+      {
+        "gradient_norm_max": 4.04818868637085,
+        "gradient_norm_mean": 1.2389400005340576,
+        "learning_rate": 0.001
+      },
+      {
+        "gradient_norm_max": 5.051808834075928,
+        "gradient_norm_mean": 1.2291263341903687,
+        "learning_rate": 0.001
+      },
+      {
+        "gradient_norm_max": 4.95342493057251,
+        "gradient_norm_mean": 1.6047015190124512,
+        "learning_rate": 0.001
+      },
+      {
+        "gradient_norm_max": 7.353091716766357,
+        "gradient_norm_mean": 1.927133321762085,
+        "learning_rate": 0.001
+      },
+      {
+        "gradient_norm_max": 5.017978191375732,
+        "gradient_norm_mean": 1.5699015855789185,
+        "learning_rate": 0.001
+      },
+      {
+        "gradient_norm_max": 7.41131067276001,
+        "gradient_norm_mean": 2.1333510875701904,
+        "learning_rate": 0.001
+      },
+      {
+        "gradient_norm_max": 4.870708465576172,
+        "gradient_norm_mean": 1.7246489524841309,
+        "learning_rate": 0.001
+      },
+      {
+        "gradient_norm_max": 6.953153610229492,
+        "gradient_norm_mean": 2.4435935020446777,
+        "learning_rate": 0.001
+      },
+      {
+        "gradient_norm_max": 4.2690887451171875,
+        "gradient_norm_mean": 1.8869967460632324,
+        "learning_rate": 0.001
+      },
+      {
+        "gradient_norm_max": 4.4420695304870605,
+        "gradient_norm_mean": 1.5287176370620728,
+        "learning_rate": 0.001
+      }
+    ],
+    "valid_code_count": 3
+  }
+]

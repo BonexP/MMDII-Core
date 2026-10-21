@@ -1,0 +1,15 @@
+nohup: ignoring input
+Traceback (most recent call last):
+  File "/home/user/PROJECT/MMDII/MMDII-Core/scripts/check_training_environment.py", line 62, in <module>
+    raise SystemExit(main())
+                     ^^^^^^
+  File "/home/user/PROJECT/MMDII/MMDII-Core/scripts/check_training_environment.py", line 24, in main
+    config = load_experiment_config(args.config)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/user/PROJECT/MMDII/MMDII-Core/src/mmdii/training/cross_validation.py", line 210, in load_experiment_config
+    with config_path.open("rb") as handle:
+         ^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/user/.local/share/uv/python/cpython-3.11.15-linux-x86_64-gnu/lib/python3.11/pathlib.py", line 1044, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/home/user/PROJECT/MMDII/MMDII-Core/configs/time_frequency_v0_3_1_pure_deep.toml'

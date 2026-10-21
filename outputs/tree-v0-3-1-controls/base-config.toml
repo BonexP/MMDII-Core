@@ -1,0 +1,95 @@
+[experiment]
+release_directory = "../../../data/interim/releases/weld-independent-v0-2-1-r2"
+output_directory = "outputs/tree-v0-3-1"
+target_codes = ["flash", "blur", "tunnel"]
+mode = "random_forest"
+aggregator = "mean"
+seed = 7
+fold_count = 5
+fold_scheme = "weld_independent"
+epochs = 20
+batch_size = 4
+learning_rate = 0.001
+weight_decay = 0.0001
+optimizer = "adamw"
+early_stopping_patience = 0
+early_stopping_min_delta = 0.0
+gradient_clip_norm = 0.0
+device = "auto"
+pipeline_backend = "cuda"
+target_fs = 5400.0
+window_seconds = 2.0
+stride_seconds = 1.0
+full_signal_samples = 4096
+
+[model]
+hidden_channels = 32
+embedding_dim = 64
+kernel_size = 31
+block_count = 2
+dropout = 0.1
+top_k = 3
+attention_dim = 64
+encoder_chunk_size = 32
+
+[representation]
+name = "dwt_swt_db4"
+encoder = "resnet2d_small"
+fusion = "raw_plus_dwt"
+output_time_bins = 256
+normalization = "per_channel_zscore"
+dwt_wavelet = "db4"
+dwt_level = 5
+
+[tree]
+learner = "random_forest"
+n_estimators = 300
+min_samples_leaf = 1
+max_features = "sqrt"
+max_depth = 0
+criterion = "gini"
+class_weight = "balanced"
+
+[second_stage]
+enabled = false
+feature_source = "embedding"
+representation_mode = "window_mil"
+inner_folds = 4
+encoder_epochs = 20
+embedding_projection = "none"
+embedding_components = 8
+
+[matrix]
+version = "v0.3.1"
+purpose = "tree_controls_and_tree_on_deep"
+representations = ["dwt_swt_db4"]
+feature_fusions = ["raw_plus_dwt"]
+deep_anchors = ["resnet2d_small", "convnext2d_lite"]
+aggregators = ["mean"]
+feature_sources = ["embedding", "embedding_pca8", "both", "both_pca8"]
+tree_learners = ["random_forest", "extra_trees"]
+control_models = [
+  "statistical",
+  "random_forest_legacy",
+  "random_forest_tuned",
+  "extra_trees_legacy",
+  "extra_trees_tuned",
+]
+seeds = [7, 17, 27]
+fold_scheme = "weld_independent"
+fold_count = 5
+inner_folds = 4
+encoder_epochs = 20
+epochs = 20
+batch_size = 4
+learning_rate = 0.001
+weight_decay = 0.0001
+optimizer = "adamw"
+pipeline_backend = "cuda"
+
+[matrix.counts]
+tree_controls_per_seed = 5
+tree_controls_total = 15
+tree_on_deep_per_seed = 16
+tree_on_deep_pilot = 16
+tree_on_deep_total = 48
