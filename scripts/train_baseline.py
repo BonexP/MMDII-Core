@@ -27,7 +27,15 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("--output-dir", type=Path)
     parser.add_argument(
         "--mode",
-        choices=("statistical", "random_forest", "full_signal", "window_mil", "second_stage"),
+        choices=(
+            "statistical",
+            "random_forest",
+            "gradient_boosting",
+            "rbf_svm",
+            "full_signal",
+            "window_mil",
+            "second_stage",
+        ),
     )
     parser.add_argument(
         "--aggregator",
@@ -72,7 +80,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument(
         "--tree-learner",
         choices=("random_forest", "extra_trees"),
-        help="Tree ensemble used by the tabular random-forest mode.",
+        help="Tree ensemble used by random_forest or second_stage mode.",
     )
     parser.add_argument("--tree-n-estimators", type=int)
     parser.add_argument("--tree-min-samples-leaf", type=int)
@@ -80,6 +88,15 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("--tree-max-depth", type=int)
     parser.add_argument("--tree-criterion", choices=("gini", "log_loss"))
     parser.add_argument("--tree-class-weight", choices=("balanced", "none"))
+    parser.add_argument(
+        "--tree-bootstrap",
+        choices=("true", "false", "default"),
+        help="Explicit ensemble bootstrap setting; default delegates to the learner default.",
+    )
+    parser.add_argument(
+        "--tree-feature-set",
+        choices=("stats18", "stats15_no_ptp", "stats12_no_ptp_rms"),
+    )
     parser.add_argument("--tree-tune", action="store_true")
     parser.add_argument(
         "--second-stage-source",
@@ -154,8 +171,16 @@ def main(argv: Sequence[str] | None = None) -> int:
         "max_depth": args.tree_max_depth,
         "criterion": args.tree_criterion,
         "class_weight": args.tree_class_weight,
+        "bootstrap": (
+            {"true": True, "false": False, "default": None}.get(args.tree_bootstrap)
+            if args.tree_bootstrap is not None
+            else None
+        ),
+        "feature_set": args.tree_feature_set,
     }
     tree_overrides = {key: value for key, value in tree_overrides.items() if value is not None}
+    if args.tree_bootstrap == "default":
+        tree_overrides["bootstrap"] = None
     if tree_overrides.get("max_depth") == 0:
         tree_overrides["max_depth"] = None
     if args.tree_tune:

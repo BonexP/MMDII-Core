@@ -47,21 +47,25 @@ def evaluate_multilabel(
     *,
     target_codes: Iterable[str],
     threshold: float = 0.5,
+    ranking_scores: np.ndarray | None = None,
 ) -> dict[str, object]:
-    """Return per-code PR-AUC, recall, F1 and explicit undefined-code fields."""
+    """Evaluate ranking scores separately from thresholded probabilities."""
 
     labels = tuple(target_codes)
     values = np.asarray(truth, dtype=np.float64)
     scores = np.asarray(probabilities, dtype=np.float64)
+    ranking = scores if ranking_scores is None else np.asarray(ranking_scores, dtype=np.float64)
     if (
         values.ndim != 2
         or scores.shape != values.shape
+        or ranking.shape != values.shape
         or values.shape[1] != len(labels)
         or not labels
         or len(labels) != len(set(labels))
         or not 0.0 <= threshold <= 1.0
         or not np.isfinite(values).all()
         or not np.isfinite(scores).all()
+        or not np.isfinite(ranking).all()
     ):
         raise ValueError("Metric inputs have invalid shapes or values.")
     if not np.isin(values, (0.0, 1.0)).all():
@@ -77,23 +81,28 @@ def evaluate_multilabel(
 
     per_code: dict[str, dict[str, float | int | None]] = {}
     valid = []
+    brier = []
     for position, code in enumerate(labels):
         binary_truth = values[:, position].astype(np.int64)
         positive_count = int(binary_truth.sum())
+        code_brier = float(np.mean(np.square(scores[:, position] - binary_truth)))
         if positive_count == 0:
             per_code[code] = {
                 "pr_auc": None,
                 "recall": None,
                 "f1": None,
                 "valid_positive_count": 0,
+                "brier": None,
             }
             continue
+        brier.append(code_brier)
         predicted = (scores[:, position] >= threshold).astype(np.int64)
         metrics = {
-            "pr_auc": float(average_precision_score(binary_truth, scores[:, position])),
+            "pr_auc": float(average_precision_score(binary_truth, ranking[:, position])),
             "recall": float(recall_score(binary_truth, predicted, zero_division=0)),
             "f1": float(f1_score(binary_truth, predicted, zero_division=0)),
             "valid_positive_count": positive_count,
+            "brier": code_brier,
         }
         per_code[code] = metrics
         valid.append(metrics)
@@ -109,5 +118,6 @@ def evaluate_multilabel(
         "macro_f1": (
             float(np.mean([metric["f1"] for metric in valid])) if valid else None
         ),
+        "macro_brier": float(np.mean(brier)) if brier else None,
         "threshold": float(threshold),
     }

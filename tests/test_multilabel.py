@@ -40,6 +40,36 @@ class MultilabelEvaluationTests(unittest.TestCase):
                 target_codes=("flash",),
             )
 
+    def test_rejects_ranking_scores_with_a_shape_different_from_probabilities(self) -> None:
+        with self.assertRaisesRegex(ValueError, "invalid shapes"):
+            evaluate_multilabel(
+                np.array([[0.0], [1.0]]),
+                np.array([[0.2], [0.8]]),
+                target_codes=("flash",),
+                ranking_scores=np.array([[0.1, 0.2], [0.3, 0.4]]),
+            )
+
+    @unittest.skipUnless(
+        importlib.util.find_spec("sklearn") is not None,
+        "scikit-learn train extra is not installed",
+    )
+    def test_ranking_scores_drive_ap_but_probabilities_drive_brier_and_threshold_metrics(self) -> None:
+        truth = np.array([[0.0], [1.0], [0.0]])
+        probabilities = np.array([[0.9], [0.8], [0.1]])
+        ranking_scores = np.array([[-1.0], [2.0], [0.0]])
+
+        report = evaluate_multilabel(
+            truth,
+            probabilities,
+            target_codes=("flash",),
+            ranking_scores=ranking_scores,
+        )
+
+        self.assertEqual(report["per_code"]["flash"]["pr_auc"], 1.0)
+        self.assertEqual(report["per_code"]["flash"]["recall"], 1.0)
+        self.assertAlmostEqual(report["per_code"]["flash"]["brier"], 0.2866666667)
+        self.assertAlmostEqual(report["macro_brier"], 0.2866666667)
+
     @unittest.skipUnless(
         importlib.util.find_spec("sklearn") is not None,
         "scikit-learn train extra is not installed",
@@ -64,9 +94,9 @@ class MultilabelEvaluationTests(unittest.TestCase):
         self.assertGreater(report["per_code"]["flash"]["pr_auc"], 0.9)
         self.assertEqual(report["per_code"]["flash"]["recall"], 1.0)
         self.assertIsNone(report["per_code"]["pore"]["pr_auc"])
+        self.assertIsNone(report["per_code"]["pore"]["brier"])
         self.assertEqual(report["per_code"]["pore"]["valid_positive_count"], 0)
         self.assertEqual(report["valid_code_count"], 1)
-
 
 if __name__ == "__main__":
     unittest.main()

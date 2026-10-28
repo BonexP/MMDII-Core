@@ -48,6 +48,40 @@ class TrainBaselineCliTests(unittest.TestCase):
             with self.assertRaises(SystemExit):
                 train_baseline.main([])
 
+    def test_cli_routes_new_tabular_modes_and_tree_contract_overrides(self) -> None:
+        captured = {}
+        output = io.StringIO()
+        release = CORE_ROOT / "training-release-override"
+
+        def capture(_index, config):
+            captured["config"] = config
+            return {"mode": config.mode}
+
+        with patch.object(train_baseline, "run_cross_validation", side_effect=capture):
+            with patch.object(train_baseline.DatasetIndex, "from_release", return_value=object()):
+                with redirect_stdout(output):
+                    exit_code = train_baseline.main(
+                        [
+                            "--config",
+                            str(CORE_ROOT / "configs" / "time_frequency_v0_3_1_tree.toml"),
+                            "--release-dir",
+                            str(release),
+                            "--mode",
+                            "rbf_svm",
+                            "--tree-bootstrap",
+                            "default",
+                            "--tree-feature-set",
+                            "stats15_no_ptp",
+                        ]
+                    )
+
+        config = captured["config"]
+        self.assertEqual(exit_code, 0)
+        self.assertEqual(config.mode, "rbf_svm")
+        self.assertEqual(config.release_directory, release.resolve())
+        self.assertIsNone(config.tree.bootstrap)
+        self.assertEqual(config.tree.feature_set, "stats15_no_ptp")
+
 
 if __name__ == "__main__":
     unittest.main()

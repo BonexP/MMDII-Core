@@ -72,6 +72,17 @@ def calibrate(path: Path) -> dict[str, Any]:
     )
     truth = _truth(rows, codes)
     scores = np.asarray([[float(row[f"prob_{code}"]) for code in codes] for row in rows])
+    score_columns = [f"score_{code}" for code in codes]
+    present_score_columns = [column for column in rows[0] if column.startswith("score_")]
+    if present_score_columns and set(present_score_columns) != set(score_columns):
+        raise ValueError("OOF score_* columns do not match probability target codes.")
+    ranking_scores = (
+        np.asarray([[float(row[column]) for column in score_columns] for row in rows])
+        if present_score_columns
+        else scores
+    )
+    if not np.isfinite(ranking_scores).all():
+        raise ValueError("OOF ranking scores must contain only finite values.")
     folds = np.asarray([int(row["fold"]) for row in rows])
     reports = []
     pooled_truth = []
@@ -86,7 +97,7 @@ def calibrate(path: Path) -> dict[str, Any]:
         _LOGGER.info("calibrate fold %s valid=%d", int(fold), int(valid.sum()))
         pooled_truth.append(truth[valid])
         pooled_pred.append(predictions)
-        pooled_scores.append(scores[valid])
+        pooled_scores.append(ranking_scores[valid])
     truth_all = np.concatenate(pooled_truth)
     pred_all = np.concatenate(pooled_pred)
     score_all = np.concatenate(pooled_scores)

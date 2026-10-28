@@ -114,6 +114,118 @@ class OutputValidationTests(unittest.TestCase):
             self.assertFalse(result["complete"])
             self.assertIn("expected 101 unique welds, found 1", result["errors"])
 
+    def test_accepts_optional_finite_ranking_scores(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            run = Path(temporary_directory)
+            (run / ".complete").touch()
+            (run / "training_summary.json").write_text(
+                json.dumps({"sample_count": 1}), encoding="utf-8"
+            )
+            (run / "run_config.json").write_text("{}", encoding="utf-8")
+            (run / "fold_metrics.json").write_text(json.dumps([{}] * 5), encoding="utf-8")
+            with (run / "oof_predictions.csv").open(
+                "w", newline="", encoding="utf-8"
+            ) as handle:
+                writer = csv.DictWriter(
+                    handle,
+                    fieldnames=("sample_id", "prob_flash", "score_flash"),
+                )
+                writer.writeheader()
+                writer.writerow(
+                    {"sample_id": "sample-1", "prob_flash": "0.5", "score_flash": "-1.25"}
+                )
+
+            result = MODULE.validate_run(run)
+
+            self.assertTrue(result["complete"], result["errors"])
+            self.assertEqual(result["score_columns"], ["score_flash"])
+
+    def test_rejects_non_finite_ranking_score(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            run = Path(temporary_directory)
+            (run / ".complete").touch()
+            (run / "training_summary.json").write_text(
+                json.dumps({"sample_count": 1}), encoding="utf-8"
+            )
+            (run / "run_config.json").write_text("{}", encoding="utf-8")
+            (run / "fold_metrics.json").write_text(json.dumps([{}] * 5), encoding="utf-8")
+            with (run / "oof_predictions.csv").open(
+                "w", newline="", encoding="utf-8"
+            ) as handle:
+                writer = csv.DictWriter(
+                    handle,
+                    fieldnames=("sample_id", "prob_flash", "score_flash"),
+                )
+                writer.writeheader()
+                writer.writerow(
+                    {"sample_id": "sample-1", "prob_flash": "0.5", "score_flash": "nan"}
+                )
+
+            result = MODULE.validate_run(run)
+
+            self.assertFalse(result["complete"])
+            self.assertIn("row 2 has non-finite score_flash", result["errors"])
+
+    def test_rejects_incomplete_score_column_family(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            run = Path(temporary_directory)
+            (run / ".complete").touch()
+            (run / "training_summary.json").write_text(
+                json.dumps({"sample_count": 1}), encoding="utf-8"
+            )
+            (run / "run_config.json").write_text("{}", encoding="utf-8")
+            (run / "fold_metrics.json").write_text(json.dumps([{}] * 5), encoding="utf-8")
+            with (run / "oof_predictions.csv").open(
+                "w", newline="", encoding="utf-8"
+            ) as handle:
+                writer = csv.DictWriter(
+                    handle,
+                    fieldnames=("sample_id", "prob_flash", "prob_blur", "score_flash"),
+                )
+                writer.writeheader()
+                writer.writerow(
+                    {
+                        "sample_id": "sample-1",
+                        "prob_flash": "0.5",
+                        "prob_blur": "0.2",
+                        "score_flash": "0.4",
+                    }
+                )
+
+            result = MODULE.validate_run(run)
+
+            self.assertFalse(result["complete"])
+            self.assertIn("score_* columns do not match prob_* columns", result["errors"])
+
+    def test_rbf_svm_requires_decision_score_columns(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            run = Path(temporary_directory)
+            (run / ".complete").touch()
+            (run / "training_summary.json").write_text(
+                json.dumps({"sample_count": 1}), encoding="utf-8"
+            )
+            (run / "run_config.json").write_text(
+                json.dumps({"mode": "rbf_svm"}), encoding="utf-8"
+            )
+            (run / "fold_metrics.json").write_text(json.dumps([{}] * 5), encoding="utf-8")
+            with (run / "oof_predictions.csv").open(
+                "w", newline="", encoding="utf-8"
+            ) as handle:
+                writer = csv.DictWriter(
+                    handle,
+                    fieldnames=("sample_id", "prob_flash"),
+                )
+                writer.writeheader()
+                writer.writerow({"sample_id": "sample-1", "prob_flash": "0.5"})
+
+            result = MODULE.validate_run(run)
+
+            self.assertFalse(result["complete"])
+            self.assertIn(
+                "rbf_svm OOF requires score_* decision columns",
+                result["errors"],
+            )
+
 
 if __name__ == "__main__":
     unittest.main()

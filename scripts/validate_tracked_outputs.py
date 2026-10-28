@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import csv
 import json
+import math
 from pathlib import Path
 from typing import Any
 
@@ -54,9 +55,15 @@ def validate_run(
         except (TypeError, ValueError):
             if expected_fold_count is not None:
                 errors.append(f"row {row_number} has invalid fold")
-    probability_columns = sorted(column for column in (rows[0] if rows else {}) if column.startswith("prob_"))
+    columns = rows[0] if rows else {}
+    probability_columns = sorted(column for column in columns if column.startswith("prob_"))
+    score_columns = sorted(column for column in columns if column.startswith("score_"))
     if not probability_columns:
         errors.append("OOF has no prob_* columns")
+    if score_columns and {
+        column.removeprefix("score_") for column in score_columns
+    } != {column.removeprefix("prob_") for column in probability_columns}:
+        errors.append("score_* columns do not match prob_* columns")
     for row_number, row in enumerate(rows, start=2):
         for column in probability_columns:
             try:
@@ -66,6 +73,14 @@ def validate_run(
                 continue
             if not 0.0 <= value <= 1.0:
                 errors.append(f"row {row_number} has out-of-range {column}")
+        for column in score_columns:
+            try:
+                value = float(row[column])
+            except (KeyError, TypeError, ValueError):
+                errors.append(f"row {row_number} has invalid {column}")
+                continue
+            if not math.isfinite(value):
+                errors.append(f"row {row_number} has non-finite {column}")
 
     expected_count = None
     summary = payloads.get("training_summary")
@@ -88,6 +103,8 @@ def validate_run(
         seed = run_config.get("seed")
         release_directory = run_config.get("release_directory")
         fold_scheme = run_config.get("fold_scheme")
+        if run_config.get("mode") == "rbf_svm" and not score_columns:
+            errors.append("rbf_svm OOF requires score_* decision columns")
         if expected_fold_scheme is not None and fold_scheme != expected_fold_scheme:
             errors.append(
                 f"expected fold_scheme={expected_fold_scheme}, found {fold_scheme}"
@@ -114,6 +131,7 @@ def validate_run(
         "folds": sorted(fold_values),
         "expected_sample_count": expected_count,
         "probability_columns": probability_columns,
+        "score_columns": score_columns,
         "seed": seed,
         "release_directory": release_directory,
         "fold_scheme": fold_scheme,

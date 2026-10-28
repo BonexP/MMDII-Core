@@ -57,6 +57,17 @@ class TreeTuningTests(unittest.TestCase):
         self.assertEqual(len(calls), 12 * 4 + 1)
         for train_x, valid_x, _kwargs in calls[:-1]:
             self.assertFalse(set(train_x[:, 0]) & set(valid_x[:, 0]))
+        self.assertEqual(
+            {call[2]["class_weight"] for call in calls},
+            {"balanced", None},
+        )
+        self.assertEqual(
+            {
+                candidate["params"]["class_weight"]
+                for candidate in diagnostics["candidates"]
+            },
+            {"balanced", "none"},
+        )
         self.assertEqual(diagnostics["selected_params"]["min_samples_leaf"], 4)
 
     def test_missing_inner_validation_class_fails_before_fitting(self) -> None:

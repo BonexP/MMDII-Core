@@ -21,10 +21,13 @@ from __future__ import annotations
 import argparse
 import csv
 import json
+import math
 from pathlib import Path
 import re
 from statistics import mean, stdev
 from typing import Any, Sequence
+
+import numpy as np
 
 from mmdii.fusion.late_fusion import (
     clustered_bootstrap_ci,
@@ -62,7 +65,9 @@ def _run_metrics(
     frame: Any,
     target_codes: Sequence[str],
     *,
+    ranking_scores: Any | None = None,
     reference: Any | None,
+    reference_ranking_scores: Any | None = None,
     n_boot: int,
     bootstrap_seed: int,
 ) -> dict[str, Any]:
@@ -70,17 +75,20 @@ def _run_metrics(
 
     truth = frame.truth
     probabilities = frame.probabilities
+    ranking = probabilities if ranking_scores is None else ranking_scores
     folds = frame.folds
+    probability_metrics = _threshold_metrics(truth, probabilities, target_codes)
     brier_macro, brier_per_class = brier_scores(truth, probabilities)
     payload: dict[str, Any] = {
         "run": frame.run_directory.name,
-        "pooled_macro_pr_auc": macro_average_precision(truth, probabilities),
-        "fold_mean_macro_pr_auc": fold_mean_macro_average_precision(truth, probabilities, folds),
+        "pooled_macro_pr_auc": macro_average_precision(truth, ranking),
+        "fold_mean_macro_pr_auc": fold_mean_macro_average_precision(truth, ranking, folds),
         "positive_counts": {
             code: int(truth[:, position].sum())
             for position, code in enumerate(target_codes)
         },
-        "per_code_pr_auc": _per_code(truth, probabilities, target_codes),
+        "per_code_pr_auc": _per_code(truth, ranking, target_codes),
+        **probability_metrics,
         "brier_macro": brier_macro,
         "brier_per_code": {
             code: brier_per_class[position] for position, code in enumerate(target_codes)
@@ -100,14 +108,76 @@ def _run_metrics(
             "reference": reference.run_directory.name,
             **paired_bootstrap_ci(
                 truth,
-                probabilities,
-                reference.probabilities,
+                ranking,
+                reference.probabilities if reference_ranking_scores is None else reference_ranking_scores,
                 frame.image_groups,
                 n_boot=n_boot,
                 seed=bootstrap_seed,
             ),
         }
     return payload
+
+
+def _threshold_metrics(
+    truth: Any, probabilities: Any, target_codes: Sequence[str]
+) -> dict[str, Any]:
+    """Report fixed-0.5 F1/recall from probabilities, excluding undefined codes."""
+
+    truth_values = np.asarray(truth, dtype=np.int64)
+    predicted = np.asarray(probabilities, dtype=np.float64) >= 0.5
+    per_code: dict[str, dict[str, float | None]] = {}
+    valid = []
+    for position in range(truth_values.shape[1]):
+        labels = truth_values[:, position].astype(bool)
+        positive_count = int(labels.sum())
+        if positive_count == 0:
+            per_code[target_codes[position]] = {"f1": None, "recall": None}
+            continue
+        selected = predicted[:, position]
+        true_positive = int(np.logical_and(selected, labels).sum())
+        false_positive = int(np.logical_and(selected, ~labels).sum())
+        false_negative = positive_count - true_positive
+        denominator = 2 * true_positive + false_positive + false_negative
+        metrics = {
+            "f1": 0.0 if denominator == 0 else 2 * true_positive / denominator,
+            "recall": true_positive / positive_count,
+        }
+        per_code[target_codes[position]] = metrics
+        valid.append(metrics)
+    return {
+        "threshold": 0.5,
+        "per_code_threshold_metrics": per_code,
+        "macro_f1": (
+            float(np.mean([item["f1"] for item in valid])) if valid else None
+        ),
+        "macro_recall": (
+            float(np.mean([item["recall"] for item in valid])) if valid else None
+        ),
+    }
+
+
+def _load_ranking_scores(directory: Path, target_codes: Sequence[str]) -> Any | None:
+    """Read optional score_* columns without changing the shared fusion frame."""
+
+    path = directory / "oof_predictions.csv"
+    with path.open(newline="", encoding="utf-8") as handle:
+        rows = list(csv.DictReader(handle))
+    if not rows:
+        return None
+    required = [f"score_{code}" for code in target_codes]
+    present = [column for column in rows[0] if column.startswith("score_")]
+    if not present:
+        return None
+    if set(present) != set(required):
+        raise ValueError(f"score_* columns do not match target codes in {path}")
+    rows.sort(key=lambda row: row["sample_id"])
+    try:
+        values = [[float(row[column]) for column in required] for row in rows]
+    except (KeyError, TypeError, ValueError) as error:
+        raise ValueError(f"OOF ranking scores are invalid: {path}") from error
+    if not all(math.isfinite(value) for row in values for value in row):
+        raise ValueError(f"OOF ranking scores are not finite: {path}")
+    return np.asarray(values, dtype=float)
 
 
 def _per_code(truth, probabilities, target_codes) -> dict[str, float | None]:
@@ -134,6 +204,11 @@ def _verdict(delta: float | None, interval_low: float | None, min_effect: float,
     if not direction_consistent:
         return "seeds_disagree"
     return "accept"
+
+
+def _mean_defined(values: Sequence[float | None]) -> float | None:
+    defined = [value for value in values if value is not None]
+    return mean(defined) if defined else None
 
 
 def main(argv: Sequence[str] | None = None) -> int:
@@ -167,9 +242,11 @@ def main(argv: Sequence[str] | None = None) -> int:
             raise ValueError(f"No run matched --reference {arguments.reference!r}.")
 
     frames: dict[tuple[int, str], Any] = {}
+    ranking_scores: dict[tuple[int, str], Any | None] = {}
     for key, directory in sorted(runs.items()):
         try:
             frames[key] = load_oof(directory, target_codes)
+            ranking_scores[key] = _load_ranking_scores(directory, target_codes)
         except (ValueError, KeyError) as error:
             _LOGGER.info("skip %s: %s", directory.name, error)
 
@@ -186,7 +263,13 @@ def main(argv: Sequence[str] | None = None) -> int:
             reports.setdefault(config, {})[seed] = _run_metrics(
                 frame,
                 target_codes,
+                ranking_scores=ranking_scores.get((seed, config)),
                 reference=reference_frame,
+                reference_ranking_scores=(
+                    ranking_scores.get(key_by_directory[reference])
+                    if reference is not None
+                    else None
+                ),
                 n_boot=arguments.n_boot,
                 bootstrap_seed=arguments.bootstrap_seed,
             )
@@ -219,6 +302,15 @@ def main(argv: Sequence[str] | None = None) -> int:
                 "pooled_macro_pr_auc_sd": stdev(pooled) if len(pooled) > 1 else 0.0,
                 "fold_mean_macro_pr_auc_mean": mean(fold_mean),
                 "fold_mean_macro_pr_auc_sd": stdev(fold_mean) if len(fold_mean) > 1 else 0.0,
+                "macro_f1_mean": _mean_defined(
+                    [per_seed[seed]["macro_f1"] for seed in seeds]
+                ),
+                "macro_recall_mean": _mean_defined(
+                    [per_seed[seed]["macro_recall"] for seed in seeds]
+                ),
+                "brier_macro_mean": _mean_defined(
+                    [per_seed[seed]["brier_macro"] for seed in seeds]
+                ),
                 "mean_delta_vs_reference": mean_delta,
                 "min_interval_low": min(lows) if lows else None,
                 "direction_consistent": direction_consistent,
@@ -287,6 +379,9 @@ def main(argv: Sequence[str] | None = None) -> int:
                     "pooled_macro_pr_auc_sd",
                     "fold_mean_macro_pr_auc_mean",
                     "fold_mean_macro_pr_auc_sd",
+                    "macro_f1_mean",
+                    "macro_recall_mean",
+                    "brier_macro_mean",
                     "mean_delta_vs_reference",
                     "min_interval_low",
                     "verdict",
@@ -301,6 +396,15 @@ def main(argv: Sequence[str] | None = None) -> int:
                         f'{row["pooled_macro_pr_auc_sd"]:.10f}',
                         f'{row["fold_mean_macro_pr_auc_mean"]:.10f}',
                         f'{row["fold_mean_macro_pr_auc_sd"]:.10f}',
+                        ""
+                        if row["macro_f1_mean"] is None
+                        else f'{row["macro_f1_mean"]:.10f}',
+                        ""
+                        if row["macro_recall_mean"] is None
+                        else f'{row["macro_recall_mean"]:.10f}',
+                        ""
+                        if row["brier_macro_mean"] is None
+                        else f'{row["brier_macro_mean"]:.10f}',
                         ""
                         if row["mean_delta_vs_reference"] is None
                         else f'{row["mean_delta_vs_reference"]:.10f}',

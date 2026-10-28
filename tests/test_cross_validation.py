@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import csv
 import importlib.util
 from dataclasses import replace
 import json
@@ -459,6 +460,78 @@ def _deep_config(root: Path, output: Path) -> ExperimentConfig:
     )
 
 
+class SvmOofTests(unittest.TestCase):
+    def test_svm_oof_keeps_decision_scores_separate_from_probabilities(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            root = Path(temporary_directory)
+            index = _synthetic_index(root)
+            output = root / "svm-run"
+            scores = np.asarray(
+                [[-0.4, 0.2, 1.4], [0.7, -0.2, -1.0]], dtype=np.float64
+            )
+            probabilities = np.asarray(
+                [[0.2, 0.6, 0.9], [0.8, 0.4, 0.1]], dtype=np.float64
+            )
+            seen_metrics = []
+
+            def fake_fold(*_args, **_kwargs):
+                return probabilities, scores
+
+            def fake_metrics(truth, values, *, target_codes, ranking_scores=None):
+                seen_metrics.append((truth, values, ranking_scores))
+                return {
+                    "per_code": {},
+                    "valid_code_count": len(target_codes),
+                    "macro_pr_auc": 0.5,
+                    "macro_recall": 0.4,
+                    "macro_f1": 0.45,
+                    "macro_brier": 0.2,
+                    "threshold": 0.5,
+                }
+
+            config = replace(
+                ExperimentConfig.for_test(),
+                output_directory=output,
+                mode="rbf_svm",
+                aggregator="mean",
+                run_folds=(0,),
+            )
+            with (
+                patch.object(cross_validation, "_run_statistical_fold", side_effect=fake_fold),
+                patch.object(cross_validation, "evaluate_multilabel", side_effect=fake_metrics),
+                patch.object(cross_validation, "log_fold_summary"),
+                patch.object(cross_validation, "log_results_table"),
+            ):
+                run_cross_validation(index, config)
+
+            self.assertEqual(len(seen_metrics), 1)
+            np.testing.assert_array_equal(seen_metrics[0][1], probabilities)
+            np.testing.assert_array_equal(seen_metrics[0][2], scores)
+            with (output / "oof_predictions.csv").open(newline="", encoding="utf-8") as handle:
+                rows = list(csv.DictReader(handle))
+
+            self.assertEqual(
+                set(rows[0]),
+                {
+                    "sample_id",
+                    "weld_id",
+                    "image_group",
+                    "fold",
+                    "target_codes_json",
+                    "prob_flash",
+                    "prob_blur",
+                    "prob_tunnel",
+                    "score_flash",
+                    "score_blur",
+                    "score_tunnel",
+                },
+            )
+            self.assertEqual(rows[0]["sample_id"], "sample-0")
+            self.assertEqual(float(rows[0]["prob_flash"]), probabilities[0, 0])
+            self.assertEqual(float(rows[0]["score_flash"]), scores[0, 0])
+            self.assertIsNone(_json_config(config)["tree"]["effective_bootstrap"])
+
+
 @unittest.skipUnless(
     importlib.util.find_spec("torch") is not None,
     "PyTorch train extra is not installed",
@@ -519,6 +592,9 @@ class DefaultBehaviourRegressionTests(unittest.TestCase):
                 "criterion": "gini",
                 "class_weight": "balanced",
                 "tune": False,
+                "bootstrap": None,
+                "feature_set": "stats18",
+                "effective_bootstrap": None,
             },
         )
         self.assertEqual(

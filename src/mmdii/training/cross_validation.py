@@ -32,10 +32,12 @@ from mmdii.evaluation.multilabel import (
 )
 from mmdii.models.statistical import (
     LEARNERS,
-    STATISTIC_NAMES,
+    STATISTIC_FEATURE_SETS,
     extract_statistical_features,
+    fit_predict_gradient_boosting_ovr,
     fit_predict_forest_ovr,
     fit_predict_logistic_ovr,
+    fit_predict_rbf_svm_ovr,
 )
 from mmdii.training.strategy import (
     AugmentationConfig,
@@ -125,6 +127,8 @@ class TreeConfig:
     criterion: str = "gini"
     class_weight: str = "balanced"
     tune: bool = False
+    bootstrap: bool | None = None
+    feature_set: str = "stats18"
 
 
 @dataclass(frozen=True)
@@ -300,6 +304,10 @@ def load_experiment_config(path: str | Path) -> ExperimentConfig:
                     tree_payload.get("class_weight", TreeConfig().class_weight)
                 ),
                 tune=bool(tree_payload.get("tune", TreeConfig().tune)),
+                bootstrap=tree_payload.get("bootstrap", TreeConfig().bootstrap),
+                feature_set=str(
+                    tree_payload.get("feature_set", TreeConfig().feature_set)
+                ),
             ),
             second_stage=SecondStageConfig(
                 enabled=bool(second_stage_payload.get("enabled", False)),
@@ -346,7 +354,13 @@ def run_cross_validation(
 ) -> dict[str, object]:
     """Run one model per held-out weld fold and publish weld-level OOF output."""
 
-    if config.mode not in {"statistical", "random_forest"} and not _mode_is_tabular_only(config):
+    tabular_modes = {
+        "statistical",
+        "random_forest",
+        "gradient_boosting",
+        "rbf_svm",
+    }
+    if config.mode not in tabular_modes and not _mode_is_tabular_only(config):
         torch, nn, DataLoader = _require_torch()
     else:
         torch = nn = DataLoader = None
@@ -377,6 +391,27 @@ def run_cross_validation(
         target_codes=config.target_codes,
         representation=config.representation.name,
     )
+    if config.mode in {"random_forest", "second_stage"}:
+        effective_bootstrap = (
+            config.tree.bootstrap
+            if config.tree.bootstrap is not None
+            else config.tree.learner == "random_forest"
+        )
+        _LOGGER.info(
+            "tabular: learner=%s feature_set=%s bootstrap=%s effective_bootstrap=%s tuning=%s",
+            config.tree.learner,
+            config.tree.feature_set,
+            config.tree.bootstrap,
+            effective_bootstrap,
+            config.tree.tune,
+        )
+    elif config.mode in {"statistical", "gradient_boosting", "rbf_svm"}:
+        _LOGGER.info(
+            "tabular: model=%s feature_set=%s tuning=%s",
+            config.mode,
+            config.tree.feature_set,
+            config.tree.tune,
+        )
     for fold in folds:
         train_records = tuple(record for record in index.records if record.fold != fold)
         valid_records = tuple(record for record in index.records if record.fold == fold)
@@ -390,11 +425,25 @@ def run_cross_validation(
             len(valid_records),
         )
         train_targets = np.asarray([record.target for record in train_records], dtype=np.float64)
-        class_weights = compute_positive_class_weights(train_targets)
+        needs_class_weights = config.mode in {"full_signal", "window_mil"} or (
+            config.mode == "second_stage"
+            and config.second_stage.feature_source != "stats"
+        )
+        class_weights = (
+            compute_positive_class_weights(train_targets)
+            if needs_class_weights
+            else None
+        )
         training_info: dict[str, object] = {}
-        if config.mode in {"statistical", "random_forest"}:
+        ranking_scores = None
+        if config.mode in {
+            "statistical",
+            "random_forest",
+            "gradient_boosting",
+            "rbf_svm",
+        }:
             tree_diagnostics: dict[str, object] = {}
-            probabilities = _run_statistical_fold(
+            tabular_result = _run_statistical_fold(
                 index,
                 train_records,
                 valid_records,
@@ -402,6 +451,10 @@ def run_cross_validation(
                 fold=fold,
                 diagnostics=tree_diagnostics,
             )
+            if config.mode == "rbf_svm":
+                probabilities, ranking_scores = tabular_result
+            else:
+                probabilities = tabular_result
             training_info.update(tree_diagnostics)
         elif config.mode == "second_stage":
             if config.second_stage.feature_source == "stats":
@@ -416,7 +469,10 @@ def run_cross_validation(
                 )
                 training_info["second_stage"] = {
                     "feature_source": "stats",
-                    "feature_count": len(STATISTIC_NAMES) * 3,
+                    "feature_count": len(
+                        STATISTIC_FEATURE_SETS[config.tree.feature_set]
+                    )
+                    * 3,
                     "inner_folds": 0,
                 }
                 training_info.update(tree_diagnostics)
@@ -433,6 +489,7 @@ def run_cross_validation(
                     DataLoader=DataLoader,
                 )
         else:
+            ranking_scores = None
             spec_kind = "full_signal" if config.mode == "full_signal" else "window"
             aggregator = "mean" if spec_kind == "full_signal" else config.aggregator
             probabilities, training_info = _run_deep_records(
@@ -449,29 +506,36 @@ def run_cross_validation(
                 aggregator=aggregator,
             )
         truth = np.asarray([record.target for record in valid_records], dtype=np.float64)
-        metrics = evaluate_multilabel(
-            truth,
-            probabilities,
-            target_codes=config.target_codes,
-        )
+        metric_arguments: dict[str, object] = {"target_codes": config.target_codes}
+        if ranking_scores is not None:
+            metric_arguments["ranking_scores"] = ranking_scores
+        metrics = evaluate_multilabel(truth, probabilities, **metric_arguments)
         metrics.update(training_info)
         metrics["fold"] = fold
         fold_reports.append(metrics)
         log_fold_summary(_LOGGER, fold=fold, metrics=metrics)
-        for record, row_probabilities in zip(valid_records, probabilities, strict=True):
-            oof_rows.append(
-                {
-                    "sample_id": record.sample_id,
-                    "weld_id": record.weld_id,
-                    "image_group": record.image_group,
-                    "fold": fold,
-                    "target_codes_json": json.dumps(record.defect_codes, separators=(",", ":")),
-                    **{
-                        f"prob_{code}": float(row_probabilities[position])
+        for row_index, (record, row_probabilities) in enumerate(
+            zip(valid_records, probabilities, strict=True)
+        ):
+            row = {
+                "sample_id": record.sample_id,
+                "weld_id": record.weld_id,
+                "image_group": record.image_group,
+                "fold": fold,
+                "target_codes_json": json.dumps(record.defect_codes, separators=(",", ":")),
+                **{
+                    f"prob_{code}": float(row_probabilities[position])
+                    for position, code in enumerate(config.target_codes)
+                },
+            }
+            if ranking_scores is not None:
+                row.update(
+                    {
+                        f"score_{code}": float(ranking_scores[row_index, position])
                         for position, code in enumerate(config.target_codes)
-                    },
-                }
-            )
+                    }
+                )
+            oof_rows.append(row)
 
     oof_rows.sort(key=lambda row: str(row["sample_id"]))
     _write_oof(config.output_directory / "oof_predictions.csv", oof_rows, config.target_codes)
@@ -513,7 +577,7 @@ def _run_statistical_fold(
     *,
     fold: int | None = None,
     diagnostics: dict[str, object] | None = None,
-) -> np.ndarray:
+) -> np.ndarray | tuple[np.ndarray, np.ndarray]:
     total = len(train_records) + len(valid_records)
     progress = ProgressReporter(
         _LOGGER,
@@ -525,27 +589,107 @@ def _run_statistical_fold(
     train_features_list: list[np.ndarray] = []
     for record in train_records:
         train_features_list.append(
-            extract_statistical_features(index.load_signal(record)[0])
+            extract_statistical_features(
+                index.load_signal(record)[0],
+                feature_set=config.tree.feature_set,
+            )
         )
         progress.update(len(train_features_list))
     valid_features_list: list[np.ndarray] = []
     for record in valid_records:
         valid_features_list.append(
-            extract_statistical_features(index.load_signal(record)[0])
+            extract_statistical_features(
+                index.load_signal(record)[0],
+                feature_set=config.tree.feature_set,
+            )
         )
         progress.update(len(train_features_list) + len(valid_features_list))
     progress.close()
     train_features = np.stack(train_features_list)
     valid_features = np.stack(valid_features_list)
     if config.mode == "statistical":
-        return fit_predict_logistic_ovr(
+        probabilities = fit_predict_logistic_ovr(
             train_features,
             np.asarray([record.target for record in train_records], dtype=np.float64),
             valid_features,
             target_codes=config.target_codes,
             random_state=config.seed,
         )
+        if diagnostics is not None:
+            diagnostics.update(
+                {
+                    "feature_set": config.tree.feature_set,
+                    "feature_count": int(train_features.shape[1]),
+                    "tree_learner": "none",
+                }
+            )
+        return probabilities
     train_targets = np.asarray([record.target for record in train_records], dtype=np.float64)
+    train_fold_ids = [record.fold for record in train_records]
+    if config.mode == "gradient_boosting":
+        if config.tree.tune:
+            from mmdii.training.tree_tuning import (
+                tune_and_predict_gradient_boosting_ovr,
+            )
+
+            probabilities, tuning_info = tune_and_predict_gradient_boosting_ovr(
+                train_features,
+                train_targets,
+                valid_features,
+                train_fold_ids=train_fold_ids,
+                target_codes=config.target_codes,
+                random_state=config.seed,
+            )
+        else:
+            probabilities = fit_predict_gradient_boosting_ovr(
+                train_features,
+                train_targets,
+                valid_features,
+                target_codes=config.target_codes,
+                random_state=config.seed,
+            )
+            tuning_info = None
+        if diagnostics is not None:
+            diagnostics.update(
+                {
+                    "model_family": "gradient_boosting",
+                    "feature_set": config.tree.feature_set,
+                    "feature_count": int(train_features.shape[1]),
+                    "tree_tuning": tuning_info,
+                }
+            )
+        return probabilities
+    if config.mode == "rbf_svm":
+        if config.tree.tune:
+            from mmdii.training.tree_tuning import tune_and_predict_rbf_svm_ovr
+
+            scores, probabilities, tuning_info = tune_and_predict_rbf_svm_ovr(
+                train_features,
+                train_targets,
+                valid_features,
+                train_fold_ids=train_fold_ids,
+                target_codes=config.target_codes,
+                random_state=config.seed,
+            )
+        else:
+            scores, probabilities = fit_predict_rbf_svm_ovr(
+                train_features,
+                train_targets,
+                valid_features,
+                train_fold_ids=train_fold_ids,
+                target_codes=config.target_codes,
+                random_state=config.seed,
+            )
+            tuning_info = None
+        if diagnostics is not None:
+            diagnostics.update({
+                "model_family": "rbf_svm",
+                "feature_set": config.tree.feature_set,
+                "feature_count": int(train_features.shape[1]),
+                "probability_calibration": "sigmoid",
+                "tree_tuning": tuning_info,
+            })
+        return probabilities, scores
     if config.tree.tune:
         from mmdii.training.tree_tuning import tune_and_predict_forest_ovr
 
@@ -553,15 +697,16 @@ def _run_statistical_fold(
             train_features,
             train_targets,
             valid_features,
-            train_fold_ids=[record.fold for record in train_records],
+            train_fold_ids=train_fold_ids,
             target_codes=config.target_codes,
             random_state=config.seed,
             learner=config.tree.learner,
+            bootstrap=config.tree.bootstrap,
         )
         if diagnostics is not None:
-            diagnostics["tree_tuning"] = tuning_info
+            diagnostics.update(_tree_diagnostics(config, train_features, tuning_info))
         return probabilities
-    return fit_predict_forest_ovr(
+    probabilities = fit_predict_forest_ovr(
         train_features,
         train_targets,
         valid_features,
@@ -574,7 +719,38 @@ def _run_statistical_fold(
         max_depth=config.tree.max_depth,
         criterion=config.tree.criterion,
         class_weight=None if config.tree.class_weight == "none" else config.tree.class_weight,
+        bootstrap=config.tree.bootstrap,
     )
+    if diagnostics is not None:
+        diagnostics.update(_tree_diagnostics(config, train_features))
+    return probabilities
+
+
+def _tree_diagnostics(
+    config: ExperimentConfig,
+    features: np.ndarray,
+    tuning: dict[str, object] | None = None,
+) -> dict[str, object]:
+    effective_bootstrap = (
+        (
+            config.tree.bootstrap
+            if config.tree.bootstrap is not None
+            else config.tree.learner == "random_forest"
+        )
+        if config.mode in {"random_forest", "second_stage"}
+        else None
+    )
+    result: dict[str, object] = {
+        "model_family": config.tree.learner,
+        "tree_learner": config.tree.learner,
+        "feature_set": config.tree.feature_set,
+        "feature_count": int(features.shape[1]),
+        "bootstrap": config.tree.bootstrap,
+        "effective_bootstrap": effective_bootstrap,
+    }
+    if tuning is not None:
+        result["tree_tuning"] = tuning
+    return result
 
 
 def _build_deep_model(config: ExperimentConfig, aggregator: str, torch: Any) -> Any:
@@ -899,7 +1075,12 @@ def _time_frequency_datasets(
 def _mode_is_tabular_only(config: ExperimentConfig) -> bool:
     """True when the run can be completed without importing torch."""
 
-    return config.mode == "second_stage" and config.second_stage.feature_source == "stats"
+    return config.mode in {
+        "statistical",
+        "random_forest",
+        "gradient_boosting",
+        "rbf_svm",
+    } or (config.mode == "second_stage" and config.second_stage.feature_source == "stats")
 
 
 def _deep_spec(config: ExperimentConfig, spec_kind: str) -> WindowSpec | FullSignalSpec:
@@ -1354,9 +1535,18 @@ def _seed_everything(seed: int, torch: Any) -> None:
 
 
 def _validate_config(config: ExperimentConfig) -> None:
-    if config.mode not in {"statistical", "random_forest", "full_signal", "window_mil", "second_stage"}:
+    if config.mode not in {
+        "statistical",
+        "random_forest",
+        "gradient_boosting",
+        "rbf_svm",
+        "full_signal",
+        "window_mil",
+        "second_stage",
+    }:
         raise ValueError(
-            "mode must be statistical, random_forest, full_signal, window_mil or second_stage."
+            "mode must be statistical, random_forest, gradient_boosting, rbf_svm, "
+            "full_signal, window_mil or second_stage."
         )
     if config.aggregator not in {"mean", "max", "topk_mean", "gated_attention"}:
         raise ValueError("Invalid aggregator.")
@@ -1386,6 +1576,12 @@ def _validate_config(config: ExperimentConfig) -> None:
         raise ValueError("augmentation.max_time_masks must be non-negative.")
     if config.tree.learner not in LEARNERS:
         raise ValueError("tree.learner must be random_forest or extra_trees.")
+    if config.tree.feature_set not in STATISTIC_FEATURE_SETS:
+        raise ValueError(
+            f"tree.feature_set must be one of {tuple(STATISTIC_FEATURE_SETS)}."
+        )
+    if config.tree.bootstrap is not None and not isinstance(config.tree.bootstrap, bool):
+        raise ValueError("tree.bootstrap must be true, false or omitted.")
     if config.tree.n_estimators < 1 or config.tree.min_samples_leaf < 1:
         raise ValueError("tree.n_estimators and tree.min_samples_leaf must be positive.")
     if config.tree.max_features not in {"sqrt", "all"}:
@@ -1397,11 +1593,16 @@ def _validate_config(config: ExperimentConfig) -> None:
     if config.tree.class_weight not in {"balanced", "none"}:
         raise ValueError("tree.class_weight must be balanced or none.")
     if config.tree.tune and config.mode == "statistical":
-        raise ValueError("tree.tune applies only to random_forest or second_stage stats mode.")
+        raise ValueError("tree.tune does not apply to the statistical logistic baseline.")
     if config.tree.tune and config.mode == "second_stage" and config.second_stage.feature_source != "stats":
         raise ValueError("tree.tune is supported only for stats features, not tree-on-deep.")
-    if config.tree.tune and config.mode not in {"random_forest", "second_stage"}:
-        raise ValueError("tree.tune applies only to tree controls.")
+    if config.tree.tune and config.mode not in {
+        "random_forest",
+        "gradient_boosting",
+        "rbf_svm",
+        "second_stage",
+    }:
+        raise ValueError("tree.tune applies only to tabular model modes.")
     if config.second_stage.feature_source not in FEATURE_SOURCES:
         raise ValueError("second_stage.feature_source must be stats, embedding or both.")
     if config.second_stage.representation_mode not in {"window_mil", "full_signal"}:
@@ -1495,6 +1696,15 @@ def _json_config(config: ExperimentConfig) -> dict[str, object]:
         None if config.preprocess_cache_directory is None else config.preprocess_cache_directory.as_posix()
     )
     result["representation_parameters"] = _representation_parameters(config)
+    result["tree"]["effective_bootstrap"] = (
+        (
+            config.tree.bootstrap
+            if config.tree.bootstrap is not None
+            else config.tree.learner == "random_forest"
+        )
+        if config.mode in {"random_forest", "second_stage"}
+        else None
+    )
     if config.mode in {"full_signal", "window_mil"} or (
         config.mode == "second_stage" and config.second_stage.feature_source != "stats"
     ):
@@ -1574,14 +1784,16 @@ def _representation_parameters(config: ExperimentConfig) -> dict[str, object]:
 
 
 def _write_oof(path: Path, rows: list[dict[str, object]], target_codes: tuple[str, ...]) -> None:
-    headers = (
+    headers = [
         "sample_id",
         "weld_id",
         "image_group",
         "fold",
         "target_codes_json",
         *(f"prob_{code}" for code in target_codes),
-    )
+    ]
+    if rows and any(f"score_{code}" in rows[0] for code in target_codes):
+        headers.extend(f"score_{code}" for code in target_codes)
     with path.open("w", newline="", encoding="utf-8") as handle:
         writer = csv.DictWriter(handle, fieldnames=headers)
         writer.writeheader()

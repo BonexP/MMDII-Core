@@ -49,6 +49,8 @@ class TreeConfigTests(unittest.TestCase):
         config = TreeConfig()
 
         self.assertEqual(config.learner, "random_forest")
+        self.assertIsNone(config.bootstrap)
+        self.assertEqual(config.feature_set, "stats18")
         self.assertEqual(config.n_estimators, 300)
         self.assertEqual(config.min_samples_leaf, 1)
         self.assertEqual(config.max_features, "sqrt")
@@ -77,6 +79,8 @@ max_depth = 8
 criterion = "log_loss"
 class_weight = "none"
 tune = true
+bootstrap = false
+feature_set = "stats15_no_ptp"
 """,
             )
             config = load_experiment_config(path)
@@ -89,6 +93,8 @@ tune = true
         self.assertEqual(config.tree.criterion, "log_loss")
         self.assertEqual(config.tree.class_weight, "none")
         self.assertTrue(config.tree.tune)
+        self.assertFalse(config.tree.bootstrap)
+        self.assertEqual(config.tree.feature_set, "stats15_no_ptp")
 
     def test_partial_tree_table_falls_back_per_field(self) -> None:
         with tempfile.TemporaryDirectory() as temporary_directory:
@@ -106,6 +112,52 @@ tune = true
             with self.assertRaisesRegex(ValueError, "tree.learner"):
                 load_experiment_config(path)
 
+    def test_unknown_feature_set_is_rejected_at_load(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            path = _write(temporary_directory, '\n[tree]\nfeature_set = "stats17"\n')
+
+            with self.assertRaisesRegex(ValueError, "tree.feature_set"):
+                load_experiment_config(path)
+
+    def test_non_boolean_bootstrap_is_rejected_at_load(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            path = _write(temporary_directory, "\n[tree]\nbootstrap = 1\n")
+
+            with self.assertRaisesRegex(ValueError, "tree.bootstrap"):
+                load_experiment_config(path)
+
+    def test_effective_bootstrap_preserves_each_sklearn_default(self) -> None:
+        from mmdii.training.cross_validation import _json_config
+
+        random_forest = _json_config(
+            replace(
+                ExperimentConfig.for_test(),
+                mode="random_forest",
+                tree=TreeConfig(learner="random_forest"),
+            )
+        )
+        extra_trees = _json_config(
+            replace(
+                ExperimentConfig.for_test(),
+                mode="random_forest",
+                tree=TreeConfig(learner="extra_trees"),
+            )
+        )
+
+        self.assertTrue(random_forest["tree"]["effective_bootstrap"])
+        self.assertFalse(extra_trees["tree"]["effective_bootstrap"])
+
+    def test_new_tabular_modes_are_valid(self) -> None:
+        for mode in ("gradient_boosting", "rbf_svm"):
+            with self.subTest(mode=mode):
+                _validate_config(
+                    replace(
+                        ExperimentConfig.for_test(),
+                        mode=mode,
+                        tree=TreeConfig(tune=True),
+                    )
+                )
+
     def test_non_positive_tree_settings_are_rejected(self) -> None:
         with self.assertRaisesRegex(ValueError, "tree.n_estimators"):
             _validate_config(replace(ExperimentConfig.for_test(), tree=TreeConfig(n_estimators=0)))
@@ -117,7 +169,11 @@ tune = true
         from mmdii.training.cross_validation import _json_config
 
         payload = _json_config(
-            replace(ExperimentConfig.for_test(), tree=TreeConfig(learner="extra_trees", n_estimators=600))
+            replace(
+                ExperimentConfig.for_test(),
+                mode="random_forest",
+                tree=TreeConfig(learner="extra_trees", n_estimators=600),
+            )
         )
 
         self.assertEqual(payload["tree"]["learner"], "extra_trees")
@@ -127,7 +183,10 @@ tune = true
         self.assertIsNone(payload["tree"]["max_depth"])
         self.assertEqual(payload["tree"]["criterion"], "gini")
         self.assertEqual(payload["tree"]["class_weight"], "balanced")
+        self.assertIsNone(payload["tree"]["bootstrap"])
+        self.assertEqual(payload["tree"]["feature_set"], "stats18")
         self.assertFalse(payload["tree"]["tune"])
+        self.assertFalse(payload["tree"]["effective_bootstrap"])
 
 
 if __name__ == "__main__":
