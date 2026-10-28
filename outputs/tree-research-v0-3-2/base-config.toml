@@ -1,0 +1,66 @@
+[experiment]
+release_directory = "../../../data/interim/releases/weld-independent-v0-2-1-r2"
+output_directory = "outputs/tree-research-v0-3-2"
+target_codes = ["flash", "blur", "tunnel"]
+mode = "random_forest"
+aggregator = "mean"
+seed = 7
+fold_count = 5
+fold_scheme = "weld_independent"
+epochs = 20
+batch_size = 4
+learning_rate = 0.001
+weight_decay = 0.0001
+optimizer = "adamw"
+early_stopping_patience = 0
+early_stopping_min_delta = 0.0
+gradient_clip_norm = 0.0
+device = "cpu"
+pipeline_backend = "cpu"
+target_fs = 5400.0
+window_seconds = 2.0
+stride_seconds = 1.0
+full_signal_samples = 4096
+
+[tree]
+learner = "extra_trees"
+n_estimators = 300
+min_samples_leaf = 1
+max_features = "sqrt"
+max_depth = 0
+criterion = "gini"
+class_weight = "balanced"
+bootstrap = false
+feature_set = "stats18"
+tune = false
+
+[matrix]
+version = "v0.3.2"
+purpose = "tree_bootstrap_family_and_feature_ablation"
+release_name = "weld-independent-v0-2-1-r2"
+expected_weld_count = 101
+seeds = [7, 17, 27]
+fold_scheme = "weld_independent"
+fold_count = 5
+
+# Phase A crosses each ensemble with both bootstrap choices.
+phase_a_learners = ["random_forest", "extra_trees"]
+bootstrap_values = [true, false]
+
+# Phase B uses one shared set of inner-fold-selected hyperparameters per
+# outer fold, selected by mean inner-fold macro average precision.
+phase_b_models = ["gradient_boosting", "rbf_svm"]
+
+# Phase C compares reduced feature sets with ExtraTrees. The stats18,
+# bootstrap=false ExtraTrees arm in Phase A is the shared reference.
+phase_c_feature_sets = ["stats15_no_ptp", "stats12_no_ptp_rms"]
+
+[matrix.counts]
+phase_a_per_seed = 4
+phase_a_total = 12
+phase_b_per_seed = 2
+phase_b_total = 6
+phase_c_per_seed = 2
+phase_c_total = 6
+per_seed = 8
+total = 24
