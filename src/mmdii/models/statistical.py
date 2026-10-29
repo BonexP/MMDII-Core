@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Iterable
+from typing import Iterable, Mapping
 
 import numpy as np
 
@@ -34,12 +34,59 @@ STATISTIC_FEATURE_SETS = {
 
 
 LEARNERS = ("random_forest", "extra_trees")
+PROCESS_FEATURE_NAMES = (
+    "depth_start",
+    "plunge_delta",
+    "rpm",
+    "welding_speed",
+)
+CHANNEL_NAMES = ("af", "sf", "axialf")
+
+
+def statistical_feature_names(
+    feature_set: str = "stats18",
+    *,
+    interval_features: bool = False,
+    process_features: bool = False,
+    duration_feature: bool = False,
+) -> tuple[str, ...]:
+    """Return the stable column order used by statistical feature extraction."""
+    try:
+        names = STATISTIC_FEATURE_SETS[feature_set]
+    except KeyError as error:
+        raise ValueError(
+            f"feature_set must be one of {tuple(STATISTIC_FEATURE_SETS)}"
+        ) from error
+    result = [
+        f"{channel}_{name}"
+        for channel in CHANNEL_NAMES
+        for name in names
+    ]
+    if interval_features:
+        result.extend(
+            f"{channel}_interval_{segment}_{name}"
+            for channel in CHANNEL_NAMES
+            for segment in range(1, 4)
+            for name in ("mean", "std")
+        )
+    if process_features:
+        result.extend(PROCESS_FEATURE_NAMES)
+    if duration_feature:
+        result.append("duration_seconds")
+    return tuple(result)
 
 
 def extract_statistical_features(
-    signal: np.ndarray, *, feature_set: str = "stats18"
+    signal: np.ndarray,
+    *,
+    feature_set: str = "stats18",
+    time: np.ndarray | None = None,
+    process_parameters: Mapping[str, float] | None = None,
+    interval_features: bool = False,
+    process_features: bool = False,
+    duration_feature: bool = False,
 ) -> np.ndarray:
-    """Return ordered summary features for each input channel."""
+    """Return whole-record stats and explicitly requested metadata feature blocks."""
 
     values = np.asarray(signal, dtype=np.float64)
     if values.ndim != 2 or values.shape[1] == 0 or not np.isfinite(values).all():
@@ -50,6 +97,21 @@ def extract_statistical_features(
         raise ValueError(
             f"feature_set must be one of {tuple(STATISTIC_FEATURE_SETS)}"
         ) from error
+    if interval_features or duration_feature:
+        timestamps = np.asarray(time, dtype=np.float64) if time is not None else None
+        if (
+            timestamps is None
+            or timestamps.ndim != 1
+            or timestamps.size != values.shape[1]
+            or timestamps.size < 2
+            or not np.isfinite(timestamps).all()
+            or np.any(np.diff(timestamps) <= 0)
+        ):
+            raise ValueError(
+                "time must be finite, strictly increasing and match signal samples."
+            )
+    else:
+        timestamps = None
     rows = []
     for channel in values:
         features = {
@@ -61,6 +123,39 @@ def extract_statistical_features(
             "peak_to_peak": float(np.ptp(channel)),
         }
         rows.extend(features[name] for name in names)
+    if interval_features:
+        assert timestamps is not None
+        boundaries = timestamps[0] + np.asarray((1.0 / 3.0, 2.0 / 3.0)) * (
+            timestamps[-1] - timestamps[0]
+        )
+        edges = (0, *np.searchsorted(timestamps, boundaries, side="left"), len(timestamps))
+        for channel in values:
+            for start, stop in zip(edges[:-1], edges[1:]):
+                segment = channel[start:stop]
+                if segment.size == 0:
+                    raise ValueError("Relative-time interval contains no signal samples.")
+                rows.extend((float(segment.mean()), float(segment.std())))
+    if process_features:
+        if process_parameters is None:
+            raise ValueError("process_parameters are required for process features.")
+        try:
+            process_values = (
+                float(process_parameters["depth_start"]),
+                float(process_parameters["depth_end"])
+                - float(process_parameters["depth_start"]),
+                float(process_parameters["rpm"]),
+                float(process_parameters["welding_speed"]),
+            )
+        except (KeyError, TypeError, ValueError) as error:
+            raise ValueError(
+                "process_parameters require numeric depth_start, depth_end, rpm and welding_speed."
+            ) from error
+        if not np.isfinite(process_values).all():
+            raise ValueError("process_parameters must be finite.")
+        rows.extend(process_values)
+    if duration_feature:
+        assert timestamps is not None
+        rows.append(float(timestamps[-1] - timestamps[0]))
     return np.asarray(rows, dtype=np.float64)
 
 

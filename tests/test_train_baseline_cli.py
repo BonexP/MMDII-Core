@@ -72,6 +72,9 @@ class TrainBaselineCliTests(unittest.TestCase):
                             "default",
                             "--tree-feature-set",
                             "stats15_no_ptp",
+                            "--tree-interval-features",
+                            "--tree-process-features",
+                            "--tree-duration-feature",
                         ]
                     )
 
@@ -81,6 +84,9 @@ class TrainBaselineCliTests(unittest.TestCase):
         self.assertEqual(config.release_directory, release.resolve())
         self.assertIsNone(config.tree.bootstrap)
         self.assertEqual(config.tree.feature_set, "stats15_no_ptp")
+        self.assertTrue(config.tree.interval_features)
+        self.assertTrue(config.tree.process_features)
+        self.assertTrue(config.tree.duration_feature)
 
 
 if __name__ == "__main__":

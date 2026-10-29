@@ -1,0 +1,53 @@
+[experiment]
+release_directory = "../../../data/interim/releases/weld-independent-v0-2-1-r2"
+output_directory = "outputs/tree-interval-v0-3-3"
+target_codes = ["flash", "blur", "tunnel"]
+mode = "random_forest"
+aggregator = "mean"
+seed = 7
+fold_count = 5
+fold_scheme = "weld_independent"
+epochs = 20
+batch_size = 4
+learning_rate = 0.001
+weight_decay = 0.0001
+optimizer = "adamw"
+early_stopping_patience = 0
+early_stopping_min_delta = 0.0
+gradient_clip_norm = 0.0
+device = "cpu"
+pipeline_backend = "cpu"
+target_fs = 5400.0
+window_seconds = 2.0
+stride_seconds = 1.0
+full_signal_samples = 4096
+
+[tree]
+learner = "extra_trees"
+n_estimators = 300
+min_samples_leaf = 1
+max_features = "sqrt"
+max_depth = 0
+criterion = "gini"
+class_weight = "balanced"
+bootstrap = false
+feature_set = "stats18"
+tune = false
+interval_features = false
+process_features = false
+duration_feature = false
+
+[matrix]
+version = "v0.3.3"
+purpose = "extra_trees_interval_process_duration_factorial"
+release_name = "weld-independent-v0-2-1-r2"
+expected_weld_count = 101
+seeds = [7, 17, 27]
+fold_scheme = "weld_independent"
+fold_count = 5
+feature_set = "stats18"
+interval_values = [false, true]
+process_values = [false, true]
+duration_values = [false, true]
+configurations_per_seed = 8
+total_runs = 24

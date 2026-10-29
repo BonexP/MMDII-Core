@@ -97,6 +97,21 @@ def main(argv: Sequence[str] | None = None) -> int:
         "--tree-feature-set",
         choices=("stats18", "stats15_no_ptp", "stats12_no_ptp_rms"),
     )
+    parser.add_argument(
+        "--tree-interval-features",
+        action=argparse.BooleanOptionalAction,
+        default=None,
+    )
+    parser.add_argument(
+        "--tree-process-features",
+        action=argparse.BooleanOptionalAction,
+        default=None,
+    )
+    parser.add_argument(
+        "--tree-duration-feature",
+        action=argparse.BooleanOptionalAction,
+        default=None,
+    )
     parser.add_argument("--tree-tune", action="store_true")
     parser.add_argument(
         "--second-stage-source",
@@ -177,6 +192,9 @@ def main(argv: Sequence[str] | None = None) -> int:
             else None
         ),
         "feature_set": args.tree_feature_set,
+        "interval_features": args.tree_interval_features,
+        "process_features": args.tree_process_features,
+        "duration_feature": args.tree_duration_feature,
     }
     tree_overrides = {key: value for key, value in tree_overrides.items() if value is not None}
     if args.tree_bootstrap == "default":

@@ -445,6 +445,83 @@ def _synthetic_index(root: Path, weld_count: int = 10):
     return DatasetIndex(root, ("flash", "blur", "tunnel"), tuple(records))
 
 
+class StatisticalFeatureBlockFoldTests(unittest.TestCase):
+    def test_process_block_rejects_missing_record_metadata(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            root = Path(temporary_directory)
+            index = _synthetic_index(root)
+            config = replace(
+                ExperimentConfig.for_test(),
+                mode="random_forest",
+                tree=TreeConfig(learner="extra_trees", process_features=True),
+            )
+            train_records = tuple(record for record in index.records if record.fold != 0)
+            valid_records = tuple(record for record in index.records if record.fold == 0)
+            with self.assertRaisesRegex(ValueError, "lacks valid process metadata"):
+                cross_validation._run_statistical_fold(
+                    index, train_records, valid_records, config, fold=0
+                )
+
+    def test_fold_features_and_diagnostics_include_enabled_blocks(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            root = Path(temporary_directory)
+            index = _synthetic_index(root)
+            records = tuple(
+                replace(
+                    record,
+                    metadata=(
+                        ("depth_end", "3.5"),
+                        ("depth_start", "1.0"),
+                        ("rpm", "800"),
+                        ("welding_speed", "4.5"),
+                    ),
+                )
+                for record in index.records
+            )
+            index = DatasetIndex(root, index.target_codes, records)
+            config = replace(
+                ExperimentConfig.for_test(),
+                mode="random_forest",
+                tree=TreeConfig(
+                    learner="extra_trees",
+                    interval_features=True,
+                    process_features=True,
+                    duration_feature=True,
+                ),
+            )
+            diagnostics = {}
+            captured = {}
+
+            def fake_forest(train_features, _targets, valid_features, **kwargs):
+                captured["train"] = train_features
+                captured["valid"] = valid_features
+                return np.full((len(valid_features), 3), 0.5)
+
+            train_records = tuple(record for record in records if record.fold != 0)
+            valid_records = tuple(record for record in records if record.fold == 0)
+            with patch.object(
+                cross_validation, "fit_predict_forest_ovr", side_effect=fake_forest
+            ):
+                cross_validation._run_statistical_fold(
+                    index,
+                    train_records,
+                    valid_records,
+                    config,
+                    fold=0,
+                    diagnostics=diagnostics,
+                )
+
+            self.assertEqual(captured["train"].shape[1], 41)
+            self.assertEqual(captured["valid"].shape[1], 41)
+            self.assertEqual(diagnostics["feature_count"], 41)
+            self.assertEqual(len(diagnostics["feature_names"]), 41)
+            self.assertEqual(diagnostics["feature_blocks"]["process"]["feature_count"], 4)
+            self.assertEqual(diagnostics["feature_blocks"]["duration"]["feature_count"], 1)
+            run_features = _json_config(config)["tree"]["statistical_features"]
+            self.assertEqual(run_features["feature_count"], 41)
+            self.assertEqual(len(run_features["feature_names"]), 41)
+
+
 def _deep_config(root: Path, output: Path) -> ExperimentConfig:
     return replace(
         ExperimentConfig.for_test(),
@@ -594,6 +671,9 @@ class DefaultBehaviourRegressionTests(unittest.TestCase):
                 "tune": False,
                 "bootstrap": None,
                 "feature_set": "stats18",
+                "interval_features": False,
+                "process_features": False,
+                "duration_feature": False,
                 "effective_bootstrap": None,
             },
         )

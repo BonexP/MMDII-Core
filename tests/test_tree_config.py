@@ -58,6 +58,9 @@ class TreeConfigTests(unittest.TestCase):
         self.assertEqual(config.criterion, "gini")
         self.assertEqual(config.class_weight, "balanced")
         self.assertFalse(config.tune)
+        self.assertFalse(config.interval_features)
+        self.assertFalse(config.process_features)
+        self.assertFalse(config.duration_feature)
 
     def test_absent_tree_table_keeps_defaults(self) -> None:
         with tempfile.TemporaryDirectory() as temporary_directory:
@@ -81,6 +84,9 @@ class_weight = "none"
 tune = true
 bootstrap = false
 feature_set = "stats15_no_ptp"
+interval_features = true
+process_features = true
+duration_feature = true
 """,
             )
             config = load_experiment_config(path)
@@ -95,6 +101,9 @@ feature_set = "stats15_no_ptp"
         self.assertTrue(config.tree.tune)
         self.assertFalse(config.tree.bootstrap)
         self.assertEqual(config.tree.feature_set, "stats15_no_ptp")
+        self.assertTrue(config.tree.interval_features)
+        self.assertTrue(config.tree.process_features)
+        self.assertTrue(config.tree.duration_feature)
 
     def test_partial_tree_table_falls_back_per_field(self) -> None:
         with tempfile.TemporaryDirectory() as temporary_directory:
@@ -165,6 +174,15 @@ feature_set = "stats15_no_ptp"
         with self.assertRaisesRegex(ValueError, "min_samples_leaf"):
             _validate_config(replace(ExperimentConfig.for_test(), tree=TreeConfig(min_samples_leaf=0)))
 
+    def test_non_boolean_feature_switches_are_rejected(self) -> None:
+        with self.assertRaisesRegex(ValueError, "must be booleans"):
+            _validate_config(
+                replace(
+                    ExperimentConfig.for_test(),
+                    tree=replace(TreeConfig(), interval_features="yes"),
+                )
+            )
+
     def test_tree_settings_are_dumped_into_the_run_config(self) -> None:
         from mmdii.training.cross_validation import _json_config
 
@@ -187,6 +205,12 @@ feature_set = "stats15_no_ptp"
         self.assertEqual(payload["tree"]["feature_set"], "stats18")
         self.assertFalse(payload["tree"]["tune"])
         self.assertFalse(payload["tree"]["effective_bootstrap"])
+        self.assertEqual(
+            payload["tree"]["statistical_features"]["feature_count"], 18
+        )
+        self.assertFalse(
+            payload["tree"]["statistical_features"]["blocks"]["interval3"]["enabled"]
+        )
 
 
 if __name__ == "__main__":

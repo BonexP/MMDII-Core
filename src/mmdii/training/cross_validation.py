@@ -31,6 +31,7 @@ from mmdii.evaluation.multilabel import (
     evaluate_multilabel,
 )
 from mmdii.models.statistical import (
+    CHANNEL_NAMES,
     LEARNERS,
     STATISTIC_FEATURE_SETS,
     extract_statistical_features,
@@ -38,6 +39,7 @@ from mmdii.models.statistical import (
     fit_predict_forest_ovr,
     fit_predict_logistic_ovr,
     fit_predict_rbf_svm_ovr,
+    statistical_feature_names,
 )
 from mmdii.training.strategy import (
     AugmentationConfig,
@@ -129,6 +131,9 @@ class TreeConfig:
     tune: bool = False
     bootstrap: bool | None = None
     feature_set: str = "stats18"
+    interval_features: bool = False
+    process_features: bool = False
+    duration_feature: bool = False
 
 
 @dataclass(frozen=True)
@@ -307,6 +312,15 @@ def load_experiment_config(path: str | Path) -> ExperimentConfig:
                 bootstrap=tree_payload.get("bootstrap", TreeConfig().bootstrap),
                 feature_set=str(
                     tree_payload.get("feature_set", TreeConfig().feature_set)
+                ),
+                interval_features=tree_payload.get(
+                    "interval_features", TreeConfig().interval_features
+                ),
+                process_features=tree_payload.get(
+                    "process_features", TreeConfig().process_features
+                ),
+                duration_feature=tree_payload.get(
+                    "duration_feature", TreeConfig().duration_feature
                 ),
             ),
             second_stage=SecondStageConfig(
@@ -586,23 +600,40 @@ def _run_statistical_fold(
         every_steps=max(1, total // 10),
         every_seconds=15.0,
     )
+    def features_for(record: Any) -> np.ndarray:
+        signal, timestamps = index.load_signal(record)
+        process_parameters = None
+        if config.tree.process_features:
+            metadata = dict(record.metadata)
+            try:
+                process_parameters = {
+                    key: float(metadata[key])
+                    for key in ("depth_start", "depth_end", "rpm", "welding_speed")
+                }
+            except (KeyError, TypeError, ValueError) as error:
+                raise ValueError(
+                    f"Sample {record.sample_id!r} lacks valid process metadata "
+                    "(depth_start, depth_end, rpm, welding_speed)."
+                ) from error
+        return extract_statistical_features(
+            signal,
+            feature_set=config.tree.feature_set,
+            time=timestamps
+            if config.tree.interval_features or config.tree.duration_feature
+            else None,
+            process_parameters=process_parameters,
+            interval_features=config.tree.interval_features,
+            process_features=config.tree.process_features,
+            duration_feature=config.tree.duration_feature,
+        )
+
     train_features_list: list[np.ndarray] = []
     for record in train_records:
-        train_features_list.append(
-            extract_statistical_features(
-                index.load_signal(record)[0],
-                feature_set=config.tree.feature_set,
-            )
-        )
+        train_features_list.append(features_for(record))
         progress.update(len(train_features_list))
     valid_features_list: list[np.ndarray] = []
     for record in valid_records:
-        valid_features_list.append(
-            extract_statistical_features(
-                index.load_signal(record)[0],
-                feature_set=config.tree.feature_set,
-            )
-        )
+        valid_features_list.append(features_for(record))
         progress.update(len(train_features_list) + len(valid_features_list))
     progress.close()
     train_features = np.stack(train_features_list)
@@ -616,13 +647,8 @@ def _run_statistical_fold(
             random_state=config.seed,
         )
         if diagnostics is not None:
-            diagnostics.update(
-                {
-                    "feature_set": config.tree.feature_set,
-                    "feature_count": int(train_features.shape[1]),
-                    "tree_learner": "none",
-                }
-            )
+            diagnostics.update(_statistical_feature_diagnostics(config, train_features))
+            diagnostics["tree_learner"] = "none"
         return probabilities
     train_targets = np.asarray([record.target for record in train_records], dtype=np.float64)
     train_fold_ids = [record.fold for record in train_records]
@@ -653,11 +679,10 @@ def _run_statistical_fold(
             diagnostics.update(
                 {
                     "model_family": "gradient_boosting",
-                    "feature_set": config.tree.feature_set,
-                    "feature_count": int(train_features.shape[1]),
                     "tree_tuning": tuning_info,
                 }
             )
+            diagnostics.update(_statistical_feature_diagnostics(config, train_features))
         return probabilities
     if config.mode == "rbf_svm":
         if config.tree.tune:
@@ -684,11 +709,10 @@ def _run_statistical_fold(
         if diagnostics is not None:
             diagnostics.update({
                 "model_family": "rbf_svm",
-                "feature_set": config.tree.feature_set,
-                "feature_count": int(train_features.shape[1]),
                 "probability_calibration": "sigmoid",
                 "tree_tuning": tuning_info,
             })
+            diagnostics.update(_statistical_feature_diagnostics(config, train_features))
         return probabilities, scores
     if config.tree.tune:
         from mmdii.training.tree_tuning import tune_and_predict_forest_ovr
@@ -740,17 +764,64 @@ def _tree_diagnostics(
         if config.mode in {"random_forest", "second_stage"}
         else None
     )
-    result: dict[str, object] = {
+    result = _statistical_feature_diagnostics(config, features)
+    result.update({
         "model_family": config.tree.learner,
         "tree_learner": config.tree.learner,
-        "feature_set": config.tree.feature_set,
-        "feature_count": int(features.shape[1]),
         "bootstrap": config.tree.bootstrap,
         "effective_bootstrap": effective_bootstrap,
-    }
+    })
     if tuning is not None:
         result["tree_tuning"] = tuning
     return result
+
+
+def _statistical_feature_diagnostics(
+    config: ExperimentConfig, features: np.ndarray
+) -> dict[str, object]:
+    names = statistical_feature_names(
+        config.tree.feature_set,
+        interval_features=config.tree.interval_features,
+        process_features=config.tree.process_features,
+        duration_feature=config.tree.duration_feature,
+    )
+    return {
+        "feature_set": config.tree.feature_set,
+        "feature_count": int(features.shape[1]),
+        "feature_blocks": _statistical_feature_blocks(config),
+        "feature_names": list(names),
+    }
+
+
+def _statistical_feature_blocks(config: ExperimentConfig) -> dict[str, object]:
+    return {
+        "whole_record": {
+            "enabled": True,
+            "feature_set": config.tree.feature_set,
+            "feature_count": len(STATISTIC_FEATURE_SETS[config.tree.feature_set])
+            * len(CHANNEL_NAMES),
+        },
+        "interval3": {
+            "enabled": config.tree.interval_features,
+            "definition": (
+                "Three equal elapsed-time segments per record; per channel and "
+                "segment, arithmetic mean and population standard deviation."
+            ),
+            "feature_count": 18 if config.tree.interval_features else 0,
+        },
+        "process": {
+            "enabled": config.tree.process_features,
+            "definition": (
+                "depth_start, depth_end-depth_start, rpm, welding_speed from samples.csv."
+            ),
+            "feature_count": 4 if config.tree.process_features else 0,
+        },
+        "duration": {
+            "enabled": config.tree.duration_feature,
+            "definition": "time[-1] - time[0] in seconds; acquisition duration, not a process setting.",
+            "feature_count": 1 if config.tree.duration_feature else 0,
+        },
+    }
 
 
 def _build_deep_model(config: ExperimentConfig, aggregator: str, torch: Any) -> Any:
@@ -1580,6 +1651,17 @@ def _validate_config(config: ExperimentConfig) -> None:
         raise ValueError(
             f"tree.feature_set must be one of {tuple(STATISTIC_FEATURE_SETS)}."
         )
+    if any(
+        not isinstance(value, bool)
+        for value in (
+            config.tree.interval_features,
+            config.tree.process_features,
+            config.tree.duration_feature,
+        )
+    ):
+        raise ValueError(
+            "tree.interval_features, process_features and duration_feature must be booleans."
+        )
     if config.tree.bootstrap is not None and not isinstance(config.tree.bootstrap, bool):
         raise ValueError("tree.bootstrap must be true, false or omitted.")
     if config.tree.n_estimators < 1 or config.tree.min_samples_leaf < 1:
@@ -1705,6 +1787,23 @@ def _json_config(config: ExperimentConfig) -> dict[str, object]:
         if config.mode in {"random_forest", "second_stage"}
         else None
     )
+    if config.mode in {
+        "statistical",
+        "random_forest",
+        "gradient_boosting",
+        "rbf_svm",
+    } or (config.mode == "second_stage" and config.second_stage.feature_source == "stats"):
+        names = statistical_feature_names(
+            config.tree.feature_set,
+            interval_features=config.tree.interval_features,
+            process_features=config.tree.process_features,
+            duration_feature=config.tree.duration_feature,
+        )
+        result["tree"]["statistical_features"] = {
+            "blocks": _statistical_feature_blocks(config),
+            "feature_names": list(names),
+            "feature_count": len(names),
+        }
     if config.mode in {"full_signal", "window_mil"} or (
         config.mode == "second_stage" and config.second_stage.feature_source != "stats"
     ):
